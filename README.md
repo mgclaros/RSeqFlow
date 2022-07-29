@@ -18,10 +18,10 @@ The pipeline carries out the following steps:
 You will need a local copy of the GitHub _RSeqFlow_ repository on your machine. It can be done using git in the shell: 
 
 ```bash
-$ git clone git@github.com:USUARIO/RSeqFlow.git 
+$ git clone git@github.com:mgclaros/RSeqFlow.git 
 ```
 
-Alternatively, you can go to <https://github.com/mgclaros/RSeqFlow/> and click on _Clone_ and select _Download ZIP_. Unzip the file and place the `RSeqFlow` directory somewhere on your `$HOME` in Linux, macOS and Windows.
+Alternatively, you can go to <https://github.com/mgclaros/RSeqFlow/> and click on _Code_ button and then _Clone_, or select _Download ZIP_ or any other possibility you prefer. The cloned of unzipped directory `RSeqFlow` should be placed somewhere on your `$HOME` in Linux, macOS and Windows.
 
 Then you can navigate inside _RSeqFlow_ using shell commands or window interface.
 
