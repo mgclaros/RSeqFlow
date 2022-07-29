@@ -1,0 +1,108 @@
+
+### Sample distances
+
+The usual way to connect/link/associate samples is to analyse distances in scaled data. Distances can be calculated as follows:
+
+* with `dist()` to compute the distances between the rows (genes);
+* after the correlations between the columns (factors, conditions, samples) using `cor()` that is the fastest function doing that; correlations can be converted to distances with `as.dist()` function.
+
+> **IMPORTANT**:
+>
+> * **Distance** variables will start by `d`
+> * **Correlation** variables will start by `r`.
+
+
+Among the different correlation methods, `pearson` will be used since all variables are numeric.
+
+```{r sample-dist-std}
+# for CTF
+r_ctf_samp <- cor(m.ctf.std, method = CORR_METHOD)
+d_ctf_samp <- as.dist(1 - r_ctf_samp)
+# for TMM
+r_tmm_samp <- cor(m.tmm.std, method = CORR_METHOD)
+d_tmm_samp <- as.dist(1 - r_tmm_samp)
+# for all DEGs
+# r_allDEG_samp <- cor(m.std, method="pearson")
+# d_allDEG_samp <- as.dist(1 - r_allDEG_samp)
+```
+
+
+### Sample linkage
+
+1. Let's use `agnes()` within our function `CalcAgglomCoef()` to obtain the **best linkage method** to calculate distances. This is based on the agglomerative coefficient (`ac`) for each clustering linkage method with a transposed version of the scaled matrix.
+    ```{r SampleDistances, results='hold'}
+    # let's use 'meth' vector previously defined for the names of methods
+    # samples for CTF
+    ac_ctf_samp <- sapply(meth, CalcAgglomCoef, df = t(m.ctf.std))
+    # samples for TMM
+    ac_tmm_samp <- sapply(meth, CalcAgglomCoef, df = t(m.tmm.std))
+
+    best_meth_ctf <- names(ac_ctf_samp[ac_ctf_samp == max(ac_ctf_samp)])
+    best_meth_tmm <- names(ac_tmm_samp[ac_tmm_samp == max(ac_tmm_samp)])
+
+    message("The best linkage method for CTF samples is: **", best_meth_ctf, "**\n", 
+            "The best linkage method for TMM samples is: **", best_meth_tmm, "**\n")
+    ```
+
+
+2. Use the best linkage method using `hclust()` to produce a `hclust` object; these variables start by `HC_??`.
+    ```{r samples-HCA}
+    # for CTF
+    HC_samples_ctf <- hclust(d_ctf_samp, method = best_meth_ctf)
+    # for TMM
+    HC_samples_tmm <- hclust(d_tmm_samp, method = best_meth_tmm)
+    ```
+
+
+### Sample dendrogram
+
+The `hclust` object can be plotted as a dendrogram.
+
+```{r sample-dendro, fig.width=6, fig.height=4, out.width=c('50%', '50%'), fig.show='hold'}
+plot(HC_samples_ctf, main = paste0("CTF.std - d:", CORR_METHOD, " — HCA: ", best_meth_ctf))
+plot(HC_samples_tmm, main = paste0("TMM.std - d:", CORR_METHOD, " — HCA: ", best_meth_tmm))
+```
+
+You can check whether the different branches correspond to sample replicates. This inspection can be complemented with a **silhouette plot** to determine how well each observation (i.e. sample) lies within its dendrogram branch: a high average silhouette width indicates a good contribution. The average silhouette is the mean of observations (samples) for different values of _k_ (here, the number of experimental factors defined by the user in `EXP_FACTORS`).
+
+```{r siluetas, fig.show='hold'}
+# use EXP_FACTORS to determine the number of clusters that must be obtained
+k_samples <- length(unique(EXP_FACTORS))
+plot(silhouette(cutree(HC_samples_ctf, k_samples), d_ctf_samp), main = "CTF")
+plot(silhouette(cutree(HC_samples_tmm, k_samples), d_tmm_samp), main = "TMM")
+# plot(silhouette(cutree(HC_samples_allDEG, k_samples), d_allDEG_samp), main = "All DEGs")
+```
+
+> **IMPORTANT:** If there is a sample with negative contribution, you may consider to remove it and reanalyse the complete dataset.
+> 
+> Additionally, both sets of TMM and CTF normalisations should produce similar dendrograms and silhouettes.
+
+
+
+### Correlation plot of samples
+
+It is a [simple graphical display](https://r-coder.com/correlation-plot-r/) of distance (or correlation) matrices in continuous variables. They are called _correlogram_ when more than two variables are presented. The color level is proportional to the value of the dissimilarity, and the correlation _r_ is printed within each box.
+
+```{r newCorrelograms, fig.width=8, fig.height=8, out.width=c('50%', '50%'), fig.show='hold'}
+# rounding r
+r_ctf_s <- round(r_ctf_samp, digits = ROUND_dig)
+r_tmm_s <- round(r_tmm_samp, digits = ROUND_dig)
+# r_allDEG_s <- round(r_allDEG_samp, digits = 3)
+
+# correlation plot for CTF transformation
+corPlot(r_ctf_s, 
+    diag = FALSE,
+    las = 2, 
+    scale = TRUE,
+    main = "Sample correlations for CTF-scaled data")
+
+# correlation plot for TMM transformation
+corPlot(r_tmm_s, 
+    diag = FALSE,
+    las = 2, 
+    scale = TRUE,
+    main = "Sample correlations for TMM-scaled data")
+```
+
+> **IMPORTANT:** Usually, correlations based on highly variant genes do not cluster samples appropriately
+

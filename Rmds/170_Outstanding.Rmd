@@ -1,0 +1,89 @@
+Profiles of genes that have been selected by at least one of this criteria:
+
+1. Automatically selected:
+    * Being a DEG in all contrasts (ubiquitous)
+    * Being a significant hub (`kleinberg score >` `r MIN_KLEINBERG` and `deg > MIN_GENES_PER_CLUSTER`)
+3. Defined by the user: in `MY_IDs` at `configure_wf.R` file
+
+Those genes merit a particular analysis by themselves.
+
+## Automatically selected
+
+Preparing data for representations:
+
+```{r prepSelectedGenes, fig.width=8, fig.height=6, fig.align='center', out.width=c('60%')}
+selected_summary <- c(length(OUTSTANDING_GENE_LIST),
+                      length(unlist(OUTSTANDING_GENE_LIST)),
+                      length(unique(unlist(OUTSTANDING_GENE_LIST))))
+outstand_sorted <- sort(table(unlist(OUTSTANDING_GENE_LIST)), decreasing = TRUE)
+barplot(outstand_sorted, las = 2, main = "Outstanding genes", ylab = "Selection frequency")
+
+# select the most outstanding genes (above the median frequency of selection)
+outst_median <- median(outstand_sorted)
+most_outs <- names(outstand_sorted[outstand_sorted > outst_median])
+```
+
+Summary: 
+
+Feature | Amount
+:---    | :---
+Conditions with significant hubs | `r selected_summary[1]`
+Total ID selected                | `r selected_summary[2]`
+Unique ID from the total         | `r selected_summary[3]`
+The most outstanding IDs         | `r length(most_outs)`
+
+Let's show the gene profiles of the most frequently selected genes at left and the others at right.
+
+```{r selgeneprof, fig.width=5, fig.height=4, out.width=c('50%', '50%'), fig.show='hold'}
+# represent the most frequent and the others, using the median as boundary
+myIDs_2Plot <- t(m.ctf.std[rownames(m.ctf.std) %in% most_outs, ])
+theTitle <- "Gene profiles of most outstanding genes"
+SelectedGeneProfilePlots(myIDs_2Plot,
+                         aTitle = theTitle)
+
+other_outs <- names(outstand_sorted[outstand_sorted <= outst_median])
+myIDs_2Plot <- t(m.ctf.std[rownames(m.ctf.std) %in% other_outs, ])
+theTitle <- "Profiles for other selected genes"
+SelectedGeneProfilePlots(myIDs_2Plot,
+                         aTitle = theTitle)
+
+```
+
+## Selected by the user
+
+Some genes may be selected by the user during this analysis, and can be seen here, provided that `MY_IDs` is not empty in `configure_wf.R`.
+
+```{r myIDs, fig.width=5, fig.height=4, out.width=c('50%', '50%'), fig.show='hold', eval=exists("MY_IDs"), include=exists("MY_IDs")}
+# Add user selected genes to the OUTSTANDING variable for further saving
+OUTSTANDING_GENE_LIST[["User_defined"]] <- MY_IDs
+
+# using the scaled, filtered data
+myIDs_2Plot <- t(m.ctf.std[rownames(m.ctf.std) %in% MY_IDs, ])
+theTitle <- "Profiles for user-selected genes in scaled"
+SelectedGeneProfilePlots(myIDs_2Plot,
+                         aTitle = theTitle)
+
+# scaling the CTF-normalised counts to include previously filtered-out genes
+m.filt.ctf_std <- scale(x.filt.ctf)
+myIDs_2Plot <- t(m.filt.ctf_std[rownames(m.filt.ctf_std) %in% MY_IDs, ])
+theTitle <- "Profiles for user-selected genes as CTF-scale counts"
+SelectedGeneProfilePlots(myIDs_2Plot,
+                         aTitle = theTitle,
+                         y_label = "CTF-scaled counts")
+```
+
+
+
+## Save outstanding genes
+
+Saving the analysis that produced outstanding genes as well as the list of gene IDs for each condition.
+
+```{r saveOutstanding}
+# convert the list into a long matrix
+m <- as.matrix(unlist2(OUTSTANDING_GENE_LIST))
+# put a meaningful name to the gene column
+colnames(m) <- "GeneID"
+fileName <- SaveTSV(m, "OutstandingGenes-")
+message("Outstanding genes were saved in file", "\n", fileName)
+```
+

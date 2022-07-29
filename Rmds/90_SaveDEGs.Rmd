@@ -1,0 +1,116 @@
+
+### Global estimates {#global-estimates}
+
+A single value for each statistic estimate will be save considering all samples an contrasts. It will be performd in two steps:
+
+1. **First step**: `topTreat()` function (`topTable()` if `eBayes()` was used instead of `treat()`) produces the statistics for each gene in every contrast. The resulting columns for every gene are:
+* ***logFC*** (_Coef_ [below](#per-contrast)): global estimate of the log2-fold-change over all samples
+* ***AveExpr***: average log2-expression for the probe over all samples
+* ***t***: moderated _t_-statistic
+* ***P.Value*** (_p.value_ [below](#per-contrast)): raw _P_-value
+* ***adj.P.Val*** (_p.value.adj_ [below](#per-contrast)): adjusted _P_-value, also known as _q_-value
+* ***B***: log-odds that the gene is differentially expressed, only when `topTable()` is used.
+
+Let's filter by `P` and `FC` thresholds to obtain values only from DEGs. This means that each gene is a DEG it at least one of the contrasts.
+
+```{r AllDEGsEstimates}
+degs.to.save.eB <- topTable(v.tmm.fit.eB, 
+                       p.value = P, 
+                       lfc = logFC, 
+                       coef = ncol(v.tmm.fit.eB$contrasts),
+                       sort.by = "logFC",
+                       resort.by = "P",
+                       number = Inf)                # all genes
+degs.to.save.treat <- topTreat(v.tmm.fit.treat, 
+                          p.value = P, 
+                          lfc = logFC, 
+                          coef = ncol(v.tmm.fit.treat$contrasts),
+                          sort.by = "logFC",
+                          resort.by = "P",
+                          number = Inf)             # all genes
+
+# show counts of the first 50 genes
+datatable(head(degs.to.save.eB, n = 50L), 
+          rownames = TRUE, 
+          filter="top", 
+          options = list(pageLength = 5, scrollX = T), 
+          caption = "DEGs from eBayes analysis")
+
+datatable(head(degs.to.save.treat, n = 50L), 
+          rownames = TRUE, 
+          filter="top", 
+          options = list(pageLength = 5, scrollX = T), 
+          caption = "DEGs from treat analysis")
+```
+
+Let's see that filtering both by `FC` and `P`, the use of `topTreat()` is more stringent than `decideTests()`. 
+
+```{r decidetest-vs-topTreat}
+# DEGs defined by decideTest()
+degs.decideTest <- names(which(rowSums(abs(status.treat)) > 0))
+# DEGs defined by topTable()
+degs.topTreat <- rownames(degs.to.save.treat)
+# prepare Venn diagram
+venn.list <- list(DEGs_topTreat = degs.topTreat, 
+                    DEGs_decideTests = degs.decideTest)
+gv <- ggvenn(venn.list,
+       fill_color = c("#868686FF", "#CD534CFF", "#0073C2FF", "#EFC000FF"),
+       show_percentage = TRUE,
+       stroke_size = 0.5, 
+       set_name_size = 3,
+       text_size = 3) +
+    ggtitle("Total treat() DEGs from decideTests and from topTreat") +
+    theme(plot.margin = margin(t = 0, r = -2, b = -2, l = -2, unit = "cm"))
+gv
+```
+
+
+2. **Second step**: Save tables in a file
+    ```{r save_DEGs_treat}
+    fileName <- SaveTSV(degs.to.save.eB, paste(sep = "", "allDEGs_eB_P-", P, "_FC-", FC, "_"))
+    message("Average statistics for **all DEGs** after **eBayes** were saved in\n", fileName)
+    
+    
+    fileName <- SaveTSV(degs.to.save.treat, paste(sep = "", "allDEGs_TREAT_P-", P, "_FC-", FC, "_"))
+    message("Average statistics for **all DEGs** after **TREAT** were saved in\n", fileName)
+    
+    # remove needless variables
+    rm(degs.to.save.eB, degs.to.save.treat)
+    ```
+
+
+### Per contrast {#per-contrast}
+
+It is absolutely necessary to obtain the statistic estimates for each gene in each contrast. This can be easily achieved using `write.fit()` function from [limma] package. The first column of the table is ***AveExpr***, that is the average log2-intensity of the gene. Then, the following columns are repeated for each contrast:
+
+* ***Coef*** (_logFC_ [above](#global-estimates)):  coefficients of contrasts as log2-fold-changes, 
+* ***t***: moderated _t_-statistics, 
+* ***P.value*** (_P.Value_ [above](#global-estimates)): _t_-statistic _P_-values, 
+* ***P.value.adj*** (_adj.P.Val_ [above](#global-estimates)): _P_-values after multitesting adjustment
+
+Then, the analysis of the _F_ statistics is presented in two columns when more than one contrast is analysed:
+
+* ***F***: the estimate;
+* ***F.p.value***: _F_-statistic _P_-values:
+
+Finally, the last columns are the ***Results*** for each contrast, where as indicated above, -1, 0 and +1 are, respectively, down-regulated, not-significant, up-regulated.
+
+```{r save_all_gene_estimates}
+fileName <- paste(sep = "", WD, "AllGenes_eB_allContrast_P-", P, "_FC-", FC, "_", HOY, ".tsv")
+write.fit(v.tmm.fit.eB, 
+          status.eB, 
+          file = fileName, 
+          method = "separate",
+          digits = ROUND_dig, 
+          adjust = "BH")
+message("Estimates for **all genes** after **eBayes** were saved in\n", fileName)
+
+fileName <- paste(sep = "", WD, "AllGenes_TREAT_allContrast_P-", P, "_FC-", FC, "_", HOY, ".tsv")
+write.fit(v.tmm.fit.treat, 
+          status.treat, 
+          file = fileName, 
+          method = "separate",
+          digits = ROUND_dig, 
+          adjust = "BH")
+message("Estimates for **all genes** after **TREAT** were saved in\n", fileName)
+```

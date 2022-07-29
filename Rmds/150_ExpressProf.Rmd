@@ -1,0 +1,440 @@
+
+## Heatmaps
+
+Heatmaps are another way to visualise [AHC] after [transforming data values to a color scale](https://statisticsglobe.com/heatmap-in-r). Its main advantage is that it allow us to simultaneously visualise clusters of samples and genes (rows, features), that is, how the values (genes) change over an area (samples). The columns/rows of the data matrix are re-ordered according to the [AHC] result, putting similar observations close to each other. Visualising the data matrix in this way can help to find the variables/genes that appear to be characteristic for each sample cluster. Ironically, the origin of the term “heat map” has nothing to do with temperature but it was invented to refer to graphical displays of real-time financial data.
+
+
+1. Prepare data giving different colours for the corresponding groups of genes (rows) 
+
+    ```{r geneclusters2}
+    # HC_samples_ctf: hclust of samples, already determined 
+    # HC_ctf_clust: hclust of samples already determined
+    hc_colours <- sample(rainbow(final_k))
+    mycolhc <- hc_colours[as.vector(groups_k)]
+    ```
+
+
+3. Plot the heatmap using the [AHC] clusters previously defined at left using `heatmap.2()`, although there are [many other packages for drawing heatmaps](https://www.datanovia.com/en/lessons/heatmap-in-r-static-and-interactive-visualization/). For examaple, clusters can be recalculated and plotted into separate groups using `pheatmap()` (right image).
+
+    ```{r heatmaps2, fig.width=6, fig.height=9, out.width=c('55%', '45%'), fig.show='hold'}
+    dendr_samples_ctf <- as.dendrogram(HC_samples_ctf)
+    heatmap.2(m.putat.ctf.CV, 
+              dendrogram = "none", # no dendrogran for genes/samples
+              Rowv = dendr_genes_ctf,  # already calculated dendrograms
+              # Colv = dendr_samples_ctf,  # reorder colums by the dendrogram
+              Colv = FALSE,             # Colums are in the same order as the matrix
+              labRow = FALSE,  # do not print gene names
+              scale = "row", 
+              trace = "none",  # to clean the imge
+              key = TRUE,      # legend
+              key.title = "Colour scale",
+              # ColSideColors = terrain.colors(length(HC_samples_ctf$labels)), 
+              ColSideColors = EXP_COLORS,
+              RowSideColors = mycolhc,
+              main = "Gene clusters correctly defined")
+    
+    # alternative presentantion, where the number of clusters to cut the tree is required
+    pheatmap(m.putat.ctf.CV, 
+             clustering_distance_rows = d_ctf_genes, 
+             cluster_cols = TRUE,  # if false, no reordering of columns is produced
+             clustering_distance_cols = d_ctf_samp,
+             cutree_rows = final_k, 
+             cutree_cols = k_samples,
+             color = colorRampPalette(rev(brewer.pal(n = 7, name = "PuOr")))(100),
+             show_rownames = FALSE,
+             main = "Gene clusters recalculated with cutree function")
+    ```
+
+Show the cluster correspondence to colours in the left heatmap
+
+```{r heatmapclustercolours, fig.align = 'center', out.width = '40%'}
+    # show_col(hc_colours, ncol = length(hc_colours))
+    barplot(rep(1, length(hc_colours)), 
+            col = hc_colours, 
+            border = hc_colours, 
+            axes = FALSE,
+            names.arg = paste("Cluster", 1:final_k),
+            main = "Legend of colours in gene clusters",
+            legend.text = hc_colours)
+```
+
+
+## Aggregate matrix by factors
+
+We will convert the expression of sample replicates in a single value by applying the `mean()` since it is more representative than me median when few replicates are available. The columns to be considered replicates of the same experimental condition was declared on `EXP_CONDITIONS` in `configure_wf-R`, and this was then converted into the new variable `EXP_FACTORS`.
+
+Aggregation will be performed both with scaled values and with [CPM] values. The new expression matrix aggregated by sample will then be used to plot cluster profiles, both from [AHC], _k_-means and model-based clustering.
+
+1. Aggregate the **scaled matrix** `m.ctf.std` by sample using the mean. Transposition is required since the function will apply to columns.
+
+    ```{r aggregate-scaled-samples}
+    # aggregate by sample (columns). Transposition is required
+    tmp <- t(aggregate(t(m.ctf.std), by = list(EXP_FACTORS), mean))
+    colnames(tmp) <- tmp[1,] # add column names from the first row
+    tmp <- tmp[-1, ] # remove the first row
+    m_ctf_std_bysample <- apply(tmp, 2, as.numeric) # convert chars into numbers
+    rownames(m_ctf_std_bysample) <- rownames(tmp)  # recuperate row names
+    ```
+
+2. For the same calculation in **[CPM]-transformed**, expression data from `x.filt.ctf` will be converted on [CPM] using `cpm()` and then filtered by gene names in `m.ctf.std`.
+
+    ```{r aggregate-CPM-samples}
+    # use the original set of counts to obtain the CPM of genes in clusters uniquely
+    keep_genes <- rownames(x.filt.ctf) %in% rownames(m.ctf.std)
+    m.ctf.cpm <- cpm(x.filt.ctf[keep_genes, ], log = FALSE)  # CPM (not log) only for genes in clusters
+    # if log-CPM were calculated, the profile will be identical to scaled values.
+    
+    # aggregate samples
+    tmp <- t(aggregate(t(m.ctf.cpm), by = list(EXP_FACTORS), mean))
+    colnames(tmp) <- tmp[1,] # add column names from the first row
+    tmp <- tmp[-1, ] # remove the first row
+    m_ctf_cpm_bysample <- apply(tmp, 2, as.numeric) # convert chars into numbers
+    rownames(m_ctf_cpm_bysample) <- rownames(tmp)  # recuperate row names
+    ```
+
+> **IMPORTANT**: The resulting aggregated expression matrix are 
+>
+> * `m_ctf_std_bysample` for scaled data
+> * `m_ctf_cpm_bysample` for CPM data
+
+
+## Aggregate genes by cluster
+
+Using the sample-aggregated matrices, genes will be aggregated by cluster by means of the `median()`, that is less sensitive to outliers than the mean when there are many data to gather. To plot error bars, the standard deviation will be also calculated using `sd()`.
+
+> **IMPORTANT**: the list `agg_list` will contain the aggregated genes by all AHC and _k_-means clusters for each aggregated set of replicates
+
+### AHC-clusters
+
+1. Aggregate AHC clusters using scaled data:
+
+    ```{r aggregateBy-AHCclusters-scaled}
+    # create the list to gather aggregated data
+    agg_list <- list()
+    thisID <- "AHC_scaled"
+
+    # aggregate the m_ctf_std_bysample matrix by clusters, using the median and sd
+    aggr_med <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_k), median)
+    aggr_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_k), sd)
+    
+    # save aggregates in a list for further graphs
+    agg_list[[thisID]]$median <- aggr_med
+    agg_list[[thisID]]$sd <- aggr_sd
+    agg_list[[thisID]]$k <- final_k
+    
+    kable(cbind(No_genes = as.data.frame(table(groups_k))$Freq, aggr_med), 
+          align = "r", 
+          digits = ROUND_dig, 
+          caption = "Scaled, aggregated expression of clusters per experimental condition")
+    ```
+
+
+2. Aggregation of the same clusters using [CPM]s.
+
+    ```{r aggregateBy-AHCclusters-CPM}
+    # # recover only genes in clusters
+    # final_df <- transform(merge(m.ctf.cpm,
+    #                             groups_k,
+    #                             by = 'row.names'),
+    #                       row.names = Row.names,
+    #                       Row.names = NULL)
+    
+    thisID <- "AHC_cpm"
+    # aggregate clusters by meduab
+    aggr_median <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_k), median)
+    # standard deviation of calculations
+    aggr_sd <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_k), sd)
+    
+    # save aggregates in a list for further graphs
+    agg_list[[thisID]]$median <- aggr_median
+    agg_list[[thisID]]$sd <- aggr_sd
+    agg_list[[thisID]]$k <- final_k
+    
+    kable(cbind(No_genes = as.data.frame(table(groups_k))$Freq, aggr_sd), 
+          align = "r", 
+          digits = ROUND_dig, 
+          caption = "Aggregated expression of clusters in CPMs per experimental condition")
+    ```
+
+
+### K-means clusters
+
+1. Aggregate k-means clusters using scaled data:
+
+    ```{r aggregateBy-kmeans-scaled}
+    thisID <- "kMeans_scaled"
+    # aggregate the new matrix by clusters, using the median
+    aggr_median <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_kmeans), mean)
+    # standard deviation of calculations
+    aggr_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_kmeans), sd)
+    
+    # save aggregates in a list for further graphs
+    agg_list[[thisID]]$median <- aggr_median
+    agg_list[[thisID]]$sd <- aggr_sd
+    agg_list[[thisID]]$k <- kmeans_k
+    
+    kable(cbind(No_genes = as.data.frame(n_genes_group_kmeans)$Freq, aggr_median), 
+          align = "r", 
+          digits = ROUND_dig, 
+          caption = "Scaled, aggregate expression of k-means clusters per experimental condition")
+    ```
+
+2. Aggregation of the same clusters using [CPM]s.
+
+    ```{r aggregateBy-kmeans-CPM}
+    thisID <- "kMeans_cpm"
+    # aggregate clusters by meduab
+    aggr_median <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_kmeans), median)
+    # standard deviation of calculations
+    aggr_sd <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_kmeans), sd)
+    
+    # save aggregates in a list for further graphs
+    agg_list[[thisID]]$median <- aggr_median
+    agg_list[[thisID]]$sd <- aggr_sd
+    agg_list[[thisID]]$k <- kmeans_k
+    
+    kable(cbind(No_genes = as.data.frame(table(groups_kmeans))$Freq, aggr_sd), 
+          align = "r", 
+          digits = ROUND_dig, 
+          caption = "Aggregated expression of clusters in CPMs per experimental condition")
+    ```
+
+
+### Model-based clusters
+
+Aggregate model-based clusters using scaled data and using [CPM]s.
+
+```{r aggregate-ByMclust}
+thisID <- "ModelBased_scaled"
+n_genes_model_based <- table(groups_mclust)
+
+aggr_median <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_mclust), mean)
+aggr_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_mclust), sd)
+
+agg_list[[thisID]]$median <- aggr_median
+agg_list[[thisID]]$sd <- aggr_sd
+agg_list[[thisID]]$k <- mclust_k
+
+kable(cbind(No_genes = as.data.frame(n_genes_model_based)$Freq, aggr_median), 
+      align = "r", 
+      digits = ROUND_dig, 
+      caption = "Scaled, aggregate expression of model-based clusters per experimental condition")
+
+thisID <- "ModelBased_cpm"
+aggr_median <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_mclust), median)
+aggr_sd <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_mclust), sd)
+
+agg_list[[thisID]]$median <- aggr_median
+agg_list[[thisID]]$sd <- aggr_sd
+agg_list[[thisID]]$k <- mclust_k
+
+kable(cbind(No_genes = as.data.frame(n_genes_model_based)$Freq, aggr_sd), 
+      align = "r", 
+      digits = ROUND_dig, 
+      caption = "Aggregated expression of clusters in CPMs per experimental condition")
+```
+
+
+## Cluster profiles
+
+Let's see the expression profile of every cluster using the scaled expression and the expression in [CPM]. For statistical considerations, the plot with error bars (as `±SD`) is also presented in the second column of plots.
+
+```{r clustplotlog, fig.width=6, fig.height=4.5, out.width=c('50%', '50%')}
+i <- 1
+n_l <- length(agg_list)
+# custom_lty <- 1:max(final_k, kmeans_k)  # for maximal number of clusters
+niceCols <- brewer.pal(max(final_k, kmeans_k, mclust_k), "Dark2") # colours for the greatest k
+
+for (i in 1:n_l) {
+  case_name <- names(agg_list)[i]
+  # tmp matrix without first row that contains cluster number after transposition
+  plot_tmp <- t(agg_list[[i]]$median)[-1, ]
+  thisTitle <- paste0("Expression course of ", case_name)
+  MatPlot4Clusters(plot_tmp,
+            mainTitle = thisTitle,
+            myCols = niceCols)
+
+  # print the same with error bars
+  # based in https://stackoverflow.com/questions/40384055/add-error-bars-to-multiple-lines-to-show-standard-deviation-on-a-plot-in-r
+  plot_tmp_sd <- t(agg_list[[i]]$sd)[-1,]
+  # margins of error per point
+  low <- plot_tmp - plot_tmp_sd
+  up <- plot_tmp + plot_tmp_sd
+  # x positions of each value
+  x_pos <- 1:nrow(plot_tmp)
+  # define default figure size
+  par(mar = c(5, 4, 4, 2), xpd = TRUE) 
+  matplot(x_pos, plot_tmp, 
+          main = paste0(thisTitle, " (±SD)"),
+          type = "b", 
+          las = 2, # all labels perpendicular to axes
+          pch = 1, 
+          col = niceCols,
+          lty = 1:agg_list[[i]]$k,
+          ylim = c(min(low), max(up)), # room for error bars within plot
+          xaxt = "n", # remove default labels at x
+          xlab = "Experimental condition",
+          ylab = paste0("Expression median (", case_name, ")"))
+  xx <- rep.int(x_pos, ncol(plot_tmp))  ## recycle `x` for each column of plot_tmp
+  repcols <- rep(niceCols, each = nrow(plot_tmp))  ## recycle colours `col` for each row of `plot_tmp`
+  ## adding error bars using vectorization power of `arrow`
+  arrows(xx, low, xx, up, col = repcols, angle = 90, length = 0.03, code = 3)
+  axis(1,  # below
+             at = 1:nrow(plot_tmp),
+             labels = rownames(plot_tmp),
+             las = 2,
+             cex.axis = 1)
+}
+```
+
+
+## Gene profiles {.tabset .tabset-fade .tabset-pills}
+
+While this may be aesthetically somewhat satisfactory, it is clear that the clusters are not homogenous as we might need them for biological interpretation. This is a general problem with clustering methods that fix the number of cluster centres either directly as in Kmeans or indirectly by cutting trees at a fixed level. It is also a problem with the data, where differences in absolute values might override separation into clusters that might better be defined in terms of relative values.
+
+### AHC groups
+
+1. Gene profiles as **scaled** values:
+
+    ```{r maplots-AHCscaled, fig.width=4, fig.height=6, out.width=c('25%', '25%', '25%', '25%'), fig.show='hold'}
+    # SCALED
+    n_genes_group <- table(groups_k)
+    i <- 1
+    for (i in 1:final_k) {
+      m2Plot <- t(m.ctf.std[groups_k == i, ])
+      theTitle <- paste0(n_genes_group[i], " genes | AHC group ", i)
+      print(PlotGeneProfiles(m2Plot, theTitle))
+    }    
+    ```
+
+
+2. Gene profiles as **CPM** values
+
+    ```{r maplots-AHCcpm, fig.width=4, fig.height=6, out.width=c('25%', '25%', '25%', '25%'), fig.show='hold'}
+    # ORIGINAL COUNTS
+    ylab_cpm <- "Count per million reads"
+    i <- 1
+    for (i in 1:final_k) {
+      m2Plot <- t(m.ctf.cpm[groups_k == i, ])
+      theTitle <- paste0(n_genes_group[i], " genes | AHC group ", i)
+      print(PlotGeneProfiles(m2Plot, theTitle, ylab_cpm))
+    }
+    ```
+
+
+### K-means groups
+
+1. Gene profiles as **scaled** values.
+
+    ```{r matplots-kmeansScaled, fig.width=4, fig.height=6, out.width=c('25%', '25%', '25%', '25%'), fig.show='hold'}
+    i <- 1
+    for (i in 1:kmeans_k) {
+      m2Plot <- t(m.ctf.std[groups_kmeans == i, ])
+      theTitle <- paste0(n_genes_group_kmeans[i], " genes | k-means group ", i)
+      print(PlotGeneProfiles(m2Plot, theTitle))
+    }    
+    ```
+
+2. Gene profiles as **CPM** values
+
+    ```{r maplots-kmeans-cpm, fig.width=4, fig.height=6, out.width=c('25%', '25%', '25%', '25%'), fig.show='hold'}
+    # ORIGINAL COUNTS
+    i <- 1
+    for (i in 1:kmeans_k) {
+      m2Plot <- t(m.ctf.cpm[groups_kmeans == i, ])
+      theTitle <- paste0(n_genes_group_kmeans[i], " genes | k-means group ", i)
+      print(PlotGeneProfiles(m2Plot, theTitle, ylab_cpm))
+    }
+    ```
+
+
+### Model-based groups
+
+1. Gene profiles as **scaled** values **scaled** values
+
+    ```{r matplots-model-based-Scaled, fig.width=4, fig.height=6, out.width=c('25%', '25%', '25%', '25%'), fig.show='hold'}
+    i <- 1
+    for (i in 1:mclust_k) {
+      m2Plot <- t(m.ctf.std[groups_mclust == i, ])
+      theTitle <- paste0(n_genes_model_based[i], " genes | model-based group ", i)
+      print(PlotGeneProfiles(m2Plot, theTitle))
+    }    
+    ```
+
+2. Gene profiles of **model-based groups** as **CPM** values
+
+    ```{r maplots-model-based-cpm, fig.width=4, fig.height=6, out.width=c('25%', '25%', '25%', '25%'), fig.show='hold'}
+        # ORIGINAL COUNTS
+    i <- 1
+    for (i in 1:mclust_k) {
+      m2Plot <- t(m.ctf.cpm[groups_mclust == i, ])
+      theTitle <- paste0(n_genes_model_based[i], " genes | model-based group ", i)
+      print(PlotGeneProfiles(m2Plot, theTitle, ylab_cpm))
+    }
+    ```
+
+
+
+
+## Using voom-transformed expression
+
+Filter the `v.tmm` variable for putative genes:
+
+```{r putative-from-v}
+keep.putative <- rowSums(status.treat != 0) >= 1
+v.tmm.putat <- v.tmm$E[keep.putative, ]
+cat("Number of putative genes voom-corrected: ", nrow(v.tmm.putat), "\n")
+
+m_v_tmm_cv <- calculaVars(v.tmm.putat)
+m_v_tmm_cv_filt <- m_v_tmm_cv[m_v_tmm_cv$cv >= CV_MIN, ]
+m_v_tmm_CV <- as.matrix(m_v_tmm_cv_filt[ , 1:ncol(v.tmm.putat)])
+ngenes_v <- nrow(m_v_tmm_CV)
+if (ngenes_v  > 400) {
+  SMALL_v <- FALSE
+  warning("Clustering and networking will not be calculated for **so many genes (", ngenes_v, ")**")
+} else { 
+  SMALL_v <- TRUE
+}
+```
+
+
+```{r clustering-v, eval=SMALL_v, echo=SMALL_v}
+# no es necesario logaritmizarlos porque ya eran log2
+m_v_tmm.std <- scale(m_v_tmm_CV)
+# sample dendrogram
+r_v_tmm_samp <- cor(m_v_tmm.std, method = CORR_METHOD)
+d_v_tmm_samp <- as.dist(1 - r_v_tmm_samp)
+HC_samples_v_tmm <- hclust(d_v_tmm_samp, method = "ward.D2")
+plot(HC_samples_v_tmm, main = paste0("v.TMM.std - d:", CORR_METHOD, " — HCA: ", best_meth_tmm))
+corPlot(r_v_tmm_samp, 
+    diag = FALSE,
+    las = 2, 
+    scale = TRUE,
+    main = "Standardised v.TMMs")
+
+# gene groups
+d_v_tmm_genes <- dist(m_v_tmm.std, method = "euclidean")
+HC_v_tmm_genes <- hclust(d_v_tmm_genes, method = "ward.D2")
+gap_stat <- clusGap(m_v_tmm.std, 
+                    FUN = kmeans,    # change for kmeans when k-means are analysed
+                    nstart = 25, 
+                    K.max = 10,   # the number of clusters evaluated
+                    B = 50)
+v_k <- ExtractFirstMax(gap_stat$Tab[,3])
+cat("Number of clusters: ", v_k)
+fviz_gap_stat(gap_stat) + labs(subtitle = "Gap statistic")
+kmeans_v_tmm <- kmeans(m_v_tmm.std, 
+                   centers = v_k, 
+                   nstart = 25)
+groups_kmeans_v <- kmeans_v_tmm$cluster
+niceCols <- brewer.pal(v_k, "Paired")
+pie(table(groups_kmeans_v), 
+    col = niceCols,
+    labels = paste("Cluster", names(table(groups_kmeans_v))), 
+    main = "k-means for v_TMM")
+fviz_cluster(kmeans_v_tmm, 
+             data = m_v_tmm.std, 
+             main = "kmeans for v.TMM",
+             geom = "point")  # no gene label
+
+```

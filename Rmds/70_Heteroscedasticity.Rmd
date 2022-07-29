@@ -1,0 +1,56 @@
+### Background
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>heteroskedasticity</b></summary>
+
+Any linear adjustment method requires that data are devoid of [**heteroskedasticity** (or heteroscedasticity)](https://www.statology.org/heteroscedasticity-regression/). This term comes from the Greek, and quite literally means data with a different (_hetero_) dispersion (_skedasis_). This means that the standard deviations (noise) of a predicted variable are non-constant along the variable values. The opposite of heteroskedastic is homoskedastic. Homoskedasticity refers to a condition in which the variance of the residual term is constant or nearly so.
+
+Most of the time in statistics, heteroskedasticity is not a problem. But running any kind of regression analysis, having data that shows heteroscedasticity can ruin the results since, ideally, data for regression must be homoskedastic. 
+
+Homo- and heteroskedasticity can be clearly observed in the following picture:
+
+```{r heterosk, fig.align = 'center', out.width = "45%", echo=FALSE}
+include_graphics("https://miro.medium.com/max/1150/1*zME3uz7yeCMGCIXngn5Ygw.png")
+```
+
+</details> 
+[END EXPANDIBLE]: #
+
+
+`r NOTE_bx`
+  RNA-seq is one of those experiments where data counts vary depending on the intensity:
+  
+  * low count genes tend to be highly variable
+  * high count genes tend to be more constants
+</div>
+
+Additionally, raw counts show increasing variance with increasing count size, while log-counts typically show a decreasing mean-variance trend. 
+
+### Becoming homoskedastic
+
+Let's use `voom()` function from [limma] library to create a new `EList` object called `v`, where:
+
+* `v$targets` inherited from `x$samples`
+* `v$E`: numeric matrix of normalized expression values on the log2 scale, is analog to `x$counts`
+* `v$weights`: matrix of inverse variance weights
+* `v$design`: the design matrix from `design`.
+* `v$lib.size`: numeric vector of total normalized library sizes as in `x$samples$lib.size`.
+
+The `voom()` method is similar in purpose to the `limma-trend` method, incorporating the mean-variance trend into the precision weights, whereas `limma-trend` incorporates the trend into the empirical Bayes ( `eBayes()`) moderation. As noted by [@Law2014tt], `voom()` should be more powerful than `limma-trend` if the library sizes are very different but, otherwise, the two methods should give similar results.
+
+`r WARN_bx`
+  `voom()` should not be used to analyse quantities that have been normalized for library size such as RPKM, transcripts per million (TPM) or counts per million (CPM).
+</div>
+
+1. Correcting heteroskedasticity
+    ```{r corrigeHeteroesc}
+    v.tmm <- voom(x.filt.norm, design, plot = FALSE)
+    ```
+
+2. Saving homoskedastic data
+    ```{r saveCorrected}
+    fileName <- SaveTSV(v.tmm$E, "normHomoscedCPM-")
+    message(fileName, "\n", "contains homoskedastic expression data of the experiment")
+    ```
+
+

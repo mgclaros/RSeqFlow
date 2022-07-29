@@ -1,0 +1,415 @@
+## Background
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>networks</b></summary>
+
+Network approaches hold great promise in facilitating our understanding of biological processes since they are a powerful way to model the biological processes measured by high-throughput sequencing, including transcriptomic, epigenomic, and genomic information. The idea is to map the physical or functional interactions between cellular components to construct a **biological network** (or **graph**) that represent the global organisation of those cellular components to infer how they can shape function of living cells [@Sia2022]. In these networks/graphs, **nodes** (_vertices, vertex, actors_) corresponding to cellular components are connected by **edges** (_links, ties, relations_) representing either physical or functional interactions determined from the empirical interaction data. Edges can be [**directed**, **undirected** or **weighted**](https://www.ebi.ac.uk/training/online/courses/network-analysis-of-protein-interaction-data-an-introduction/wp-content/uploads/sites/64/2020/08/new-fig-4.png). Many biological networks are of a bipartite nature, meaning they consist of two different types of nodes, with connections only forming between the different node sets [@Calderer2021jd].
+
+**Gene co-expression networks** ([GCN]s, where genes are nodes, and edges link genes that have co-expression relationships) are undirectred graphs that provide an essential tool for the study of biological systems. Co-expression reflect a similarity of gene expression patterns across various experimental conditions, suggesting the function of the characterised genes can be extended to uncharacterised neighbours in the network. However, [GCN]s do not provide any information about the causality relationships between genes (e.g., activation or inhibition), and edges only represent the fact that there exists a correlation or dependency relationship among genes. Debates on normalization methods, use of Pearson's or Spearman's correlation measures as co-expression surrogates, and significance and relevance are still alive and ongoing [@TIERI2019]. The [GCN] is widely used to deduce the unknown genes by validating known gene functional functions and regulatory relationships between genes, because genes under the same regulatory control tend to be functionally related [@Parsana2019jm; @Emamjomeh2017tn] based on a 'guilt-by-association' approach [@Beiki2016db]. This has been revealed a successful approach to annotate unknown and uncharacterised genes involved in specific biological roles  and to identify new genes involved in biological mechanisms [@Zainal-Abidin2022tj].
+
+Biological networks have been observed to be **highly modular**, that means that they display groups of nodes that are enriched for links to each other relative to other parts of the network. These tightly connected nodes (genes) define a **community** (_group, module, unit_ or _cluster_) assumed to be involved in really similar biological functions that are usually responsible for a common phenotype. Hence, the central hypothesis to biological network analysis is that _highly connected nodes (genes) represent organised communities that conduct one or more biological functions [@Fortunato2016] that can extract new biological knowledge from a network_.
+
+Unfortunately, networks derived from omics data are often very large (often including thousands of nodes and many more edges) and plenty of spurious connections that researchers have to properly clean. Moreover, finding modules within a network is a hard problem because reconstructed biological networks are always incomplete due to technical bias and biological complexity, and the evaluation of putative communities is further complicated by a lack of known ground truth. As a result, biological networks are **difficult to model, analyse, and interpret**. This is why over the past decade, network inference and reconstruction algorithms that are not overly sensitive to noise have been profusely developed to retrieve actual regulatory relationships while limiting the number of false positives [@Arbet2021mc; @Calderer2021jd]. 
+
+</details> 
+[END EXPANDIBLE]: #
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>network parameters</b></summary>
+
+**Important parameters** related to [GCN]s and [how can be calculated](https://kateto.net/networks-r-igraph):
+
+* ***Connectivity***: the total number of links in the network.
+* ***Path***: menor número de conexiones que conectan dos nodos. Use `mean_distance()`.
+* ***Diameter***: the longest geodesic distance (length of the shortest path between two nodes) in the network. `diameter()` returns the distance, while `get_diameter()` returns the nodes along the first found path of that distance.
+* ***Hub***: a node concentrating many _outgoing links_ that can bridge autonomous modules. Hubs may be regarded as **regulators**. Use `hub_score(net, weights=NA)$vector` for the Kleinberg's index.
+* ***Authorities***: a node concentrating many _incoming links_ from _hubs_ that may be interpreted as containng relevant information. Therefore, they may be regarded as **regulated gene**. Use `authority_score(net, weights=NA)$vector`. 
+* ***Node degree***: the number of connections of a node with other nodes in the network. Use `degree(net, mode="all")` with different modes for directed networks, combined with `degree_distribution()`.
+* ***Density***: the proportion of present edges from all possible edges in the network. Use `edge_density(net, loops = F)`.
+* ***Betweenness of a node***: the sum of the shortest paths connecting all pair of nodes in the network, passing through that specific node; that is, centrality based on a broker position connecting others. Use `betweenness()`.
+* ***Closeness***: centrality based on distance to others in the graph. Use `closeness()`.
+* ***Eigenvector***: centrality proportional to the sum of connection centralities. Use `eigen_centrality()`.
+* ***Clique***: complete subgraphs of an undirected graph. Use `cliques()` and `largest_cliques(net.sym)` to obtain the one with max number of nodes.
+* ***Community*** or ***module***: a group of densely connected nodes with fewer connections across groups. It can be based on 
+   + Edge betweenness (Newman-Girvan) using `cluster_edge_betweenness()`. 
+   + Propagating labels using `cluster_label_prop()`.
+   + Greedy optimization of modularity using `cluster_fast_greedy()`.
+   
+</details> 
+[END EXPANDIBLE]: #
+
+Constructing [GCN]s to identify genes that are controlled by the same transcriptional regulatory program, that are functionally related, or whose gene products are involved in a common biological process, can be divided in two main steps [@FIONDA2019]: 
+
+1. **Calculating a co-expression measure** by exploiting high-throughput gene expression profiling technologies for several samples or experimental conditions. It provides pairs of genes that show a similar expression pattern across samples. Pearson's correlation coefficient, mutual information, Spearman's rank correlation coefficient or Euclidean distance can be used, Pearson's correlation coefficient being the most popular.
+
+2. **Selecting a significance threshold** such that gene pairs which have a correlation score higher than the threshold are considered to have significant co-expression relationship
+
+We will produce network for the following datasets using the method `r CORR_METHOD`:
+
+* The most variable genes (those with `CV > ` `r CV_MIN`)
+* All variant DEGs with `CV > ` `r CV_MIN` 
+* AHC clusters
+* _k_-means clusters
+* Model-based clusters
+
+
+## List of clusters
+
+The [DEG]s have been [already filtered](#filtering) as `putative` and then the most variable ones were then [scaled](#scaling) and stored in `m.ctf.std`. We will now obtain the significant correlation as the quantifiable link to perform a net [@Provart2012tj]. Let's create a list (`CLUSTER_LIST`) with all clusters that we want to analyse.
+
+```{r}
+CLUSTER_LIST <- list()
+# most variable genes
+CLUSTER_LIST[["Most_variable_genes"]] <- list(expr_matrix = t(scale(matriz_filt)))
+
+CLUSTER_LIST[["Variant_DEGs"]] <- list(expr_matrix = t(m.ctf.std))
+
+txt <- "AHC_Clust_"
+i <- 1
+for (i in 1:final_k) {
+  id <- paste0(txt, i)
+  CLUSTER_LIST[[id]][["expr_matrix"]] <- t(m.ctf.std[groups_k == i, ])
+}    
+
+txt <- "kMeans_Clust_"
+i <- 1
+for (i in 1:kmeans_k) {
+  id <- paste0(txt, i)
+  CLUSTER_LIST[[id]] <- list(expr_matrix = t(m.ctf.std[groups_kmeans == i, ]))
+}    
+
+txt <- "ModelBased_Clust_"
+i <- 1
+for (i in 1:mclust_k) {
+  id <- paste0(txt, i)
+  CLUSTER_LIST[[id]] <- list(expr_matrix = t(m.ctf.std[groups_mclust == i, ]))
+}    
+
+# contants for the list
+list_length <- length(CLUSTER_LIST)
+```
+
+
+## Significant correlations {.tabset .tabset-fade .tabset-pills}
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>significance in correlations for co-expression</b></summary>
+
+The correlation in expression pattern between pairs of genes is measured, and those exhibiting strong correlations are joined in a graphical representation to create a network, which can be visualised with graph network viewers [@Provart2012tj]. This will reveal genes with similar patterns of expression in the same or equivalent tissues.
+
+When large numbers of data sets are used when computing correlation, values of as low as 0.2 will have good _P_ values. Thus it is often useful to use a higher cutoff and to consider the **coefficient of determination** $r^2$ that reflects the amount of variance in common: $r^2 = {{Variation_{explained}} \over {Variation_{total}}}$. Thus a pair of genes with a coexpression score of 0.75 is commonly used as a cutoff, because $r^2 = (0.75)^2 = 0.56$ meaning that genes exhibiting such a score would have 56% ($r^2 \cdot 100$) of their variance in common [@Usadel2009su] leaving 44% ($100 - r^2$) to randomness. This seems biologically meaningful in the sense that this variance might be directed by _cis_-regulatory elements in common in the promoters of co-expressed genes.
+
+To avoid the multitesting problem in large number of data sets, the adjusted _P_ values should also be added to the significance filtering, keeping always in mind that correlation is not causation [@Maurage2013]. However, _P_-values should be calculated for small datasets since it is computationally demanding. Hence, the correlation matrix will be converted in a **list of edges** only for those genes (nodes) whose correlation is over `r R_MIN` and `P.adj <` `r P`. The edge list is then saved as a table ready-to-use in Cytoscape.
+
+</details> 
+[END EXPANDIBLE]: #
+
+
+```{r, results='asis'}
+# An analysis for each CLUSTER_LIST element
+i <- 1
+for (i in 1:list_length) {
+  # tab header
+  cluster_name <- names(CLUSTER_LIST)[i]
+  cat(paste0("  \n### ", cluster_name))
+  
+  # correlations
+  r_genes_clust <- corr.test(CLUSTER_LIST[[i]]$expr_matrix, method = CORR_METHOD, ci = FALSE)
+  
+  r_clust <- r_genes_clust$r # correlations
+  p_clust <- r_genes_clust$p # P-value for each correlation
+  corr_list = data.frame(Item1 = rownames(r_clust)[row(r_clust)[upper.tri(r_clust)]],
+                         Item2 = colnames(r_clust)[col(r_clust)[upper.tri(r_clust)]],
+                         r = r_clust[upper.tri(r_clust)],
+                         P = p_clust[lower.tri(p_clust)],
+                         P.adj = p_clust[upper.tri(p_clust)])
+  
+  # retain only significant correlations
+  corr_df = corr_list[abs(corr_list$r) >= R_MIN & corr_list$P.adj <= P, ]
+  
+  # use only 3 decimals for r and 4 for P
+  corr_df$r <- format(round(corr_df$r, 3), nsmall = 3)
+  corr_df$P <- format(round(corr_df$P, 4), nsmall = 4)
+  corr_df$P.adj <- format(round(corr_df$P.adj, 4), nsmall = 4)
+  # show top pairs
+  print(kable(head(corr_df), caption = "Top correlations of this cluster"))
+  
+  # Add corr_df to the list of clusters
+  CLUSTER_LIST[[i]][["corr_df"]] <- corr_df
+  
+  # save correlation for Cytoscape
+  thisFile <- paste0("BestCorrelations_", cluster_name, "-")
+  fileName <- SaveTSV(corr_df, 
+                      thisFile, 
+                      colN = TRUE,
+                      rowN = FALSE)
+  message(fileName, "\n", "contains significant correlations of ", cluster_name)
+}
+# cat("## {.unlisted .unnumbered} \n")
+rm(r_genes_clust, r_clust, p_clust, corr_list, corr_df)
+```
+
+
+## Constructing nets {.tabset .tabset-fade .tabset-pills}
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>matrices for networks</b></summary>
+
+A network is a precise, mathematical construct of nodes (vertices, actors) `N` and edges (ties, relations) `E` that can be directed or undirected, as mentioned aboove. Graphically, networks are represented as an ensemble of nodes (genes) and interactions depicted by links (edges) connecting pairs of nodes. Each co-expression network is represented by **adjacency matrix** which encodes connection strength of each pair of nodes. An adjacency matrix is a symmetric matrix of 0 and 1 with zeros on its diagonal that indicate if the pair of nodes are connected or not. The adjacency matrix should be distinguished from its ***incidence matrix*** that indicates whether vertex–edge pairs are incident or not, and its degree matrix, which contains information about the degree of each vertex.
+
+</details> 
+[END EXPANDIBLE]: #
+
+The process of building networks includes:
+
+1. Calculation of an adjacency matrix with `graph.data.frame()` from the `corr_df` element of the cluster list to show whether pairs of nodes (vertices, genes) are adjacent to each other in the graph structure
+2. The degree of a vertex is its most basic structural property. The function `degree()` shows the number of adjacent edges.
+3. An histogram of the conectivity and a scatter plot with cumulative frequency.
+
+
+```{r netConnect, results='asis', fig.width=5, fig.height=4, out.width=c('25%', '30%', '45%')}
+# An analysis for each CLUSTER_LIST element
+i <- 1
+for (i in 1:list_length) {
+  # tab header
+  cluster_name <- names(CLUSTER_LIST)[i]
+  cat(paste0("  \n### ", cluster_name, "\n")) # required to combine markdown with plots
+
+  # 1 constructing the adjacency matrix with the two first columns of the df
+  cdf_tmp <- CLUSTER_LIST[[i]]$corr_df[, 1:2]
+  aNet <- graph.data.frame(cdf_tmp, directed = FALSE)
+  
+  # 2 the degree of connectivity
+  deg <- degree(aNet)
+  deg.dist <- degree_distribution(aNet, cumulative = T, mode = "all")
+  
+  # Add deg and aNet to the cluster list properties
+  CLUSTER_LIST[[i]][["Network"]] <- aNet
+  CLUSTER_LIST[[i]][["Degree"]] <- deg
+  
+  # Network properties
+  md_table<- c("Property | Value in", cluster_name, "\n",
+          ":---  | :--- \n",
+          "***Edges***: number of pairs/links between vertices | ", ecount(aNet), "\n",
+          "***Vertex***: number of nodes/genes | ", vcount(aNet), "\n",
+          "***Density***: number of nodes/genes | ", round(edge_density(aNet), digits = ROUND_dig), "\n",
+          "***Length***: ratio number of edges per number of possible edges | ", diameter(aNet, directed = FALSE), "\n")
+  cat(md_table)
+  
+  # geodesic IDs
+  GEOD_IDs  <- names(get_diameter(aNet, directed = FALSE))
+  cat("Members of the **longest geodesic path**: \n", GEOD_IDs, "\n")
+  cat("   \n")  # required to combine markdown with plots
+  
+  # 3 Histogram and cumulative
+  hist(deg, breaks = 1:vcount(aNet) - 1, main = paste0(cluster_name, " connectivity"))
+  # Cumulative frequency
+  plot(x = 0:max(deg), 
+       y = 1 - deg.dist, 
+       pch = 19, 
+       cex = 1.2, 
+       col = "lightsteelblue2",
+       xlab = "Degree", 
+       ylab = "Cumulative Frequency",
+       main = paste0(cluster_name, " cumulative"))
+  # profile of geodesic genes
+  # myIDs_2Plot <- t(m.ctf.std[rownames(m.ctf.std) %in% GEOD_IDs, ])
+  tmp <- colnames(CLUSTER_LIST[[i]]$expr_matrix) %in% GEOD_IDs
+  myIDs_2Plot <- CLUSTER_LIST[[i]]$expr_matrix[, tmp]
+  theTitle <- "Profiles of geodesic IDs"
+  print(SelectedGeneProfilePlots(myIDs_2Plot,
+                         aTitle = theTitle))
+
+  cat("   \n")  # required to combine markdown with plots
+} 
+
+rm(cdf_tmp, aNet, deg, deg.dist, md_table, tmp)
+```
+
+
+
+## Detecting hubs {.tabset .tabset-fade .tabset-pills}
+
+Let's select nodes (genes) with high connectivity and significant centrality (`betweenness()`), that is, nodes receiving many edges and behaving as a key bridge within the network. We will put `deg` and the resulting `betweenness` in the same `data.frame` to retrieve the hubs. Significant hubs will be those having many links (`deg > MIN_GENES_PER_CLUSTER`) with the highest Kleinberg's score (`kleinberg_sc > MIN_KLEINBERG`), both values being defined in the `configure_wf.R` file.
+
+```{r hub-detect, results='asis'}
+i <- 1
+for (i in 1:list_length) {
+  # tab header
+  cluster_name <- names(CLUSTER_LIST)[i]
+  cat(paste0("    \n### ", cluster_name, " \n")) # required to combine markdown with plots
+
+  aNet <- CLUSTER_LIST[[i]]$Network
+  deg <- CLUSTER_LIST[[i]]$Degree
+  
+  # Create data.frame with connectivity (deg) and 'betweeness'
+  aNet_st <- data.frame(deg, betw = betweenness(aNet))
+
+  # Hub scoring based on Kleinberg's hub centrality scores
+  kleinberg_sc <- hub_score(aNet, weights = NA)$vector
+  aNet_st <- cbind(aNet_st, kleinberg_sc)
+  
+  CLUSTER_LIST[[i]][["Hub_Score"]] <- aNet_st[order(aNet_st$kleinberg_sc, decreasing = TRUE), ]
+  # remove needless variables
+  rm(aNet, deg, aNet_st, kleinberg_sc)
+  
+  # best hubs using the configured value of MIN_KLEINBERG
+  keep_hubs <- CLUSTER_LIST[[i]]$Hub_Score$kleinberg_sc > MIN_KLEINBERG & CLUSTER_LIST[[i]]$Hub_Score$deg > MIN_GENES_PER_CLUSTER
+  if (length(keep_hubs[keep_hubs == TRUE]) > 0) {
+    OUTSTANDING_GENE_LIST[[cluster_name]] <- rownames(CLUSTER_LIST[[i]]$Hub_Score[keep_hubs, ])
+  }
+  
+  cat("   \n")
+  # print is necessary since it is within a for loop
+  print(kable(CLUSTER_LIST[[i]]$Hub_Score[1:6, ], 
+              align = "r", 
+              digits = ROUND_dig, 
+              caption = paste0("Best hubs in ", cluster_name)))
+  cat("   \n")
+}
+```
+
+
+## Newtwork graphs {.tabset .tabset-fade .tabset-pills}
+
+Nodes (genes) having a significant correlation (as a surrogate of co-expression) are now plotted using the `igraph` library capabilities. Hubs, connectivity and centrality will be highlighted.
+
+```{r net-plots, fig.width=5, fig.height=5, out.width=c('33%', '33%', '33%'), results='asis'}
+i <- 1
+for (i in 1:list_length) {
+  # tab header
+  cluster_name <- names(CLUSTER_LIST)[i]
+  cat(paste0("  \n### ", cluster_name, "\n")) # required to combine markdown with plots
+
+  aNet <- CLUSTER_LIST[[i]]$Network
+  deg <- CLUSTER_LIST[[i]]$Degree
+  kleinberg_sc  <- CLUSTER_LIST[[i]]$Hub_Score$kleinberg_sc
+  
+  # plot network highlighting hubs, if exist
+  tmpTF <- names(V(aNet)) %in% OUTSTANDING_GENE_LIST[[cluster_name]] # TRUE/FALSE list
+  hub_names <- names(V(aNet))[tmpTF] # recover names of TRUE cases
+  if (length(hub_names) > 0) {
+    plot.igraph(aNet, 
+       main = paste0(cluster_name, " marking ", length(hub_names), " significant hubs"), 
+       vertex.label = NA,
+       vertex.size = 5,
+       mark.shape = 0.4, 
+       mark.groups = hub_names)
+  } else {
+    plot.igraph(aNet, 
+       main = paste0(cluster_name, " with no hub"), 
+       vertex.label = NA,
+       vertex.size = 8)
+  }
+  
+  
+  plot(aNet, 
+       vertex.label = NA, 
+       vertex.size = deg*2, 
+       main = paste0(cluster_name, " weighted by connectivity"))
+  
+  plot(aNet, 
+       vertex.label = NA, 
+       vertex.size = kleinberg_sc*30, # 30 is the maximum size
+       main = paste0(cluster_name, " weighted by Kleinberg's score"))
+  
+  cat("   \n")  # required to combine markdown with plots
+}
+```
+
+
+## Communities {.tabset .tabset-fade .tabset-pills}
+
+For each network, we wil determine the communities that may form the network. Genes belonging to the same community are more likely co-expressed.
+
+```{r Allcommunities, results='asis'}
+i <- 1
+for (i in 1:list_length) {
+  # tab header
+  cluster_name <- names(CLUSTER_LIST)[i]
+  cat(paste0("  \n### ", cluster_name, "\n")) # required to combine markdown with plots
+  aNet <- CLUSTER_LIST[[i]]$Network
+
+  # Clustering by distances to obtain sub-graphs
+  ceb <- cluster_edge_betweenness(aNet)
+  
+  # sort communities by size
+  sz <- as.matrix(sizes(ceb))
+  sz_ord <- sz[order(sz, decreasing = TRUE), ]
+  
+  # get the number of the biggest subgraph
+  biggest_subgraph <- as.numeric(names(sz_ord[1]))
+  # get genes with the subgraph membership
+  gene_per_subgraph <- membership(ceb)
+  
+  # add these values to the list  
+  CLUSTER_LIST[[i]][["Biggest_subgraph"]] <- biggest_subgraph 
+  CLUSTER_LIST[[i]][["Genes_by_subgraph"]] <- gene_per_subgraph
+  
+  plot(ceb, 
+     aNet, 
+     vertex.label = NA,
+     main = paste0("Sub-graphs in ", cluster_name))
+
+  cat("   \n")  # required to combine markdown with plots
+  
+  # print some information
+  print(kable(t(as.data.frame(table(cluster = CLUSTER_LIST[[i]][["Genes_by_subgraph"]])))), align="c")
+  message("Number of communities in ", cluster_name, ": ", length(ceb), "\n", 
+          "The biggest community is no. ", biggest_subgraph)
+
+  cat("   \n")  # required to combine markdown with plots
+}
+
+rm(ceb, sz, sz_ord, biggest_subgraph, gene_per_subgraph)
+```
+
+## {.unlisted .unnumbered}
+
+The **list of subgroups per cluster** can be extracted as `table(CLUSTER_LIST[['k_ID']]$Genes_by_subgraph)`
+
+The **gene IDs belonging to the most populated subgraph** can be extracted with the following code, where `k_ID` must be substituted by the cluster name (_`r names(CLUSTER_LIST)`_):
+
+```{r eval=FALSE}
+names(
+  CLUSTER_LIST[['k_ID']]$Genes_by_subgraph[
+  CLUSTER_LIST[['k_ID']]$Genes_by_subgraph == CLUSTER_LIST[['k_ID']]$Biggest_subgraph
+  ]
+)
+```
+
+For example, gene IDs for subgraph 2 for cluster `VariantDEGs` can be obtained as:
+
+`names(CLUSTER_LIST[['VariantDEGs']]$Genes_by_subgraph[CLUSTER_LIST[['VariantDEGs']]$Genes_by_subgraph == 2])`
+
+
+
+## Save network data
+
+```{r}
+fileName <- paste0(WD, "List_of_clusters-", HOY, ".Rds" )
+saveRDS(CLUSTER_LIST, file = fileName)
+message("An **R object** containing all information about clusters has been saved in \n", fileName)
+
+# verification
+newList <- readRDS(file = fileName)
+summary(newList)
+rm(newList)
+```
+
+## Use Cytoscape
+
+The list of edges and their parameters are saved in the `corr_df` matrix for each cluster in the `List_of_clusters-` that can be read in R using `r newList <- readRDS(file = fileName)`. Otherwise, the corresponding `BestCorrelations_` file are lists of edges for every cluster. The can be loaded into [**Cytoscape**](http://www.cytoscape.org/) to more analysed as described in [@RodriGutierrez2018]:
+
+1. Launch Cytoscape
+2. Import the network table `BestCorrelations.tsv`: File > Import > Network > File
+3. Indicate where relevant information is stored in the file: 
+* Source interaction is Item1
+* Target interaction is Item2
+4. After the network has been displayed, use `organic layout` which can be found under the Layout > yFiles Layout > Organic menu to facilitate identification of highly connected nodes
+5. Load the network ranks  the node information calculated before, the user should go through File > Import > Table > File and select `Network_statistics.tsv`
+6. In the pop-up window, the drop-down list `Network Collection` select the imported network `BestCorrelations.tsv`
+7. Import the table as `Node table columns` in the `Import Data as:` drop-down list. Be sure to check all columns
+8. Node size can be set accordingly by selecting the `Style` tab under the  `Control Panel` box. 
+9. Under the “Node” section in the “Style” tab of the “Control Panel” box, set the size of the node by checking “Lock node width and height,” and then select “Size.” 
+10. On the new menu displayed, click on “Column” to show a new menu in which select “Rank_- stat” as the attribute to determine the size. “Mapping type” should be in “Continuous Mapping” option to distribute the sizes contin- uously along the previously generated combined ranking for each node.

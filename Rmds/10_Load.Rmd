@@ -1,0 +1,115 @@
+
+## Reading data file(s)
+
+`DATA_FILES` is read with [edgeR] [@Robinson2010bis] functions to construct the `DEGlist` object using the user-defined function `LoadExpressionData()`.
+
+```{r buildx}
+# use 'x' as a short name since it will be thoroughly used
+x <- LoadExpressionData(DATA_FILES, DATA_DIR, EXP_FACTORS, COLUMNS_TO_READ)
+
+# raw data will be saved only when the expression matrix was not the input file
+SAVE_RAW_DATA <- (length(DATA_FILES) > 1)
+```
+
+
+## Assigning data colours
+
+Based on `EXP_FACTORS`, the number of different experimental factors will be extracted to define specific colours for them throughout the report.
+
+```{r FactorsColours}
+# convert experimental factors to colours
+UNIQ_FACTORS <- unique(EXP_FACTORS)
+EXP_COLORS <- as.vector(EXP_FACTORS)
+i <- 1
+for (i in 1:length(UNIQ_FACTORS)) {
+   # replace each factor by a colour number
+   EXP_COLORS <- replace(EXP_COLORS, EXP_COLORS == UNIQ_FACTORS[i], i + 1)
+}
+
+# remove unused variables
+rm(DATA_FILES, CHARS_TO_REMOVE, COLUMNS_TO_READ, OTHER_DATA, PKG_UPDATE)
+```
+
+
+Data summary:
+
+Property   | Value
+:--------- | :------
+Genes      | `r dim(x)[1]`
+Samples (conditions) | `r dim(x)[2]`
+Unique factors       | `r toString(UNIQ_FACTORS)`
+Colours              | `r toString(unique(EXP_COLORS))`
+
+
+## Inspect raw data {#origSizeMDS}
+
+Data will be inspected with three plots.
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` 
+Expand to read about <b>library size, MDS and PCA plots</b></summary>
+
+* Raw library sizes to see if they are balanced. 
+`r NOTE_bx` Ideally, library sizes must be similar in all samples to avoid bias in type I error rate and FDR (_false discovery rate_, the type II error rate). Methods better supporting unequal library sizes are `voom()` and `glm()` broth from `limma` [@Law2014tt]. They will be used for differential expression in this script.
+* _Multidimensional scaling_ (**[MDS]**) scatterplot of distances between the samples to reduce de dimensionality to two dimensions in an iterative process to show the sample relative similarities. Replicates are expected to form clusters, that is, [the distance between replicates is shorter than with other samples](https://richardlent.github.io/post/multivariate-analysis-with-r/#multidimensional-scaling).
+* _Pincipal components analysis_ (**[PCA]**) [@Jolliffe2016dp] of correlation or covariance values based on the user-defined function `PlotMyPCA()`. It is an easy and fast way to analyse data by a dimensional reduction of multivariate data. Replicates should be correlate, so they are expected to form clusters when uncorrelated (principal components: PC) are used. The [PCs are linear combinations of the original variables that maximise the dispersion of samples](https://richardlent.github.io/post/multivariate-analysis-with-r/#principal-components-analysis).
+
+</details> 
+[END EXPANDIBLE]: #
+
+
+
+```{r sizesMDSplots, fig.width=6, fig.height=5, out.width=c('33%', '33%', '33%'), fig.show='hold'} 
+# grasp the names of samples to pinpoint them
+COL_NAMES <- colnames(x)
+
+# create a place at rigth (8) for the legend outside the graph
+# structure of mar = c(bottom, left, top, right)
+par(mar = c(4, 3, 3, 8), xpd = TRUE) 
+# plot library sizes
+barplot(x$samples$lib.size * 1e-6, 
+        names = COL_NAMES, 
+        col = EXP_COLORS,
+        ylab = "Library size (millions)", 
+        las = 2, 
+        main = "Raw (original) data library sizes") 
+
+# legend to indicate the correspondence of colours and factors in all plots
+legend("topright", inset = c(-0.3, 0), # legend outside the plot 
+       legend = as.vector(UNIQ_FACTORS), 
+       fill = unique(EXP_COLORS),
+       cex = 0.8)
+
+# return to mar default values
+par(mar = c(5, 4, 4, 2), xpd = TRUE)
+# MDS: multi-dimensional scaling scatterplot
+plotMDS(x, 
+        col = EXP_COLORS, 
+        main = "Raw sample similarities as MDS")
+
+
+pca_sum <- PlotMyPCA(x$counts, "PCA of raw data", thisScale = FALSE)
+```
+
+See the contribution of each component to the [PCA] for raw data:
+
+```{r PCAcomp1}
+kable(pca_sum, align="c", digits = ROUND_dig) # only 3 decimals
+# remove needless variables
+rm(pca_sum)
+```
+
+
+
+
+
+## Save raw counts 
+
+Raw counts are saved as _tab separated values_ (**.tsv**) only when several files were read to construct the expression table. In such a case, rows are gene codes and columns are experimental data. The user-defined function `SaveTSV()` will be used from now on to save data.
+
+
+```{r datatable, eval=SAVE_RAW_DATA}
+fileName <- SaveTSV(x$counts, "rawData-")
+message("Raw counts table for all genes was saved in file", "\n", fileName)
+```
+

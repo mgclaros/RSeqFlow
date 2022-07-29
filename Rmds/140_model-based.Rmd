@@ -1,0 +1,54 @@
+
+The `Mclust()` function in [the `mclust` package](https://mclust-org.github.io/mclust/articles/mclust.html) selects the optimal model initialised by hierarchical clustering for parameterised Gaussian mixture models using maximum likelihood criterium. One chooses the model and number of clusters with the largest BIC (_Bayesian Information Criterion_) in comprehensive strategies for clustering, density estimation and discriminant analysis: a large BIC score indicates strong evidence for the corresponding model.
+
+```{r MClustResults, results='hide'}
+# See also PAGE 173
+fit <- Mclust(m.ctf.std)
+```
+
+Let's see the results of the model-based clustering based on [BIC], as explained [above](#clustbkg).
+
+```{r show-Mclust-results}
+plot(fit, what = "BIC")
+summary(fit) # display the best model
+
+groups_mclust <- fit$classification
+mclust_k <- fit$G
+message("The number of **Mclust** clusters is: **", mclust_k, "**")
+```
+
+
+
+## Clustering comparisons
+
+The function `cluster.stats()` from `fpc` package returns a list containing many components useful for analysing the intrinsic characteristics of all clusterings performed (AHC, _k_-means and model-based), that can be used to evaluate its internal quality. Let's calculate these estimates:
+
+```{r}
+# Statistics for clusterings using distances in d_ctf_genes
+ahc_stats <- cluster.stats(d_ctf_genes, groups_k, alt.clustering=groups_kmeans)
+km_stats <- cluster.stats(d_ctf_genes, groups_kmeans, alt.clustering=groups_mclust)
+mclust_stats <- cluster.stats(d_ctf_genes, groups_mclust, groups_k)
+```
+
+The comparative results are the following:
+
+
+Metrics | Meaning | AHC | k-means | Model-based
+:---    | :---    | :---    | :--- | :---
+***cluster.number*** | Number of clusters | `r ahc_stats$cluster.number` | `r km_stats$cluster.number` | `r mclust_stats$cluster.number`
+***cluster.size*** | Vector containing the number of points in each cluster | `r toString(ahc_stats$cluster.size)` | `r toString(km_stats$cluster.size)` | `r toString(mclust_stats$cluster.size)`
+***average.distance*** | Vector with cluster-wise within average distances | `r toString(round(ahc_stats$average.distance, ROUND_dig))` | `r toString(round(km_stats$average.distance, ROUND_dig))` | `r toString(round(mclust_stats$average.distance, ROUND_dig))`
+***median.distance*** | Vector with cluster-wise within median distances | `r toString(round(ahc_stats$median.distance, ROUND_dig))` | `r toString(round(km_stats$median.distance, ROUND_dig))` | `r toString(round(mclust_stats$median.distance, ROUND_dig))`
+***average.between*** | Average distance between clusters. **Larger is better** | `r round(ahc_stats$average.between, ROUND_dig)` | `r round(km_stats$average.between, ROUND_dig)` | `r round(mclust_stats$average.between, ROUND_dig)`
+***average.within*** | Average distance within clusters. **Smaller is better** | `r round(ahc_stats$average.within, ROUND_dig)` | `r round(km_stats$average.within, ROUND_dig)` | `r round(mclust_stats$average.within, ROUND_dig)`
+***wb.ratio*** | average.within/average.between, **smaller is better** | `r round(ahc_stats$wb.ratio, ROUND_dig)` | `r round(km_stats$wb.ratio, ROUND_dig)` | `r round(mclust_stats$wb.ratio, ROUND_dig)`
+***clus.avg.silwidths*** | Vector of cluster average (-1, +1) silhouette widths. **Higher is better** | `r round(ahc_stats$clus.avg.silwidths, ROUND_dig)` | `r round(km_stats$clus.avg.silwidths, ROUND_dig)` | `r round(mclust_stats$clus.avg.silwidths, ROUND_dig)`
+***within.cluster.ss*** | Generalisation of the within clusters sum of squares for Euclidean distance matrices | `r ceiling(ahc_stats$within.cluster.ss)` | `r ceiling(km_stats$within.cluster.ss)` | `r ceiling(mclust_stats$within.cluster.ss)`
+***dunn*** | Dunn index for minimum separation / maximum diameter | `r round(ahc_stats$dunn, ROUND_dig)` | `r round(km_stats$dunn, ROUND_dig)`  | `r round(mclust_stats$dunn, ROUND_dig)`
+***dunn2*** | Dunn index for minimum average dissimilarity between two cluster / maximum average within cluster dissimilarity | `r round(ahc_stats$dunn2, ROUND_dig)` | `r round(km_stats$dunn2, ROUND_dig)`  | `r round(mclust_stats$dunn2, ROUND_dig)`
+***corrected.rand*** | Corrected Rand index to assess the similarity of two clustering | `r round(ahc_stats$corrected.rand, ROUND_dig)` | `r round(km_stats$corrected.rand, ROUND_dig)` | `r round(mclust_stats$corrected.rand, ROUND_dig)`
+***vi*** | Meila's VI to assess the similarity of two clustering | `r round(ahc_stats$vi, ROUND_dig)` | `r round(km_stats$vi, ROUND_dig)` | `r round(mclust_stats$vi, ROUND_dig)`
+
+`r NOTE_bx`
+  You have information about the different clustering approaches to decide your preferences for posterior analyses
+</div>

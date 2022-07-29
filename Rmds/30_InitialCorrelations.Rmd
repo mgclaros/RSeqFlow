@@ -1,0 +1,210 @@
+## Dispersion background
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>correlations</b></summary>
+
+It's easy to think that just because two things seem related, that one must be the cause of the other. 
+But [correlation does not imply causation](https://www.freecodecamp.org/news/why-correlation-does-not-imply-causation-the-meaning-of-this-common-saying-in-statistics/), as demonstrated in [@Maurage2013]. 
+Correlations tell the researchers the degree of relationship between factors: **changes in one variable are associated with changes in another**, even if non-significant correlation was observed. 
+No more, no less.
+Misinterpretations are due to
+
+* A **confounding variable** that affects both the independent and dependent variables in your relationship, and so confounds your ability to determine the nature of that relationship.
+* There is a **omitted variable** that is really causing the correlation.
+* **Reverse causation** that makes you assume that A causes B when is B which is causing A.
+* **Coincidence**, that is, both things occurr at the same time by chance.
+* **Sample biass**, that is, the samples do not reflect the complete population or do not produce an accurate error estimation.
+
+Correlation only has sense for genes with variable expression between samples.
+There are serveral ways to assess this variability:
+
+* **D** (_dispersion_), also called index of dispersion, dispersion index, coefficient of dispersion, relative variance, or variance-to-mean ratio (VMR): it is defined as the ratio of the variance to the mean ($D = \sigma^{2}/\mu$). The result depends on the values, so _it is not useful for between-sample comparisons_.
+* **CV** (_coefficient of variation_) also known as relative standard deviation (RSD): it is defined as the ratio of the standard deviation to the mean or its absolute value ($CV = \sigma / \mu$). 
+It can be expressed as a percent (`%CV = CV · 100`).
+_CV allows relative comparison of two measurements_ due to its
+  - precision and repeatability, 
+  - independence from units in which the measurement has been taken, 
+  - invariance from the number of replicates, and
+  - log-normally distributed measurements exhibit stationary CV. 
+* **COD** (_coefficient of dispersion_): it a measure of dispersion around a median calculated as the MAD (_median absolute deviation_) divided by the median (`COD = MAD/median`). MAD is more resilient to outliers than $\sigma$ as well as median respect to mean. It can be expressed as a percent (`%COD = COD · 100`).
+
+`r NOTE_bx` 
+  Althoug COD is also more resilient to outliers than CV and `COD < CV`, science literature usually prefers CV.
+</div>
+
+This script has defined function `calculaVars()` (based on `cofVar()` from `coexnet` library) to add to counts data in `x.filt` the following columns:
+
+* ***mean***, 
+* ***d*** for dispersion D
+* ***cv*** for CV,
+* ***cod*** for COD.
+
+</details> 
+[END EXPANDIBLE]: #
+
+
+## Filtering by CV
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>filtering by CV</b></summary>
+
+There is no specific vaule for a [CV] that is considered a _good_ value since it depends on the situation. In most fields, lower [CV] values are considered _invariant_ because it means there is less variability around the mean.
+This is why this parameter can be configured in `configure_wf.R` as `CV_MIN`.
+We can consieder **stable** (invariable) genes those with `CV < 0.1`. 
+In noisy contexts, the threshold can be scaled up to `CV < 0.2` or even to `CV < 0.5` (the standard deviation is half as large as the mean!).
+
+Another way to increase gene expression stability is to log-transform expression values, therefore detecting correlations only for highly variable genes.
+This behaviour is controlled by the `LOG_EXPR` variable customisable in `configure_wf.R`.
+
+</details> 
+[END EXPANDIBLE]: #
+
+
+1. Log-transformation of expression vallues depending on `LOG_EXPR =` `r LOG_EXPR`.
+    ```{r calcLog}
+    if (LOG_EXPR) {
+      matriz <- log2(x.filt$counts + 1) # add 1 to avoid log(0)
+      cat("Correlations will be calculated with logarithmic expression values\n")
+    } else {
+      matriz <- x.filt$counts
+      cat("Correlations will be calculated with decimal expression values\n")
+    }
+    ```
+
+
+2.  Removing files (genes) whose `CV <` **`r CV_MIN`**.
+    ```{r filtrado, results='hold', fig.show='hold'}
+    # calculating CVs
+    matriz_cv <- calculaVars(matriz)
+
+    # remove genes with CV < CV_MIN
+    matriz_cv_filt <- matriz_cv[matriz_cv$cv >= CV_MIN,]
+    tmpData <- matriz_cv_filt$cv
+    
+    # plot the distribution of CVs after removal
+    hist(tmpData,
+         breaks = 20,
+         ylab = "Frecuency",
+         xlab = "CV", 
+         main = paste0("Filtered by CV > ", CV_MIN))
+    
+    # remove needless variables
+    rm(tmpData, matriz_cv)
+    ```    
+
+
+3. Remove additional colums appended by `calculaVars()` used to filter genes. The resulting variable is `matriz_filt`.
+    ```{r matriz_filt}
+    # nos quedamos con las mismas columnas que tenía la 'matriz' original
+    matriz_filt <- as.matrix(matriz_cv_filt[,1:ncol(matriz)])
+    # remove needless variable since it has too many columns
+    rm(matriz_cv_filt) 
+    ```
+
+Result            | Total            | After CV > `r CV_MIN`
+:---              | ---:             | ---:
+Samples (columns) | `r ncol(matriz)` | `r ncol(matriz_filt)`
+Genes (files)     | `r nrow(matriz)` | `r nrow(matriz_filt)`
+
+
+## Correlations
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>calculating correlations</b></summary>
+
+The correlation matrix is calculated for the columns of a matrix or data frame.
+There are many R functions that can calculate it, but here you are two of them:
+
+* `cor()` from `stats` package calculates correlations very quickly, returning a matrix. If you want your results as a data frame, use `correlate()` from `corrr` package, that is a wrapper around `cor()`.
+* `cor.test()` also from `stats` package, also calculates the _P_ value of the test, which depends on the sample sizes and takes much more time. Alternatively, you can use `corr.test()` from `psych` package to obtain both _P_ and _adjusted P_ to monitor _multitesting_ issues.
+
+![](https://corrr.tidymodels.org/reference/figures/to-cor-df.png)
+
+Correlations will be plotted using function `corrplot()` from `corrplot` package or `corPlot()` from `psych`. 
+
+The most used method to calculate association between paired samples is Pearson, the Spearman and in some cases Kendall or MI [@Serin2016uw; @Emamjomeh2017tn]:
+
+* **Pearson**'s _r_ is the most popular correlation measure, although it assumes a linear correlation and normally distributed values, but it is sensitive to outliers. It measures the correlation between a pair of expression profiles.
+* **Spearman**'s $\rho$ rank correlation is more robust (less sensitive to outliers), but also less powerful than _r_ because it distributes values in ranges and looks for linear correlation between ranks. Useful when you have at least one qualitative variable.
+* **Kendall**'s $\tau$ is less powerful, but useful when all values are qualitative.
+* **Mutual Information** (MI) attempts to measure sthe tatistical dependence between two variables
+
+</details> 
+[END EXPANDIBLE]: #
+
+> **IMPORTANT:** Since all variables are quantitative, `pearson` method can be used, or you may prefer `spearman` to correlate tendencies (instead of linearity). 
+
+`r NOTE_bx` 
+  Since this step is only exploratory, no _P_ value will be calcuate to speed up the analysis.
+</div>
+
+
+1. Calculating sample correlations 
+    ```{r CorrSamples_r}
+    # default method is Pearson; it includes scaling
+    # rounding r to 3 decimals
+    corr_samples_r <- round(cor(matriz_filt, method=CORR_METHOD), digits = ROUND_dig)
+    ```
+
+2. Plotting correlations with _r_ values
+    ```{r corPlotting}
+    corPlot(corr_samples_r, 
+        diag = FALSE,
+        las = 2, 
+        scale = TRUE,
+        main = "Correlations between samples")
+    ```
+    
+
+3. Another correlation plot, where the circle size relates to _r_ and the color to the sign:
+    ```{r corrPlotBasic}
+    # other possible plots: https://r-coder.com/correlation-plot-r/
+    corrplot(corr_samples_r)
+    ```
+
+> **IMPORTANT:** If samples are correctly grouped, data are very coherent. However, even if samples apparently produce odd groups, this might be corrected after normalisation and differential expression (see next sections)
+
+
+## Grouping raw samples
+
+A good way to see if raw samples behave as expected respect to replicates and experimental conditions is to group them by similarity and then plot the result as a dendrogram. [Fundamentals of clustering will be given below](#clustering) ando also in <https://www.statology.org/hierarchical-clustering-in-r/>. You can also inspect some [clustering code](https://github.com/Statology/R-Guides/blob/main/hierarchical_clustering.R).
+
+
+1. The first representation is a dendrogram to inspect whether all samples are grouped by replicates in separate branches. 
+    ```{r dendrogram}
+    # clustering by sample as eculidean distances
+    hcols <- hclust(as.dist(1 - corr_samples_r), method = "complete") 
+    plot(hcols)
+    ```
+
+2. Let's group genes (rows) now by expression and mark groups by colours
+    ```{r geneclusters}
+    # clustering by gene
+    hrow <- hclust(as.dist(1-cor(t(matriz_filt), method=CORR_METHOD)), method="complete")
+    # Obtain discrete clusters
+    mycl <- cutree(hrow, h = max(hrow$height)/1.5)
+    # Give colours to clusters
+    mycolhc <- sample(rainbow(256))
+    mycolhc <- mycolhc[as.vector(mycl)]
+    ```
+
+
+3. Use both hierarchical clusters to construct a heatmap, but showing only the dendrogram of samples (the one of genes is very crowded).
+    ```{r heatmap}
+    heatmap.2(matriz_filt, 
+              dendrogram = "column", # no dengrogran for row/genes
+              Rowv = as.dendrogram(hrow), 
+              Colv = as.dendrogram(hcols),
+              # col = redgreen(150),
+              labRow = FALSE,
+              scale = "row", 
+              trace = "none",
+              key = TRUE,
+              key.title = "Colour scale",
+              ColSideColors = terrain.colors(length(hcols$labels)), 
+              RowSideColors = mycolhc)
+    ```
+
+> **IMPORTANT:** Samples should be grouped by replicates. 
+
+> **IMPORTANT:** If there are clusters of genes that clearly change their expression level between samples, a successful study can be expected.

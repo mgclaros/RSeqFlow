@@ -1,0 +1,366 @@
+---
+title: "`r PROJECT_NAME`"
+subtitle: "Using `r SOFT_NAME`; last code update on 29-VII-2022"
+author: "M. Gonzalo Claros & Amanda Bullones"
+date: "`r format(Sys.time(), '%A %d, %B %Y. %H.%M.%S')`"
+bibliography: Refs_RSeqFlow.bib
+biblio-style: default
+link-citations: true
+---
+
+```{r RmdSetup, include = FALSE}
+opts_chunk$set(echo = VERBOSE_MODE)
+
+# message(), warning() and stop() result in alert markdown text
+# https://www.r-bloggers.com/2017/06/pretty-errors-warnings-and-messages-in-r-markdown/
+# https://yihui.org/knitr/hooks/
+knitr::knit_hooks$set(
+   error = function(x, options) {
+     paste('\n\n<div class="alert alert-danger">',
+           gsub('##', '\n', gsub('^##\ Error', '***Error!*** ', x)),
+           '</div>', sep = '\n')
+   },
+   warning = function(x, options) {
+     paste('\n\n<div class="alert alert-warning">',
+           gsub('##', '\n', gsub('^##\ Warning:', '***Warning!*** ', x)),
+           '</div>', sep = '\n')
+   },
+   message = function(x, options) {
+     paste('\n\n<div class="alert alert-success">',
+           gsub('##', '\n', paste("***Success!*** ", "\n", x)),
+           '</div>', sep = '\n')
+   }
+)
+```
+
+
+# Environment setup
+
+```{r inLineAlertSetup, include = FALSE}
+# define ALERT BOXES with colours. 
+# Write </div> at the end of the sentence
+# they can also be defined as params: or launchend in render() as params=list(...)
+# blockquote
+# > IMPORTANT: Essential information required for user success
+# blue = Accessory information the user should notice even if skimming
+NOTE_bx <- "<div class='alert alert-info'>***NOTE:*** "
+# green = Optional information to help a user be more successful
+OK_bx <- "<div class='alert alert-success'>***SUCCESS!*** "
+# orange = Negative potential consequences of an action
+WARN_bx <- "<div class='alert alert-warning'>***CAUTION!*** "
+# red = Dangerous certain consequences of an action
+DANGER_bx <- "<div class='alert alert-danger'>***DANGER!*** "
+# expandible box, include </summary> and </details> at the end
+EXPAND_bx <- '<details  style="background-color: SeaShell; 
+                 border: 2px solid wheat;
+                 border-radius: 5px; 
+                 padding: 10px 10px 10px 10px;">
+<summary markdown="span" style="background-color: mintCream; 
+                 color: darkGreen; 
+                 padding: 3px 2px 3px 2px;">'
+```
+
+[Global links setup]: #
+
+[PCA]: https://builtin.com/data-science/step-step-explanation-principal-component-analysis "Pincipal components analysis"
+
+[MDS]: http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/122-multidimensional-scaling-essentials-algorithms-and-r-code/ "Multi-dimensional scaling"
+
+[edgeR]: http://www.bioconductor.org/packages/release/bioc/html/edgeR.html
+
+[edgeRUsersGuide]: https://www.bioconductor.org/packages/release/bioc/vignettes/edgeR/inst/doc/edgeRUsersGuide.pdf "Complete user's guide for edgeR"
+
+[limma]: http://www.bioconductor.org/packages/release/bioc/html/limma.html
+
+[GLM]: https://towardsdatascience.com/generalized-linear-models-9ec4dfe3dc3f "Generalised linear model"
+
+[NB]: https://bioramble.wordpress.com/2016/01/30/why-sequencing-data-is-modeled-as-negative-binomial/ "Negative binomial"
+
+[CPM]: https://www.reneshbedre.com/blog/expression_units.html "Counts per million reads"
+
+[CV]: https://statisticsbyjim.com/basics/coefficient-variation/ "Coefficient of variation"
+
+[good CV]: https://www.statology.org/what-is-a-good-coefficient-of-variation/
+
+[CV2]: https://stats.libretexts.org/Courses/Las_Positas_College/Math_40%3A_Statistics_and_Probability/03%3A_Data_Description/3.02%3A_Measures_of_Variation/3.2.01%3A_Coefficient_of_Variation "Coefficient of variation"
+
+[BCV]: https://www.bioconductor.org/packages/release/bioc/vignettes/edgeR/inst/doc/edgeRUsersGuide.pdf#2.9.2 "Biological coefficient of variation"
+
+[AHC]: https://online.stat.psu.edu/stat555/node/86/ "Agglomerative hierarchical clustering"
+
+[CTF]: https://github.com/krishnanlab/RNAseq_coexpression "Counts adjustment with TMM Factors"
+
+[BIC]: https://www.datanovia.com/en/lessons/model-based-clustering-essentials/ "Bayesian Information Criterion"
+
+[WSS]: https://data-flair.training/blogs/clustering-in-r-tutorial/ "within-cluster sum of square"
+
+[DE]: "Differential expression"
+
+[DEG]: "Differentially expressed gene"
+
+[GCN]: "Gene co-expression network"
+
+[FC]: "Fold change"
+
+[TMM]: "Trimmed Mean of M-values"
+
+[QLF]: "quasi-likelihood F-test"
+
+[MD plot]: "mean-difference plot"
+
+**`r SOFT_NAME`** is a R framework to:
+
+1. Read/construct a count table for RNA-seq mappings [@Wang2009]
+2. Quality control and gene filtering
+3. Normalisation using `TMM` and `CTF` [@Zhao2021wp; @Johnson2022fn]
+4. Differential expression using `limma/voom` and `treat()` from [edgeR] [@Oshlack2010; @Marioni2008; @Li2022cf].
+5. Correlation analyses for clustering with 3 algorithms [@Usadel2009su; @Serin2016uw]
+6. Co-expression networks, including hubs and subgraphs [@Parsana2019jm; @Sia2022]
+7. Outstanding gene profiles
+
+`r NOTE_bx`
+  `r okMsg`. You can use AS IS without any warrants.
+</div>
+
+| Environment variables        | Value |
+| :---- | :--- |
+| **Workflow** name and version | `r SOFT_NAME` v. `r VERSION_CODE` |
+| Run **date & time**           | `r HOY` |
+| **`r COMPUTER`**              | `r VERSION_R$platform` |
+| **R** version                 | `r VERSION_R$version.string` |
+| **BioConductor** version      | `r VERSION_BIOC` |
+| **User**                      | `r YO` |
+| PATH to **results**           | `r WD` |
+|                               |  |
+| **Customisable environment**: |  |
+| Packages update               | `r PKG_UPDATE` |
+| PATH to **code** files        | `r SOURCE_DIR` |
+| **Verbose** report            | `r VERBOSE_MODE` |
+
+
+Customised parameters           | Value
+:---| :---
+PATH to **data** files          | `r DATA_DIR`
+Data **files**                  | `r toString(DATA_FILES)`
+**Chars to remove** in file names | `r CHARS_TO_REMOVE`
+Columns to read                 | `r toString(COLUMNS_TO_READ)`
+**Exp. factors** by column      | `r  toString(EXP_FACTORS)`
+**Control** (reference)         | `r CTRL`
+First **treatment**             | `r TREAT`
+All **contrasts** to analyse    | `r toString(allContrasts)`
+**CPM** threshold               | `r MIN_CPM`
+**CV** threshold                | `r CV_MIN`
+**Fold-change** threshold       | `r FC` (**logFC = `r logFC`**)
+**P-value** threshold           | `r P`
+**LOG2** for correlations       | `r LOG_EXPR`
+**Optimal clusters**            | `r OPT_CLUST`
+**Min no. genes** in cluster    | `r MIN_GENES_PER_CLUSTER`
+**Kleinberg score** threshold   | `r MIN_KLEINBERG`
+ | 
+**Not configurable parameters**: | 
+**Decimal digits** for rounding  | `r ROUND_dig`
+**Correlation method**           | `r CORR_METHOD`
+**Correlation threshold**        | `r R_MIN`
+Maximal **node** count           | `r NODE_MAX`
+
+
+***
+
+
+# Load data
+
+Load data file(s) and convert it(them) in a `DGEList` object.
+
+```{r load_data, child='Rmds/10_Load.Rmd', eval=TRUE}
+```
+
+
+
+***
+
+# Gene filtering
+
+A living being with about 20 000 genes usually have only **9 000-20 000 genes** whose expressions worth analysing.
+
+```{r gene_filtering, child='Rmds/20_Filtering.Rmd'}
+```
+
+
+***
+
+# Raw sample similarities
+
+This is to show if original data already can group replicates in separate groups. This is based on correlation coefficient.
+
+```{r initial_corr, child='Rmds/30_InitialCorrelations.Rmd'}
+```
+
+
+
+***
+
+# Normalization
+
+```{r normalization, child='Rmds/40_Normalising.Rmd'}
+```
+
+***
+
+> **IMPORTANT:** `x.filt.norm` will be submitted to differential expression and `x.filt.ctf` to correlation and co-expression studies.
+
+***
+
+# Differential expression
+
+Differential expression (DE) of genes means that a gene is expressed differently in a series of biological conditions due to the process where different genes are activated in a cell, giving that cell a specific purpose that defines its function. 
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>differential expression methods</b></summary>
+
+Detecting [DE] is extremely important because it allows living organisms, including human beings, to grow and develop into complex, multicellular beings with different tissues, cells, and organs. Genes exhibiting DE are called **DEGs** (_differentially expressed genes_). [DEG]s can be selected using many algorithms based on the gene-expression _fold change_ (**FC**) and other statistical parameters. 
+
+There is no reliable method for differential expression in RNA-seq [@Rapaport2013]. However, the most reliable and widely used [DE] methods when a few replicates are available are those based in [DESeq2](https://www.bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html) and [edgeR] libraries. 
+
+</details> 
+[END EXPANDIBLE]: #
+
+The following steps are to reduce data dispersion, homogenise them around the mean, and adjust a linear model to obtain the most reliable [DEG]s.
+
+## Experimental design
+
+```{r exp_design, child='Rmds/50_Experiment.Rmd'}
+```
+
+```{r, include=FALSE}
+# mirar cómo incluir DESEQ2 a partir de RNAseq123 con Glimma
+# https://bioconductor.org/packages/release/bioc/vignettes/Glimma/inst/doc/DESeq2.html
+```
+
+
+## Data dispersion
+
+
+```{r disperssion, child='Rmds/60_Dispersion.Rmd'}
+```
+
+
+## Heteroskedasticity
+
+
+```{r calculate-GLM, child='Rmds/70_Heteroscedasticity.Rmd'}
+```
+
+
+## GLM: Generalised linear model
+
+Once we know that data `v.tmm` are less dispersed and homoskedastic, a GLM can be applied to obtain DEGs.
+
+
+```{r calculate-GLM, child='Rmds/80_GLM.Rmd'}
+```
+
+## Saving DEGs
+
+The complete set of parameters calculated for every gene, including the information about whether it is compatible or not with the model of every contrast (in other words, it it can be considered a [DEG]) will be saved.
+
+```{r savingDEGs, child='Rmds/90_SaveDEGs.Rmd'}
+```
+
+
+***
+
+
+# Clustering {#clustering}
+
+From the complete set of genes, the most significant ones should be selected for correlation and co-expression analysis. As [previously indicated](#normBkg), [CTF] normalisation is more appropriate than [TMM] for clustering and co-expression analyses [@Johnson2022fn], and this is why dataset including `ctf` will be preferred.
+
+```{r clustering, child='Rmds/100_FinalFilterScale.Rmd'}
+```
+
+
+## AHC of samples
+
+A matrix can be grouped by columns (***samples***: one per experimental condition or factor) or by rows (genes). The total number of experimental conditions (factors) is much lower than the number of genes, so there is not computational problem on this. Clustering samples can serve to discern if replicates cluster together, and if different factor (conditions) produce different clusters.
+
+`r NOTE_bx`
+  As a rule, the number of clusters should be the number of different experimental conditions.
+</div>
+
+```{r AHC-sampl-clust, child='Rmds/110_SampleClusters.Rmd'}
+```
+
+
+## AHC of genes
+
+Clustering genes can serve to know genes that behave similarly, and this can be interpreted as co-expressed or co-regulated genes belonging to the same or related biological process or pathway. In any RNA-seq experiment, the number of genes (_rows_) is much higher than the number of columns (samples) by far, so there is a computational constraint that requires the elimination of _stable_ genes to reduce computation. This is the reason of the [filtering performed above](#filtering).
+
+```{r AHC-gene-clust, child='Rmds/120_GeneClustering.Rmd'}
+```
+
+
+## K-means of genes
+
+```{r kmeans-genes-clust, child='Rmds/130_kmeans.Rmd'}
+```
+
+
+## Model-based clustering
+
+```{r mbc-genes-clust, child='Rmds/140_model-based.Rmd'}
+```
+
+
+***
+
+
+# Profiling gene clusters
+
+To see the behaviour of clusters with respect to samples using the `aggregate()` function to calculate the mean for each cluster in each sample.
+
+```{r profiles, child='Rmds/150_ExpressProf.Rmd'}
+```
+
+
+***
+
+# Networking
+
+```{r networks, child='Rmds/160_Networks.Rmd'}
+```
+
+
+***
+
+# Outstanding genes
+
+```{r outsprofs, child='Rmds/170_Outstanding.Rmd'}
+```
+
+
+***
+
+# References
+
+<div id="refs"></div>
+
+> You can change the [csl style](https://github.com/citation-style-language/styles) for references
+
+
+***
+
+# Information about this session
+
+```{r tiempo_total, results='hold', echo=FALSE}
+# T00 calculated in execute_wf.R
+Tff <- proc.time() # final time
+T_total <- Tff - T00
+```
+
+Elapsed time: **`r round(T_total[[3]]/60, digits = 2)` min**.
+
+```{r sessionInfo, results='hold', echo=FALSE}
+cat("Variables in memory:\n")
+ls()
+cat("\n")
+sessionInfo()
+```

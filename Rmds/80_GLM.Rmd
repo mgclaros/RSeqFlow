@@ -1,0 +1,278 @@
+### About GLM {#aboutGLMs}
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>GLMs and RNA-seq</b></summary>
+
+[DE] parametric tests require methods based on [binomial negative][NB] generalized linear models that take advantage of the estimates of dispersion and logarithmic fold changes, their main issue being the false positive. This issue has been recently investigated [@Li2022cf] for the most popular methods based on parametric distributional assumptions `DESeq2` and [edgeR], as well as `limma-voom`, `NOISeq`, `dearseq` and Wilcoxon rank-sum test. The only method that maintains the FDR control is the Wilcoxon rank-sum test, while `DESeq2` and `edgeR` sometimes exceed 20% of false positives, a rate that increases with the number of samples since they are very affected by the existence of outliers. In extreme cases, `DESeq2` and  `edgeR` had only an 8% overlap in the DEGs they identified. 
+
+`r NOTE_bx`
+The recommendation of [@Li2022cf] is to **use non-parametric Wilcoxon rank-sum test with large sample sizes**, with _large_ meaning $>10$ samples per experimental condition, since it is **more robust to outliers**. The Wilcoxon test developed in 1956 [@WILCOXON1946wa] is also known as the Mann-Whitney test, developed in 1947 [@Mann-Withney1947]. Wilcoxon rank-sum test is known to be **powerful for skewed distributions**, as is the case with gene expression counts measured by RNA-seq.
+</div>
+
+Non-parametric approaches, such as `NOISeq` `SAMseq` or the Wilcoxon test require more replicates (usually 5 or more) than parametric methods (usually 3, but some of them can work with only 1 replicate [@GonzalezGayte2017]). The most frequent case when studying non-model species is that the number of replicates per experimental condition is not so high (usually 3 or less than 5) that allows a non-parametric study. Therefore, the parametric analysis that provides the best results in the recent study of @Li2022cf is the **combination of `limma + voom`** (very similar to the `limma-trend`). This [GLM] approach is an extension of classical linear models to [non-normally distributed response data](https://online.stat.psu.edu/stat504/lesson/6/6.1) (including linear regression, logistic regression and Poisson regression) [@Nelder1972GLM], where `glm()` is used to fit [GLM]s on the variable whose heteroskedascity has been corrected, while `lm()` is used to fit linear models (regression, and analysis of variance and covariance). 
+
+Typically, any linear model imply the [following assumptions](https://www.r-bloggers.com/2021/10/simple-linear-regression-in-r/):
+
+* **Log-linearity**: a straight line between the log values of _x_ and _y_ (a constant change in a predictor leads to a constant change in the response variable); in terms of gene expression, the response variable _y_ is assumed to follow an exponential family distribution with _mean_ ($\mu$).
+* **Homoskedasticity**: noise hase the same variance along the variables.
+* **Normality**: noise is normally distributed.
+* **Independence**: error is independent of variables and does now follow a gaussian/normal distribution.
+
+Independently of the sample size, violation of these parametric assumptions would lead to ill-behaved _P_-values and likely failed FDR control [@BenjaminiHochberg1995ps]. Obtaining [DEG]s using [edgeR] and [limma] libraries can be addressed by three different parametric approaches:
+
+* **Exact _t_-test** is based on the Student's _t_-test [@Robinson2008ro] for a difference in mean between two groups of negative binomial random variables. It depends on [`exactTest()` function](https://www.r-bloggers.com/2020/09/exact-tests-and-plots-with-edger-basic-differential-expression-analysis/). It is rapid and easy-to-do, but **many false positive**s are obtained, as revealed by [@Li2022cf].
+* **Quasi-likelihood F-tests (QLF)** performs the quasi-likelihood (QL) F-test [@Lund2012; @Lun2016] based on [GLM], with some enhancements and slight differences on trend and FDR methods. In fact, it performs a _genewise negative binomial generalized linear model with quasi-likelihood tests_ with `glmQLFit()` (preferred over `glmLRT()`) and `glmQLFTest()` (or the more rigurous `glmTreat()`) functions. Since they provide the most accurate type I error control and adds a bayesian squeezing of data from [limma] package, the results are better than exact tests for RNA-seq under the assumption that genes should exhibit a [binomial negative][NB] distribution, as [indicated above](#binomialNegative).
+* A pure **generalized linear model (GLM)** based on `lmFit()` and `eBayes()`, or even better `treat()`, that gives the **lowest number of false positives** [@Law2014tt; @Li2022cf].
+
+Benefits of the `limma + voom` approach combimed with `treat()` function are the following:
+
+1. production of accurate results for RNA-seq [@Law2014tt; @Li2022cf];
+2. resilience for unequal library sizes [@Law2014tt];
+3. dealing with outliers better than other parametric approaches [@Soneson2013];
+4. exacerbation of experimental errors when normalisation is based on less suitable adjustments, such as RPKM, CPM or TMP instead or [TMM].
+
+Taking all the above together explains why this `r paste(SOFT_NAME, VERSION_CODE)` script is based only on `limma + voom` [GLM].
+
+</details> 
+[END EXPANDIBLE]: #
+
+
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about the <b>empirical Bayes moderation</b> in RNA-seq</summary>
+
+An indicated above, both exact _t_-test and [QLF] produce an unwanted number of false positives, while `limma + voom` [GLM] provides more reliable results by means of the following functions:
+
+* `lmFit()`, that fits a linear model by weighted or generalized least squares for each gene given a series of data matrices corresponding each one to a different sample.
+* `contrasts.fit()`, that computes estimated coefficients and standard errors for a given set of contrasts for a linear model fit using `lmFit()`. The idea of this function is to fit a full-rank model to obtain coefficients and standard errors for any number of contrasts.
+* `eBayes()` for the fitted model, computing moderated _t_-statistics, moderated _F_-statistic, and log-odds of differential expression by empirical Bayes moderation. This is to compensate the few replicates usually available in RNA-seq experiments, as explained [above](#aboutGLMs) and in the background about [data dispersion](#binomialNegative).
+
+But this approach is highly dependent on _P_ values, that are misused in many cases.
+
+</details> 
+[END EXPANDIBLE]: #
+
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>the usual misinterpretation of <i>P</i>-values</b></summary>
+
+The American Statistical Association (ASA) is claiming the proper use and interpretation of the _P_-value highlighting that **scientific conclusions should not be based only on whether a _P_-value passes a specific threshold since, by itself, a _P_-value does not provide a good measure of evidence regarding a model or hypothesis**. Moreover, since associating statistically significant findings with $P < 0.05$ (as arbitrarily introduced by Ronald Fisher in 1925) results in a **high rate of false positives**, the ASA also recommends that **declarations of _statistical significance_ should be abandoned** since statistical significance was never meant to imply scientific importance [@Wasserstein2019]. The situation is so worrying that some authors claim that most published research findings are false [@Ioannidis2005ud] or biased [@Altman2017mv]. Hence, Amrhein [@Amrhein2019]  asserts that:
+
+* Never conclude there is _no difference_ or _no association_ just because $P < 0.05$ because a confidence interval includes zero. 
+* Never conclude that two studies conflict because one had a statistically significant result and the other did not.
+* _P_-values should be given with a precise value ($P = 0.021$), without adornments such as stars, and not as binary inequalities (~~$P < 0.05$~~)
+
+![Beware false conclusions](https://media.nature.com/lw800/magazine-assets/d41586-019-00857-9/d41586-019-00857-9_16551622.jpg)
+It is obvious that all statistics naturally vary from study to study and can lead to large disparities in _P_-values, far beyond falling just to either side of the 0.05 threshold (see the image above). Therefore, we must consider **uncertainity** and, for example, rename _confidence intervals_ as _compatibility intervals_ to transmit the idea that all the values between the interval's limits are reasonably compatible with the data. Hece, because the interval gives the values most compatible with the data, it doesn't mean values outside it are incompatible: they are just less compatible
+
+**Possible solutions**: 
+
+If researchers have to discard statistical significance, what should they do instead?
+
+1. Many authors suggest to change to $P < 0.005$ or include a Bayesian perspective to improve the reproducibility [@Benjamin2018sj], but the main disadvantage is the enormous false negative results that it gives. 
+2. Others propose to at least avoid _dichotomisation_ (significant vs. non-significant) [@Amrhein2019] and learn to deal with uncertainty. 
+3. One of the best proposal to mitigate _P_-value misuse is that they must be integrated with secondary results to arrive at valid conclusions [@Lu2015wd]. In the case of RNA-seq, the secondary result is the **expression fold-change**.
+4. The last proposal is in agreement to the idea that researchers should seek to analyse data in multiple ways to see whether different analyses converge on the same answer [@Nature2019].
+
+</details> 
+[END EXPANDIBLE]: #
+
+
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>using `treat()` to circumvent <i>P</i>-value issues`</b></summary>
+
+In the context of avoiding fixed _P_-values and the use of expression fold-change as the second endopoint for differential expression, [edgeRUsersGuide] proposed to use `treat()`, that tests whether the true log2-fold-change is greater than `FC` in absolute value [@McCarthy2009oo]. As a result, `treat()` is a more rigorous and conservative alternative to `eBayes()`. This `treat()`-based approach is also known as the **limma-trend method** [@Law2014tt] in which, instead of testing for genes that have true log-fold-changes different from zero, it is tested whether the true log2-fold-change is greater than the used defined `FC` and `P` values [@Law2016yj].
+
+When the number of DEGs is large, `treat()` is often useful for giving preference to larger `FC`  and for **prioritising genes that are biologically important**. Note that the `FC` threshold is not the minimum value of the fold-change expected to qualify a [DEG]. [DEG]s will need to exceed this threshold by some way before being declared statistically significant. It is better to interpret the `FC` threshold as _the fold-change below which we are definitely not interested in the gene_ rather than ~~the fold-change above which we are interested in the gene~~.
+
+`r NOTE_bx`
+`FC` threshold for `treat()` must be relatively small because genes need to have FCs substantially greater than defined threshold. Typical threshold is $FC = 1.2$ (or even 1.1 or 1.5) to the purpose of prioritising genes with larger fold-changes. Therefore:
+
+* $FC = 2$ is considered **high** and counter productive.
+* When $FC = 1$, `treat()` is identical to `eBayes()`.
+</div>
+
+In the presence of a huge number of DEGs, a relatively large `FC` threshold may be appropriate to narrow down the search to genes of interest. In the lack of DEGs a small or even no fold-change threshold shall be used.
+
+Note that the cutting threshold of `FC` will vary depending on the counts and more statistics. Use `topTreat()` to examine genes analysed using `treat()`. 
+
+</details> 
+[END EXPANDIBLE]: #
+
+`r NOTE_bx`
+The above discussion reflects that changes in thresholds for `FC` and `P`, the statistic approach and even the RNA integrity affects the differential expression of any transcribed RNA (messanger, non-coding, etc.), and may exhibit significant differences [@Lu2022md; @Spies2019mx]. Fortunately, the functional enrichment analysis of the [DEG]s was significantly consistent and identified regular characteristics of samples. Hence, functions instead of genes must be the main source of interpretations when the statistic approach is not the best performing one [@Lu2022md; @Spies2019mx].
+</div>
+
+### Performing GLM
+
+Homoskedastic GLM-fitted values will be analysed with `eBayes` to produce `xxxx.eB` variables, and with `treat()` to produce `xxxx.treat` variables.
+
+```{r GLM-eBayes}
+v.tmm.fit <- lmFit(v.tmm, design)
+v.tmm.fit <- contrasts.fit(v.tmm.fit, contrasts = contr_matrix)
+# using the classical eBayes()
+v.tmm.fit.eB <- eBayes(v.tmm.fit)
+# using the adjusted treat()
+v.tmm.fit.treat <- treat(v.tmm.fit, lfc = logFC)
+
+# remove needless variables
+rm(v.tmm.fit)
+```
+
+## Resulting DEGs
+
+Let's have an overview of DEGs per contrast depending on the `eBayes()` or `treat()` analysis based on the `decideTests()` function with the configured `P` and `FC` thresholds, [as recommended above](#aboutGLMs), that qualifies genes in each contrast as:
+
+* **NotSig** (`0`): not-significant expression change
+* **Down** (`-1`): genes <span style="color:blue">down-regulated</span> in the contrast
+* **Up** (`+1`): genes <span style="color:red">up-regulated</span> in the contrast
+
+Although using the default `method = separate` makes function is equivalent to `topTable()` (that will be used for saving [DEG]s) but less stringent.
+
+```{r DEGs-ebayes-treat}
+# NotSig, Down and Up variables from decideTests() will be used to colour plots
+status.eB <- decideTests(v.tmm.fit.eB, p.value = P, lfc = logFC)
+status.treat <- decideTests(v.tmm.fit.treat, p.value = P, lfc = logFC)
+
+# join per rows the summary tables of eBayes and treat, with an intermediate title 
+tmp <- rbind(EBAYES="", summary(status.eB), TREAT="", summary(status.treat))
+# display the summary table
+kable(as.data.frame(tmp), align ="r", caption = "Orientative number of DEGs per contrast depending on eBayes() and treat() functions")
+```
+
+```{r old-DEGs-ebayes-treat, include=FALSE, eval=FALSE}
+# dt.norm2 <- decideTests(v.tmm.fit.eB, p.value = P, lfc = logFC)
+# this is now status.eB
+t1 <- as.data.frame(summary(status.eB))
+t2 <- as.data.frame(summary(status.treat))
+# construye un dataframe con los resultados con P, FC por eBayes y treat
+t3 <- cbind(t1, t2[,3])
+colnames(t3) <- c("Expression", "Contrast", "eBayes()", "treat()")
+
+# display the summary table
+kable(t3, align ="lcrr")
+```
+
+
+## MD plots
+
+A mean-difference plot ([MD plot]) is a representation of log2-intensity ratios (differences) versus log2-intensity averages (means). It is equivalent to [MA plot](https://en.wikipedia.org/wiki/MA_plot) from microarrays. Thresholds for `P` and `FC` lined to clearly see <span style="color:blue">down-regulated</span> genes in <span style="color:blue">**blue**</span>, while <span style="color:red">up-regulated</span> genes are in <span style="color:red">**red**</span>.
+
+### Global plot
+
+Let's see the global aspect of DEGs.
+
+```{r MDplotx3, fig.width=4.5, fig.height=5, out.width=c('50%', '50%'), fig.show='hold'}
+plotMD(v.tmm.fit.eB, 
+       status = status.eB, 
+       hl.cex=0.5,
+       main = "DEGs by eBayes()")
+# mark logFC cutoffs
+abline(h = c(-logFC, logFC), col = "magenta")
+
+plotMD(v.tmm.fit.treat, 
+       status = status.treat, 
+       hl.cex=0.5,
+       main = "DEGs by treat()")
+# mark logFC cutoffs
+abline(h = c(-logFC, logFC), col = "magenta")
+```
+
+> **IMPORTANT!**: DEGs obtained with `treat()` must be a subset of those obtained by `eBayes()`.
+
+```{r Compare-DEGs-tr_eB}
+# create vector of gene IDs to compare
+degs.ebayes <- which(rowSums(abs(status.eB)) > 0)
+degs.treat <- which(rowSums(abs(status.treat)) > 0)
+# gather vectors in a single list with *named* elements
+venn.list <- list(DEGs_eBayes = degs.ebayes, 
+                    DEGs_treat = degs.treat)
+
+# construct a nice Venn diagram
+gv <- ggvenn(venn.list,
+       fill_color = c("#0073C2FF", "#EFC000FF", "#868686FF", "#CD534CFF"),
+       show_percentage = TRUE,
+       stroke_size = 0.5, 
+       set_name_size = 3,
+       text_size = 3) +
+    ggtitle("Total DEGs for eBayes() and treat()") +
+    theme(plot.margin = margin(t = 0, r = -2, b = -2, l = -2, unit = "cm"))
+# remove needless variables
+rm(degs.ebayes, degs.treat, venn.list)
+# show Venn diagram
+gv
+```
+
+### Plots per contrasts
+
+Now let's see the differences of DEGs depending on the `eBayes()` and `treat()` methods.
+
+```{r DEGsPerContrast, fig.width=4.5, fig.height=5, out.width=c('50%', '50%'), fig.show='hold'}
+# a variable for the number of contrasts to study.
+NUM_CONTRASTS <- length(allContrasts)
+i <- 1
+for (i in 1:NUM_CONTRASTS) {
+  # plot for eBayes
+  plotMD(v.tmm.fit.eB, 
+         column = i,
+         status = status.eB[ ,i], 
+         main = paste0("eBayes() - ", colnames(v.tmm.fit.eB)[i]),
+         xlim = c(-8, 12), 
+         ylim = c(-10, 10),
+         hl.cex=0.5)
+  # mark logFC cutoffs
+  abline(h = c(-logFC, logFC), col = "magenta")
+
+  # plot for treat
+  plotMD(v.tmm.fit.treat, 
+         column = i,
+         status = status.treat[ ,i], 
+         main = paste0("treat() - ", colnames(v.tmm.fit.treat)[i]),
+         xlim = c(-8, 15), 
+         ylim = c(-10, 10),
+         hl.cex=0.5)
+  # mark logFC cutoffs
+  abline(h = c(-logFC, logFC), col = "magenta")
+}
+```
+
+
+
+```{r venn1, include=FALSE, eval=FALSE}
+# Venn diagrams comparying the ebayes/treat results of contrasts
+num_cols <- 2
+num_rows <- ceiling(num_contrast/num_cols)
+
+i <- 1
+venn_groups <- list()
+gv_list <- list()
+for (i in 1:num_contrast) {
+  thisContrast <- colnames(status.eB[ ,i])
+  degs.ebayes <- which(status.eB[, i] != 0)
+  degs.treat <- which(status.treat[, i] != 0)
+
+  # creamos la lista de vectores a comparar
+  venn.list <- list(DEGs_eBayes = degs.ebayes, 
+                    DEGs_treat = degs.treat)
+  
+  # nice Venn plot
+  gv_list[[thisContrast]] <- ggvenn(venn.list,
+       fill_color = c("#0073C2FF", "#EFC000FF", "#868686FF", "#CD534CFF"),
+       show_percentage = TRUE,
+       stroke_size = 0.5, 
+       set_name_size = 3,
+       text_size = 3) +
+    ggtitle(thisContrast) +
+    theme(plot.margin = margin(t = 0, r = -1, b = -1, l = -1, unit = "cm"))
+  
+  # guardar los conjuntos de cada parte
+  venn_groups[[thisContrast]] <- venn(venn.list,
+                                 show.plot = FALSE,
+                                 intersections = TRUE)
+}
+
+# alternative, with an additional label
+# ggarrange(plotlist= gv_list, labels = names(gv_list), nrow = num_rows, ncol = num_cols)
+grid.arrange(grobs = gv_list, ncol = num_cols)
+```

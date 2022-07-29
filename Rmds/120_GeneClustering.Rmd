@@ -1,0 +1,333 @@
+
+### Gene distances
+
+Scaled gene expresions (row) will be transformed on distances using `dist()` with the `euclidean` method that do not requires matrix transposition. Transposition is only required if row (gene) correlations are required.
+
+> **REMEMBER**:   Distances are variables starting by `d`.
+
+
+```{r distances}
+d_ctf_genes <- dist(m.ctf.std, method = "euclidean")
+d_tmm_genes <- dist(m.tmm.std, method = "euclidean")
+```
+
+### Gene linkage
+
+Let's use again `agnes()` within our function `CalcAgglomCoef()` to obtain the **best linkage method** for genes. In contrast to sample linkage, the scaled matrix does not need any transposition.
+
+```{r bestClustMethGenes, results='hold'}
+# the distance matrix is not transposed now
+# genes for CTF
+ac_ctf_genes <- sapply(meth, CalcAgglomCoef, df = m.ctf.std)
+# genes for TMM
+ac_tmm_genes <- sapply(meth, CalcAgglomCoef, df = m.tmm.std)
+
+best_meth_ctf <- names(ac_ctf_genes[ac_ctf_genes == max(ac_ctf_genes)])
+best_meth_tmm <- names(ac_tmm_genes[ac_tmm_genes == max(ac_tmm_genes)])
+
+message("The best clustering method for **genes** in CTF is: **", best_meth_ctf, "**\n", 
+        "The best clustering method for **genes** in TMM is: **", best_meth_tmm, "**")
+```
+
+
+Clustering using the best linkage method determined above. The `hclust` objects are `HC_??` variables
+
+```{r hclust-genes}
+HC_ctf_clust = hclust(d_ctf_genes, method = best_meth_ctf)
+HC_tmm_clust = hclust(d_tmm_genes, method = best_meth_tmm)
+```
+
+### Gene dendrograms
+
+There are many ways to [plot dendrograms](http://sthda.com/english/wiki/beautiful-dendrogram-visualizations-in-r-5-must-known-methods-unsupervised-machine-learning#plot.dendrogram-function). Here it is the simpler one:
+
+
+```{r dendrogram-genes, fig.width=6, fig.height=6, out.width=c('50%', '50%'), fig.show='hold'}
+dendr_genes_ctf <- as.dendrogram(HC_ctf_clust)
+plot(dendr_genes_ctf, main = "Dendrogram of CTF", leaflab = "none") # without gene names
+dendr_genes_tmm <- as.dendrogram(HC_tmm_clust)
+plot(dendr_genes_tmm, main = "Dendrogram of TMM", leaflab = "none")
+```
+
+> **IMPORTANT**: Both dendrograms are nearly identical usually. Therefore, only CTF-transformed data will be used to cluster genes.
+
+
+### How many gene clusters? {#bestgeneclusterk}
+
+In contrast to samples, where the number of clusters expected should be the number of different factors (experimental conditions), the number of clusters that can be formed with genes requires some evaluation.
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>optimal number of clusters</b></summary>
+
+The [optimal number of clusters](https://www.r-bloggers.com/2021/04/cluster-analysis-in-r/) is somehow subjective and depends on the method used for measuring similarities and the parameters used for partitioning. To determine how many clusters the observations should be grouped in, the total intra-cluster variation for different values of _k_ with their expected values for a distribution with no clustering will be compared. This can be performed in several ways:
+
+1. Using several **orientative plots** where visual inspection or subjective decisions are required:
+
+  * ***Scree plot*** as a result of the _elbow method_ that minimses the [WSS] (_Within Sum of Squares_). [WSS]  that measures the compactness of the clustering and we want it to be as small as possible. The number of clusters `k` that adding another cluster `k + 1` does not improve much better the total [WSS] will be considered the opimum _k_. You can also see the optimal number of clusters as the one that appears to be the bend in the knee. The main issue is that it is sometimes ambiguous or subjective.
+  * Using the ***GAP statistic*_*** [@Tibshirani2002] that compares the total intra-cluster variation for different values of _k_ with their expected values under null reference distribution of the data. The idea is to obtain the highest gap statistic as the number of ideal clusters. It can be done using the `clusGap()` function from the `cluster` package. `clusGap()` calculates a goodness of clustering measure via bootstrapping by means of the `gap` statistic. The bootstrapping is set to `B = 50` for practical purposes (after 500 bootstraps, the result will not change, but is too long). A plot of clusters vs. gap statistic using the `fviz_gap_stat()` function shows the result. We have developed the function `ExtractFirstMax()` to obtain this optimal _k_.
+  * The ***silhouette method*** has been used above to inspect the contribution of samples to sample clusters. But the average silhouette approach determines how well each observation (_gene_) lies within its cluster for a wide range of _k_: a high average silhouette width indicates a good clustering and can provide the best number of clusters.
+
+2. A method **based on 30 metrics** can be obtained using `NbClust()` function from the `NbClust` package. Using the parameter `index = "all"` is very quick but uses only 26 metrics, excluding GAP. The complete set is more time-consuming and requires to change the function call with  with `index = "alllong"`.
+
+3. **Dynamic clustering** includes a [novel dynamic branch cutting methods](https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/WORKSHOP/2014/Langfelder-NetworkDay-clustering.pdf) for detecting clusters in a dendrogram depending on their shape [@Langfelder2008tf], instead of using constant height cutoff methods (as performed  by `cutree()` function): it launches several clustering methods to perform an adaptive branch pruning of hierarchical clustering dendrograms. It also uses a minimal number of genes per cluster (by default is `20`) to avoid very small clusters, giving better detection of outliers. It is implemented in `dynamicTreeCut` package implements  
+
+The three cases will be shown here, but only the second and the third will be considered to obtain the optimal number of clusters _k_.
+
+</details> 
+[END EXPANDIBLE]: #
+
+It requires a matrix of scaled and filtered genes: `m.ctf.std` and maybe `m.tmm.std`.
+
+#### Orientative plots
+
+For the scree plot, [WSS] is calculated on-the-fly. Then, `clusGap()` is used to determine the gap statistic that can be plotte with `fviz_gap_stat()`. The third plot uses `fviz_nbclust()` to directly calculate the distances, linkage and average silhouette.
+
+```{r orientativePlots, fig.width=5, fig.height=6, out.width=c('33%', '33%', '33%'), fig.show='hold'}
+# scree plot
+wss <- (nrow(m.ctf.std) - 1) * sum(apply(m.ctf.std, 2, var))
+for (i in 2:20) wss[i] <- sum(kmeans(m.ctf.std, centers = i)$withinss)
+plot(1:20, wss, type="b", 
+     xlab="Number of clusters k", ylab="Within groups sum of squares", 
+     main = "Scree plot")
+
+# calculate gap statistic for each number of clusters
+gap_stat <- clusGap(m.ctf.std, 
+                    FUN = hcut,    # change for kmeans when k-means are analysed
+                    nstart = 25, 
+                    K.max = 10,   # the number of clusters evaluated
+                    B = 50)       # the number of Monte Carlo (“bootstrap”) samples
+
+# plot of clusters vs. gap statistic
+fviz_gap_stat(gap_stat) + labs(subtitle = "Gap statistic for hcut")
+
+# Average silhouette statistics
+fviz_nbclust(m.ctf.std, hcut, method = "silhouette") + labs(subtitle = "Average silhouette")
+```
+
+It can be obtained an **orientative cluster number** _k_ in `orientative_k` locating the first maximum in the gap statistic using our function `ExtractFirstMax()`. And then, genes can be assigned to clusters. 
+
+```{r optimalNumcluster}
+orientative_k <- ExtractFirstMax(gap_stat$Tab[,3])
+message("**Orientative** number of clusters for **genes: ", orientative_k, "**")
+
+# cut the tree by orientative_k
+groups_orient <- cutree(HC_ctf_clust, k = orientative_k)
+kable(t(as.data.frame(table(groups_orient))), caption = "Groups using the orientative k")
+```
+
+#### Best-of-30
+
+The **optimal cluster number** `k_30` can be calculated with a longer method based on 26 (`index = "all"`) metrics to be sure that the selected value is supported by most methods, not only one. Severla plots and messages are generated during the evaluation.
+
+```{r k-30}
+# calculation the opt of k_30
+nb <- NbClust(m.ctf.std, 
+              distance = "euclidean", 
+              min.nc = 2,  # min_nc: minimal number of clusters
+              max.nc = 10, # max.nc: maximal number of clusters
+              index = "all", # only 26. The 30 are calculated with alllong
+              method = best_meth_ctf)
+
+# graphical representation
+fviz_nbclust(nb)
+```
+
+To assign the `k_30` value and the groups formed, the `nb` variable is inspected. A final message with the result is provided.
+
+```{r}
+# the best k is the máx cluster indentifier of genes in $Best.partition
+groups_30 <- nb$Best.partition
+k_30 <- as.integer(max(names(table(groups_30))))
+message("**Optimal** number of clusters for **genes** analysing 30 methods is: **", k_30, "**")
+
+kable(t(as.data.frame(table(groups_30))), caption = "Groups using the best-of-30 k")
+```
+
+
+#### Dynamic clustering
+
+The `dynamicTreeCut` package contains `cutreeDynamic()` function to perform this clustering. An important setting is the the minimal number of genes per clusters defined in `MIN_GENES_PER_CLUSTER` from `configure_wf.R`. This value will be passed to `minClusterSize`. The number of clusters will be stored in `dynamic_k`, and the genes per cluster in `group_dynamic`.
+
+```{r dynamic-k}
+group_dynamic <- cutreeDynamic(dendro = HC_ctf_clust, 
+                               distM = as.matrix(d_ctf_genes), 
+                               minClusterSize = MIN_GENES_PER_CLUSTER)
+# restore gene(row) names
+names(group_dynamic) <- HC_ctf_clust$labels
+
+# determine k regarding if 0 (genes not clusterizables) is present in group_dynamic
+dynamic_k <- ifelse((names(table(group_dynamic))[1] != 0), length(table(group_dynamic)), length(table(group_dynamic)) - 1)
+
+message("DYNAMIC number of clusters for **genes**: **", dynamic_k, "**")
+
+kable(t(as.data.frame(table(group_dynamic))), caption = "Groups using the dynamic approach of k")
+```
+
+
+### Comparing AHC clusters
+
+Let's compare the number of clusters and the number of genes in each cluster obtained by the different methods. First of all, let's see the results as **pie plots**:
+
+```{r pie-plot all, fig.width=4, fig.height=4, out.width=c('33%', '33%', '33%'), fig.show='hold'}
+t_groups <- table(groups_orient)
+piecolours <- brewer.pal(orientative_k, "Spectral")
+pie(t_groups, 
+    col = piecolours,
+    labels = paste("Cluster", names(t_groups)), 
+    main = "Orientative clusters")
+
+t_groups <- table(groups_30)
+piecolours <- brewer.pal(k_30, "Spectral")
+pie(t_groups, 
+    col = piecolours,
+    labels = paste("Cluster", names(t_groups)), 
+    main = "Best-of-30 clusters")
+
+t_groups <- table(group_dynamic)
+piecolours <- brewer.pal(dynamic_k, "Spectral")
+pie(t_groups, 
+    col = piecolours,
+    labels = paste("Cluster", names(t_groups)), 
+    main = "Dynamic clusters")
+```
+
+Then, let's construct and plot the **dendrograms** based on each _k_-detection method:
+
+1. Dendrogram for orientative _k_
+
+    ```{r dendro-orient-k, fig.width=6, fig.height=4, fig.align='center'}
+    # cut the dendrogram by k
+    HC_grouped <- hcut(d_ctf_genes, k = orientative_k)
+    fviz_dend(HC_grouped,     # ¿o HC_ctf_clust?
+              main = "Using orientative k",
+              show_labels = FALSE, 
+              cex = 0.5,            # label size
+              k_colors = "jco",   # accepts RColorBrewer and ggsci sets
+              color_labels_by_k = TRUE, # color labels by groups
+              rect = TRUE, # Add rectangle around groups
+              rect_fill = TRUE,
+              rect_border = "jco",
+              horiz = FALSE,        # produce horizontal dendrogram?
+              as.ggplot = TRUE)
+    ```
+
+2. Dendrogram for best-of-30:
+
+    ```{r dendro-best-30, fig.width=6, fig.height=4, fig.align='center'}
+    # dendrogram plot using eclust() instead of hclust() because eclust() is prepared for ggplot
+    HC_30 <- eclust(m.ctf.std, "hclust", 
+                     k = k_30, 
+                     hc_metric = "euclidean",
+                     hc_method = best_meth_ctf, 
+                     graph = FALSE)
+    fviz_dend(HC_30, 
+              main = "Using k_30",
+              show_labels = FALSE, 
+              cex = 0.5,            # label size
+              k_colors = "Dark2",   # accepts RColorBrewer and ggsci sets
+              color_labels_by_k = TRUE, # color labels by groups
+              rect = TRUE, # Add rectangle around groups
+              rect_fill = TRUE,
+              rect_border = "Dark2",
+              horiz = FALSE,        # produce horizontal dendrogram?
+              as.ggplot = TRUE)
+    ```
+
+3. Dendrogram for dynamic k:
+
+    ```{r plotHCdyn, fig.width=8, fig.height=5, fig.show='hold', fig.align='center'}
+    # dendrogram for these clusters
+    dyn_cols <- brewer.pal(dynamic_k, "Spectral")
+    # dendr_genes_ctf is the dendrogram of HC_ctf_clust
+    plot(HC_ctf_clust, main = "Boxing dynamic clusters", cex = 0.2)
+    # Draw rectangles for clusters
+    rect.hclust(HC_ctf_clust, k = dynamic_k, border = dyn_cols, cluster = group_dynamic) # cutting to produce k groups
+    ```
+
+Now, let's see that the dendrogram of dynamic clusters is different (**and wrong!**) when recalculated with `hclust()`:
+
+```{r dendro-dyn, fig.width=5, fig.height=2.5, fig.align='center'}
+# plot dendrogram
+HC_dyn <- eclust(m.ctf.std, "hclust", 
+                 k = dynamic_k, 
+                 hc_metric = "euclidean",
+                 hc_method = best_meth_ctf, 
+                 graph = FALSE)
+fviz_dend(HC_dyn, 
+          main = "Wrong clustering of dynamic K",
+          show_labels = TRUE,
+          cex = 0.5,            # label size
+          palette = "Dark2", 
+          color_labels_by_k = TRUE, # color labels by groups
+          rect = TRUE, # Add rectangle around groups
+          rect_fill = TRUE,
+          rect_border = "Dark2",
+          horiz = FALSE,        # produce horizontal dendrogram?
+          as.ggplot = TRUE)
+```
+
+
+### Final gene groups
+
+Since the orientative _k_ is based in a single metrics using the clustering function `kmeans` for obtaining the [WSS], it will not be considered for [AHC]. Usually, the dynamic _k_ is higher than the best-of-30, the last producing more unbalanced groups with small groups typically corresponding to less related genes of a big cluster. Therefore, the **biggest _k_** will be selected for further processing, unless you have configured `OPT_CLUST` in `configure_wf.R` with a particular value not being `0`.
+
+```{r finalK}
+ if (k_30 > dynamic_k){
+   groups_k <- groups_30
+   final_k <- k_30
+   txt <- " by k_30"
+} else {
+  groups_k <- group_dynamic
+  final_k <- dynamic_k
+  txt <- " by dynamic clustering"
+}
+
+# redefine K and GROUPS if the user forces to a predefined OPT_CLUST
+if (OPT_CLUST != 0) {
+  # change empirically the number of optimal clusters
+  message("Although the FINAL number of clusters is ", final_k, " you changed it in _configure_wf.R_ to **", OPT_CLUST, "**")
+  final_k <- OPT_CLUST
+  groups_k <- cutree(HC_ctf_clust, k = OPT_CLUST)
+} else {
+  message("FINAL number of clusters: **", final_k, "**", txt)
+}
+```
+
+
+```{r gene-silueta, fig.height=10, fig.width=4, eval=FALSE}
+# To see the accurateness of these genes and groups, let's see their **silhouette plot**, where any bar going to negative values indicate that the gene contributes negatively to the clustering. 
+
+silh_genes <- silhouette(cutree(HC_ctf_clust, final_k), d_ctf_genes)
+plot(silh_genes, main = paste0("Original silhouette for ", final_k, " clusters"))
+
+# Are there genes with negative silhouette? (sil_with < 0)
+keep_clustGenes <- (silh_genes[, 3] > 0) # the third column is 'sil_width'
+REMOVE_GENES_FROM_SILH <- (length(keep_clustGenes[keep_clustGenes == FALSE]) > 0)
+
+# Removal of non contributing genes only if there are removable genes
+m.putat.opt <- m.ctf.std[keep_clustGenes, ]
+
+# recalculate distances and clustering
+d_genes_opt <- dist(m.putat.opt, method = "euclidean")
+HC_genes_opt = hclust(d_genes_opt, method = best_meth_ctf)
+groups_k <- cutree(HC_genes_opt, k = final_k)
+
+# maintain original values for dynamic clustering
+HC_ctf_clust_ori <- HC_ctf_clust
+m.ctf.std_ori <- m.ctf.std
+
+# rename variable if calculated
+HC_ctf_clust <- HC_genes_opt 
+m.ctf.std <- m.putat.opt
+```
+
+
+### Saving gene groups
+
+```{r saveclust}
+# append cluster labels to original data
+m.putat.std.clust <- cbind(as.data.frame(m.ctf.std), Cluster = groups_k)
+
+fileName <- SaveTSV(m.putat.std.clust, "ClustersCTF-")
+message(fileName, "\n", "contains standardised counts and cluster membership of genes")
+```

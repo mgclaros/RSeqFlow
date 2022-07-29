@@ -1,0 +1,163 @@
+## Removing noisy genes
+
+Unexpressed genes are those with `counts == 0` in all samples (conditions, e.g. columns) and should be removed since they have no biological interest and only introduce noise in statistics.
+
+```{r filter1, results='hold'}
+# Looking for genes expressed in all samples (TRUE)
+none_is0 <- table(rowSums(x$counts == 0) == 0)
+
+# Counting genes not expressed in any sample (TRUE)
+COL_NUMBER <- length(COL_NAMES)
+all_are0 <- table(rowSums(x$counts == 0) == COL_NUMBER)
+
+# other counts
+total_genes <- dim(x)[1] # or nrow(x$counts)
+at_least_1 <- total_genes - none_is0[[2]] - all_are0[[2]]
+```
+
+We can remove at the same time those unexpressed genes together with any **noisy genes** (genes with unreliable expression because they have low mapping counts [_underexpression_] in most samples). We will consider a minimal reliable expression when genes are expressed in at least one set of replicates.
+
+> **IMPORTANT:** The analysis cannot rely on `counts` since they depend on library sizes. [CPM] (_counts per million_) will be used instead of counts:
+
+    ```{r x.cpm}
+    # CMP for the x object containing raw data
+    x.cpm <- cpm(x)
+    ```
+
+Removing `CPM > 0` will remove genes with no expression in all samples. Increasing the threshold to `MIN_CPM` value defined in `configure_wf.R` will remove also the low-expressed genes.
+
+The minimal number of samples with `cpm > MIN_CPM` is the lowest number of replicates as defined in `EXP_FACTORS`.
+
+```{r numRep}
+# calculate the minimal number of samples for cpm > MIN_CPM
+MIN_REPL <- min(table(EXP_FACTORS))
+
+# filtering by CPM
+keep.exprs <- rowSums(x.cpm > MIN_CPM) >= MIN_REPL
+filteredOK <- table(keep.exprs) # see in TRUE how many genes pass the filter
+x.filt <- x[keep.exprs, , keep.lib.sizes = FALSE]
+```
+
+The final balance is the following:
+
+Genes | Amount  | Percent (%)
+:---- | ----:   | ---:
+Total                                   | `r total_genes`       | 100
+Expressed in all samples                | `r none_is0[[2]]`  | `r round(100 * none_is0[[2]]/total_genes)`
+Not expressed in at least 1 sample      | `r at_least_1`     | `r round(100 * at_least_1/total_genes)`
+Never expressed                         | `r all_are0[[2]]`  | `r round(100 * all_are0[[2]]/total_genes)`
+Tentetively useful                      | `r all_are0[[1]]`  | `r round(100 * all_are0[[1]]/total_genes)`
+Really useful after `CMP >` `r MIN_CPM` | `r filteredOK[[2]]`| `r round(100 * filteredOK[2][1]/total_genes)`
+
+
+
+## Data without noise {.tabset .tabset-fade .tabset-pills}
+
+### Density plots {-}
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` 
+Expand to read about the <b>density plot</b></summary>
+
+The density of logCPM (`lcpm`) values will be plotted for each sample, where
+
+* _dotted_ vertical line at `CPM = 0` (equivalent to `logCPM = 1`) will pinpoint the minimum logCPM threshold;
+* _dashed_ vertical line will mark the main zone of gene removal. 
+
+These reference lines are calculated as follows:
+
+```{r cutoffs}
+# To define the same range of density for all data
+L <- mean(x$samples$lib.size) * 1e-6
+M <- median(x$samples$lib.size) * 1e-6
+# a cutoff line to sepparate useful from useless genes
+genes.cutoff <- log2(10/M + 2/L)
+# remove needless variables
+rm(L, M)
+```
+
+</details> 
+[END EXPANDIBLE]: #
+
+
+Density plots are produced using `RColorBrewer` within local function `PlotGeneDensity()` to individualise samples.
+
+```{r densityplots, fig.width=4, fig.height=5, out.width=c('50%', '50%'), fig.show='hold'}
+# calculation of CPM and logCPM
+# for raw data (x.cpm was already calculated)
+x.lcpm <- cpm(x, log = TRUE)
+# for filtered data
+x.filt.lcpm <- cpm(x.filt, log = TRUE)
+x.filt.cpm <- cpm(x.filt)
+
+# density plots of raw data and filtered data
+PlotGeneDensity(x.lcpm, genes.cutoff, "Raw data")
+PlotGeneDensity(x.filt.lcpm, genes.cutoff, "After filtering")
+
+# remove needless variables
+rm(none_is0, all_are0, filteredOK, keep.exprs) # from previous chunk
+rm(genes.cutoff, x.lcpm, x.filt.lcpm)
+```
+
+> **IMPORTANT:** After filtering, density lines should be nearly identical following a gauss-shaped profile. Peak at very low logCPM should disappear.
+
+
+***
+
+### Inspect filtered data {#filterdSizeMDSPCA}
+
+Let`s see the new library sizes and sample grouping in [MDS] and [PCA] plots to compare with previous results with [raw data](#origSizeMDS).
+
+
+```{r sizesMDSplotsFiltered, fig.width=6, fig.height=5, out.width=c('33%', '33%', '33%'), fig.show='hold'}
+# Reconstruct libsizes after filtering.
+# These new, effective library sizes will be used  in all downsteam analyses
+x.filt$samples$lib.size <- colSums(x.filt$counts)
+
+# create a place at rigth (8) for the legend outside the graph
+# structure of mar = c(bottom, left, top, right)
+par(mar = c(4, 3, 3, 8), xpd = TRUE) 
+
+barplot(x.filt$samples$lib.size * 1e-6, 
+        names = COL_NAMES, 
+        col = EXP_COLORS,
+        ylab = "Library size (millions)", 
+        las = 2, 
+        main = "Library sizes after filtering") 
+
+# legend to indicate the correspondence of colours and factors in all plots
+legend("topright", inset = c(-0.3, 0), # legend outside the plot 
+       legend = as.vector(UNIQ_FACTORS), 
+       fill = unique(EXP_COLORS),
+       cex = 0.8)
+
+# return to mar default values
+par(mar = c(5, 4, 4, 2), xpd = TRUE)
+
+plotMDS(x.filt, 
+        col = EXP_COLORS, 
+        main = "MDS relative similarities after filtering")
+
+pca_sum <- PlotMyPCA(x.filt$counts, "PCA of filtered data")
+```
+
+> **IMPORTANT:** Library sizes appear to be the same than in [previous plot](#origSizeMDS) since only genes with very few counts were removed.
+
+`r NOTE_bx` Samples should group similar to [previous MDS and PCA plots](#origSizeMDS) or **even better**, since filtering must remove noisy data and improve sample clustering.</div>
+
+`r WARN_bx` If inferior sample grouping, you have a problem with your samples. Take results with caution.</div>
+
+
+
+***
+
+
+## Save filtered counts 
+
+Gene counts after filtering are saved in a **.tsv** (_tab separated values_) file where gene codes are in rows and experimental data in columns.
+
+```{r datatablefiltered}
+# SaveTSV() is difined in functions_wr.R
+fileName <- SaveTSV(x.filt$counts, "filteredData-")
+message(fileName, "\n", "contains filtered gene counts")
+```

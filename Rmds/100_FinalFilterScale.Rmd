@@ -1,0 +1,178 @@
+## Background {#clustbkg}
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>clustering</b></summary>
+
+[**Clustering**](https://data-flair.training/blogs/clustering-in-r-tutorial/) is the most widespread and popular method of _unsupervised learning_ in data analysis and data mining. It is a technique of data segmentation that [partitions the data into several groups](https://www.hackerearth.com/practice/machine-learning/machine-learning-algorithms/clustering-algorithms-evaluation-r/tutorial/) based on their similarity (vector distances). In fact, clustering is simply attempting to find structure within a dataset without being trained by any response variable. But be careful: the structure revealed by clustering does not mean that it is biologically relevant and informative. A careful interpretation by a trained scientist is required, as for any other mathematical operation on biological data.
+
+As advanced above, data for clustering must be _scaled_ (standardised or _Z_-normalised) to reduce spurious variations and expression level differences, resulting in a global reduction of diversity. Then, **distances** should be calculated based on one on these methods:
+
+* `euclidean`: usual distance between the two vectors; the most common method.
+* `manhattan`: is similar to the Euclidean but it has an added functioning in the reduction of the effect in the extreme objects.
+* Other methods are `"maximum", "canberra", "binary", "minkowski"`. Remember that you can use `as.dist()` when you have a matrix of correlations already calculated.
+
+Distances can also be obtained from correlations as `1 - r`, where `pearson` method is the preferred for correlations. In any case, the result is a **dissimilarity matrix** (= distance matrix). Note that Pearson's correlation is quite sensitive to outliers, in such a case Spearman's correlation could be more appropriate.
+
+Clustering methods can be classified in the following [main classes](https://data-flair.training/blogs/clustering-in-r-tutorial/):
+
+1. **Hierarchical**: it involves creating clusters in a predefined order, such that similar clusters are grouped together and are arranged in a hierarchical manner. It can be further divided into two types namely _agglomerative_ hierarchical clustering and _divisive_ hierarchical clustering, the first one, the **Agglomerative Hierarchical Clustering ([AHC])** (or simply hierarchical clustering), being used in this pipeline. The result is that the distance between the points of distant clusters are higher than the points that are present in the same cluster. It generates a type of tree called **dendrogram** to [visualise the hierarchy](https://www.gastonsanchez.com/visually-enforced/how-to/2012/10/03/Dendrograms/). Splitting this dendrogram produces clusters. This process consists of two separate mathematical operations:
+    1. _Similarity matrix_: It is the distance matrix mentioned above.
+    2. _Linkage_: It takes the distance information and groups pairs of objects to produce the branch of the dendrogram. These newly formed clusters are linked to each other to create bigger branches. This process is iterated until all the objects in the original data set are linked together in a hierarchical tree. To determine how close together two branches are, the following linkage methods can be used:
+
+        * **Complete linkage clustering**: Find the max distance between points belonging to two different clusters.
+        * **Single linkage clustering**: Find the minimum distance between points belonging to two different clusters.
+        * **Mean linkage clustering**: Find all pairwise distances between points belonging to two different clusters and then calculate the average.
+        * **Centroid linkage clustering**: Find the centroid of each cluster and calculate the distance between the centroids of two different clusters.
+        * **Ward’s minimum variance method**: Minimize the total; it is usually the most appropriate.
+    
+    The method to choose will depend on data behaviour; the `agnes()` function will be used to determine the best linkage method.
+
+2. **Non-hierarchical**: this technique groups the data in order to maximise or minimise some evaluation criteria,  involving the iterative formation of new clusters by merging or splitting the clusters instead of following a hierarchical order. Although it is less intuitive, it is considered [faster and more reliable than hierarchical clustering](https://www.geeksforgeeks.org/difference-between-hierarchical-and-non-hierarchical-clustering/), and is preferred for large datasets. There are many algorithms, such as K-medians, self-organising maps, or gene shaving, but **[K-means](https://data-flair.training/blogs/clustering-in-r-tutorial/)** is the most popular and simple. _K_-means algorithm is commonly randomnly initialized, so different runs may yield different results. Additionally, _k_-means requires the specification of the the optimal number of clusters _k_. Since there is no solid solution for such a determination, a _Within Sum of Squares_ ([WSS]) evaluated in an _Elbow plot_ is the usual criterium. The result can be checked with the _Silhouette Score_, that should be positive and close to +1. More details can be obtained [below](#bestgeneclusterk). 
+
+3. **Model-based clustering**, also known as **mixture models**, is a broad family of algorithms designed for modelling an unknown distribution as a mixture of simpler distributions [@Fraley2002]. It considers the data as multivariate, coming from a distribution that is mixture of two or more clusters with variety of data models, and applies maximum likelihood estimation and Bayes criteria to identify the most likely model and number of clusters. In contrast to the hirarchical and non-hierarchical, model-based clustering is no heuristic but based on formal models. The model parameters can be estimated using the _Expectation-Maximization_ (EM) algorithm initialised by hierarchical model-based clustering. Among the different model selections to provide the most realistic _true clusters_, the _Bayesian Information Criterion_ ([BIC]) remains the criterion of choice [@McNicholas2016vo], that is, a large [BIC] score indicates strong evidence for the corresponding model.
+
+
+In the case of gene expression, you can cluster both samples (columns) and genes (rows). The best way to represent this is bi-dimensionally by means of a **heatmap**. A heatmap depicts values for a main variable of interest (gene expressión) across samples (factors, conditions) as a grid of coloured squares. It gives obvious visual cues about the magnitude of gene expression across samples to infer clustering, association or correlation. 
+
+</details> 
+[END EXPANDIBLE]: #
+
+
+## Filtering
+
+Two initial subsets will be defined only after `treat()`:
+
+* **Ubiquitous**: genes that are DEGs in ***ALL*** contrasts (`ubi`)
+* **Putative**: genes that are DEGs in at least one contrast (`putative`)
+
+1. If there is any **`ubi`** DEG, save it, since they can be good **biomarker candidates**, although their utility for clustering, networking functional analyses is less significant.
+    ```{r DEGs-in-all, results='hold'}
+    keep.treat.ubi <- rowSums(abs(status.treat)) == dim(status.treat)[2]
+    # keep.ubiquitous <- rowSums(status.treat != 0) == dim(status.treat)[2]
+    ubis.treat.IDs <- names(keep.treat.ubi[keep.treat.ubi == TRUE]) # ID of best 'ubis'
+    ubis.treat <- length(ubis.treat.IDs)
+    keep.eB.ubi <- rowSums(abs(status.eB)) == dim(status.eB)[2]
+    ubi.DEGs <- as.data.frame(status.eB[keep.eB.ubi, ]) # information of eBayes 'ubis'
+    ubis.eB <- nrow(ubi.DEGs)
+
+    cat("Number of ubiquitous genes after treat(): ", ubis.treat,
+        "\nNumber of ubiquitous genes after eBayes(): ", ubis.eB, "\n")
+    
+    # Save ubiquitous DEGs for further utility
+    if (ubis.eB >= 1) {
+      fileName <- SaveTSV(ubi.DEGs, "ubiquitousDEGs_")
+      message("IDs of ubiquitous DEGs have been saved in file", "\n", fileName)
+      if (ubis.treat > 0) {
+        cat("\n -- Main BIOMARKER CANDIDATES -- \n", toString(ubis.treat.IDs))
+      }
+    }
+    
+    # keep ubi IDs as the first outstanding genes
+    OUTSTANDING_GENE_LIST <- list()
+    if (length(ubis.treat.IDs) > 0) { 
+      OUTSTANDING_GENE_LIST[["Ubiquitous"]] <- ubis.treat.IDs
+    }
+    
+    # remove needless variables
+    rm(keep.treat.ubi, keep.eB.ubi, ubi.DEGs)
+    ```
+
+
+2. Retain **`putative`** genes based on the `treat()` analysis for further clustering, networking and functional analysis. Only CTF normalised data will be considered as [previoulsy explained](#normBkg).
+    ```{r putativeDEGs}
+    keep.putative <- rowSums(status.treat != 0) >= 1
+    # putative in CTF
+    x.filt.ctf.putat <- x.filt.ctf[keep.putative, ]
+    # putative in TMM
+    x.filt.tmm.putat <- x.filt.norm$counts[keep.putative, ]
+    
+    rm(keep.putative)
+    cat("Number of putative DEGs: ", nrow(x.filt.ctf.putat), "\n")
+    ```
+
+
+3. Correlations and distances should be calculated with **logarithmic counts** to group highly variant genes. However, this is configured in `configure_wf.R` in the variable `LOG_EXPR`. As explained above and in [@Johnson2022fn], only [CTF] transformation is affected.
+The new log-counts are stored in `m.??` variables.
+    ```{r calcLogCtf}
+        if (LOG_EXPR) {
+          m.x <- log2(x.filt.ctf + 1) # add 1 to avoid log(0) ; complete x object
+          m.putat.ctf <- log2(x.filt.ctf.putat + 1) # CTF putative
+          m.putat.tmm <- log2(x.filt.tmm.putat + 1) # TMM putative
+          cat("Correlations will be calculated with logarithmic expression values")
+        } else {
+          m.x <- x.filt.ctf # complete x object not filtered
+          m.putat.ctf <- x.filt.ctf.putat  # CTF putative
+          m.putat.tmm <- x.filt.tmm.putat # TMM putative
+          cat("Correlations will be calculated with decimal expression values")
+        }
+    ```
+
+
+4. Retain the **most variable genes** (rows) by filtering `putative` DEGs by [CV] as configured in `configure_wf.R`. When the `m` variables are in log-counts, CV will be much lower than CV for regular counts. Hence, configure `LOG_EXPR` to FALSE only when your experiment does not contain many variable genes.
+    ```{r filterByCV}
+    # the most variant genes
+    m.x.cv <- calculaVars(m.x) # complete set of genes
+    m.putat.ctf.cv <- calculaVars(m.putat.ctf) # CTF putative
+    m.putat.tmm.cv <- calculaVars(m.putat.tmm) # TMM putative
+    
+    # remove genes with CV < CV_MIN
+    m.x.cv_filt <- m.x.cv[m.x.cv$cv >= CV_MIN,]
+    m.putat.ctf.cv_filt <- m.putat.ctf.cv[m.putat.ctf.cv$cv >= CV_MIN,]
+    m.putat.tmm.cv_filt <- m.putat.tmm.cv[m.putat.tmm.cv$cv >= CV_MIN,]
+    
+    # remove additional columns introduced by calculaVars()
+    m.x.CV <- as.matrix(m.x.cv_filt[,1:ncol(x.filt.ctf)])
+    m.putat.ctf.CV <- as.matrix(m.putat.ctf.cv_filt[,1:ncol(x.filt.ctf)])
+    m.putat.tmm.CV <- as.matrix(m.putat.tmm.cv_filt[,1:ncol(x.filt.ctf)])
+    ```
+
+
+5. A brief **summary** of the new sets of data for clustering:
+
+Result            | Total | After CV > `r CV_MIN`
+:---              | ---:  | ---:
+***Total matrix***      |
+Samples (columns) | `r ncol(m.x)`             | `r ncol(m.x.CV)`
+Genes (files)     | `r nrow(m.x)`             | `r nrow(m.x.CV)`
+***Ubiquitous DEGs***    |  | 
+eBayes() genes    | `r ubis.eB`    | -
+treat() genes     | `r ubis.treat` | -
+***Putative DEGs in CTF***    |  |
+Samples (columns) | `r ncol(m.putat.ctf)`         | `r ncol(m.putat.ctf.CV)`
+Genes (files)     | `r nrow(m.putat.ctf)`         | `r nrow(m.putat.ctf.CV)`
+***Putative DEGs in TMM***    |  |
+Samples (columns) | `r ncol(m.putat.tmm)`         | `r ncol(m.putat.tmm.CV)`
+Genes (files)     | `r nrow(m.putat.tmm)`         | `r nrow(m.putat.tmm.CV)`
+
+
+
+## Scaling
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>scaling</b></summary>
+
+Clustering analyses are based on distances that have to be calculated with comparable expression data. The comparability is achieved by **scaling**, also called **standardisation** or even **_Z_-normalization**, where all gene (_row_) profiles are homogenised to the same range, irrespective of their count levels. Usually, every row (_gene_) has different dynamic range that must be homogenised to be comparable. The simplest way to calculate it is using `scale()` to _standardise_ to the _Z_-score (`(x - mean) / sd`). You can see here a [graphical explanation](https://www.dropbox.com/s/guozazczkv5xmvu/scaling.jpg) of scaling.
+
+</details> 
+[END EXPANDIBLE]: #
+
+The scaled matrices `m` variables are characterised for ending by `std`
+
+```{r z-norm_scaling}
+# scaling CTF normalisation
+m.ctf.std <- scale(m.putat.ctf.CV)
+# scaling TMM normalisation
+m.tmm.std <- scale(m.putat.tmm.CV)
+```
+
+Recovering RAM space by removing needless variables. On the non-scaled matrix `m.putat.ctf.CV` is retained for future heatmaps.
+
+```{r remCV}
+rm(m.x, m.putat.ctf, m.putat.tmm,      # LOG2 transformed (or not)
+   m.x.cv, m.putat.ctf.cv, m.putat.tmm.cv, # including CV columns
+   m.x.cv_filt, m.putat.ctf.cv_filt, m.putat.tmm.cv_filt, # only most CV variants
+   m.x.CV, m.putat.tmm.CV)  # retain only the expression columns
+```
+
+> **IMPORTANT**:  The matrices that can be clustered by genes or samples are `m.ctf.std` and `m.tmm.std`.
+

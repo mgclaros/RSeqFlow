@@ -1,0 +1,78 @@
+### Background {#binomialNegative}
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about the <b>meaning of dispersion</b></summary>
+
+In a standard sequencing experiment (RNA-Seq), sequencing reads are mapped to the reference and then count how many reads fall within a given transcript, gene or exon. Fitting the correct statistical model to the data is an essential step before making inferences about differentially expressed genes.
+Hence, the input for the statistical analysis are then **counts** (discrete non-negative integers), which vary considerably from tens to thousands. Since the chance of a given read to be mapped to any specific gene/transcript/exon is rather small, it sounds very much like a _Poisson distribution_ and could be modelled as such.
+
+But there is one **problem**: the variability of read counts in sequencing experiments tends to be larger than the Poisson distribution allows. Poisson requires that `variance = mean` ($\sigma^2 = \mu$), but in RNA-seq `variance >> mean` ($\sigma^2 >> \mu$) because the same transcript is expressed at slightly different levels in each sample, even under the same conditions. This problem is called **overdispersion** (an extra variance). Moreover, the variance increases with the counted reads. This is why the **negative binomial** ([NB][]) distribution has emerged as the model of choice to fit sequencing data.
+In a few words, a [NB][] is a Poisson distribution the includes an additional parameter called dispersion ($\alpha$), resulting in the following equation where $\sigma^2$ in variance, $\mu$ is mean y $\alpha$ is dispersion coefficient: 
+
+$$\sigma^2 = \mu + \alpha\mu^2$$
+From this formula it is evident that the dispersion is always greater than the mean for $\alpha > 0$. Particularly, when $\alpha \rightarrow 0$ we have a Poisson distribution, meaning less dispersion and a more consistent experiment. This can be clearly seen in the following plot:
+
+<div style="text-align: center;">
+![Figure of NB vs P](https://bioramble.files.wordpress.com/2016/01/nb_mean_var.png)
+</div>
+
+Unfortunately, in a standard RNA-seq experiment, **few biological replicates per experimental condition** are available mainly due to laboratory difficulties, library preparations and the sequencing costs. This makes the gene-wise estimates of dispersion $\alpha$ rather unreliable. Current bioinformatics tools, such as [edgeR], include dispersion estimates based on all genes by means of weighted likelihood empirical Bayes to mitigate the shortcomings of having few replicates.
+
+In conclusion, assessing dispersion allows not only a better modelisation but also get insights from the experimental quality and if statistical transformation are improving or worsening the original data.
+
+</details> 
+[END EXPANDIBLE]: #
+
+
+### Calculating dispersion
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>calculating dispersion</b></summary>
+
+To estimate the common, trended and tagwise (gene-wise) dispersions across genes based on the contrasts that will be performed from the `design`, `estimateDisp()` function from [edgeR] will be used. Based on the _genewise dispersion_, the varinace dispersion $\alpha$ will be calculated and included in the field `common.dispersion` of the `DEGList` object `x`. It has been demonstrated that gene-specific variability is preferred to a common dispersion across genes or a fixed relationship between abundance and variability [@McCarthy2012] since it de-prioritize genes with inconsistent results and allow the main analysis to focus on changes that are consistent between biological replicates, making the application of [GLM]s ([see below](#aboutGLMs)) to genomic data more convenient and practical. 
+
+</details> 
+[END EXPANDIBLE]: #
+
+The betst way to evaluate dispersion $\alpha$ is **[BCV]** (_biological coefficient of variation_) [@McCarthy2012], based on the coefficient of variation ([CV]). Mathematically, $BCV = \sqrt\alpha$.
+[BCV] reflects the variation with which the (unknown) true abundance of each gene varies between replicate RNA samples. It represents the CV that would remain between biological replicates if sequencing depth could be increased indefinitely. While the [CV][CV2] decreases as the size of the counts increases (the measure is more precise), the BCV does not since more biological variation is considered with more replicates.
+
+
+```{r dispersionEstimates}
+# Produce a matrix of pseudo-counts to estimate the common and tagwise dispersions
+# use a define 'design' to avoid the switch to the classic mode 
+x.disp <- estimateDisp(x, design = design) # raw data to compare with
+x.filt.norm.disp <- estimateDisp(x.filt.norm, design = design) # filt + norm with TMM
+x.filt.ctf.disp <- estimateDisp(x.filt.ctf, design = design) # filt + norm with CTF
+
+# BCV calculations
+bcv.x <- sqrt(x.disp$common.dispersion)
+bcv.norm <- sqrt(x.filt.norm.disp$common.dispersion)
+bcv.ctf <- sqrt(x.filt.ctf.disp$common.dispersion)
+```
+
+**Data types** | **Dispersion** | **BCV**
+:---           | ------:        | ----:
+Raw               | `r x.disp$common.dispersion`           | `r bcv.x`
+TMM normalisation | `r x.filt.norm.disp$common.dispersion` | `r bcv.norm`
+CTF normalisation | `r x.filt.ctf.disp$common.dispersion`  | `r bcv.ctf`
+
+
+### Outcome
+
+```{r evalBCV}
+if (bcv.x < bcv.norm) {
+  warning("Normalisation **increased** data dispersion!")
+} else {
+  message("TMM normalised data **decreased** dispersion, as expected")
+}
+
+if (bcv.norm > 0.4) {
+  cat("Dispersed data (BCV > 0.4), probably due to biological replications")
+} else {
+  message("Data are very consistent (BCV < 0.4), probably due to technical replications or _good handling_\n")
+}
+```
+
+
+> **IMPORTANT:** normalised data must be less dispersed than original, otherwise the statistical treatments are worsening the biological information.

@@ -1,0 +1,195 @@
+## Background {#normBkg}
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>normalisation methods</b></summary>
+
+This procedure is require to enable sample comparison (it will not be necessary only when genes in only one sample are compared). Experience with microarray data has demonstrated that normalization is a critical and obligate component of the processing pipeline for an accurate estimation and detection of differential expression (DE). More recently, an exhaustive comparison revealed that normalized counts are the best choice for the analysis of RNA-seq data across samples since it exhibits **greater comparability** among replicate samples and are **more robust to technical artifacts** [@Zhao2021wp]. In fact, the aim of normalization is to remove systematic technical effects that occur in the data to ensure that technical bias has minimal impact on the results [@Robinson2010;@Liu2019]. It implies the assumption that most genes do not present DE, having similar read counts across samples.
+
+
+Normalisation methods have been compared many times, resulting in **TMM** (_Trimmed Mean of M-values_) method being the most robust, simple and effective method for estimating relative RNA production levels from RNA-seq data [@Dillies2013; @Lin2016; @Tam2015]. [TMM] normalizes across samples by finding a subset of genes whose variation is mostly due to technical rather than biological factors. It relies on `calcNormFactors()` function from [edgeR] package. [TMM] method is so robust against deviations from statistical assumption that up to about 30% of DE in one direction does no affect the result. Another good method is based on functions `estimateSizeFactors()` and `sizeFactors()` from the `DESeq2` package [@Liu2019]. 
+
+
+In [TMM], lowly-expressed genes will impact on highly-expressed ones, and this is the reason of [previously performed][Gene filtering]. Another requirement for normalisation is that the number of over- and under-expressed genes should be similar; if this were not the case, normalisation for biased data should be considered [@Liu2019].
+
+Genes from the same sample can change their count due to the transcript length: longer transcripts will receive more mapped reads. The classical method to normalise this effect is the calculation of RPKM (_Reads Per Kilobase of transcript per Million fragments mapped_) or TPM (_Transcripts Per Million_). Since this intuitive calculations alter the biological information, the use of RPKM and TPM should be considered only when you are comparing transcript expression within one sample. If you need them, TPM is the best choice [@Johnson2022fn].
+
+However, a recent report indicates that **[TMM] and DESeq2 are not appropriate for co-expression analyses** since between-sample normalization has the biggest impact in co-expression [@Johnson2022fn]. Authors propose that counts adjusted by size factors produce networks that most accurately recapitulate known tissue-naive and tissue-aware gene functional relationships, being **[CTF](https://github.com/krishnanlab/RNAseq_coexpression)** (_Counts adjustment with TMM Factors_) or in second place CUF (_Counts adjustment with Upper quartile (UQ) Factors_) the preferred methods. Both are simply dividing counts by the corresponding [TMM] or UQ normalisation factors.
+
+</details> 
+[END EXPANDIBLE]: #
+
+
+
+## Normalisation factors
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>normalisation factors in TMM</b></summary>
+
+Normalisation assumes that most genes maintain a constant expression. If this is the case, function `calcNormFactors()` compares the total counts and computes **scaling factors** to convert observed library sizes into effective library sizes based on a vector of normalisation factors (`lib.size * norm.factors`). For symmetry, normalization factors are adjusted to multiply to 1, hence good data are expected to have closer to 1 factors. 
+
+</details> 
+[END EXPANDIBLE]: #
+
+As explained above, [TMM] normalisation will be performed for differential expression analyses and, correspondingly, [CTF] will be calculated for further correlation, clustering and networking analyses. For clarity, both will be calculated now and assigned to variables containing `norm` or `tmm` for TMM, and `ctf` for CTF. If you change normalization method from TMM to UQ, the `tmm` variables were normalised with UQ and `ctf` will really correspond to CUF transformation.
+
+```{r NormFacts}
+# compute scaling factors explicitely for TMM
+x.filt.norm <- calcNormFactors(x.filt, method = "TMM")
+
+# CTF normalisation: divide with norm factors here
+x.filt.ctf <- sweep(x.filt$counts, 2, x.filt.norm$samples$norm.factors, "/")
+```
+
+Filtered and normalised data to analyse are `x.filt.norm` and `x.filt.ctf`.
+
+
+
+## Sample similarities  {.tabset .tabset-fade .tabset-pills}
+
+Data normalisation should improve the raw data. This section serves to visualise if this is true.
+
+### Inspect for outliers {-}
+
+It is expected that there is no scaling factor outlier quartiles that would indicate that the corresponding sample might be removed from the analysis.
+
+It is also expected that expression data follo now a normal distribution with medians and quartiles aligned on similar values for all samples.
+
+```{r NormFactPlot, fig.width=4, fig.height=5, out.width=c('33%', '33%', '33%'), fig.show='hold'}
+x.filt.norm.lcpm <- cpm(x.filt.norm, log = TRUE)
+x.filt.ctf.lcpm <- cpm(x.filt.ctf, log = TRUE)
+
+boxplot(x.filt.norm$samples$norm.factors, 
+        xlab = "All samples together", 
+        ylab = "NormFactors in TMM", 
+        main = "Sample outliers?")
+        
+boxplot(x.filt.norm.lcpm, 
+        las = 2, 
+        col = EXP_COLORS, 
+        main = "After TMM normalisation", 
+        ylab = "Log-cpm")
+
+boxplot(x.filt.ctf.lcpm, 
+        las = 2, 
+        col = EXP_COLORS, 
+        main = "After CTF normalisation", 
+        ylab = "Log-cpm")
+```
+
+> **IMPORTANT:** Any sample with outlier scaling factor and quartile distribution should be removed to improve the analysis.
+
+
+
+### Sample MDS and PCA {-}
+
+The new [MDS] and [PCA] plots for normalised data must be compared to the [previous plot](#filterdSizeMDSPCA) to verify that samples group better now [@Jolliffe2016dp]. Both TMM and CTF normalised data are compared
+
+
+```{r MDStrasNorm, fig.width=8, fig.height=8}
+par(mfrow = c(2, 2))
+plotMDS(x.filt.norm, 
+        labels = colnames(x.filt.norm), 
+        col = EXP_COLORS,
+        main = "TMM sample similarities by MDS")
+
+# PCA using log-CPM of TMM instead of CPM
+tmp <- PlotMyPCA(x.filt.norm.lcpm, "TMM sample similarities by PCA")
+
+plotMDS(x.filt.ctf, 
+        labels = colnames(x.filt.ctf), 
+        col = EXP_COLORS,
+        main = "CTF sample similarities by MDS")
+
+# PCA using log-CPM of CTF instead of CPM
+tmp <- PlotMyPCA(x.filt.ctf.lcpm, "CTF sample similarities by PCA")
+```
+
+> **IMPORTANT:** If component contribution of both axis are greater than [before](#filterdSizeMDSPCA), normalisation is expected to improve data quality.
+
+`r DANGER_bx`
+In case that samples are grouped worse than [before](#filterdSizeMDSPCA), data should be questioned, or the further analyses put in caution.
+</div>
+
+Since only the two first components appear in the plots, a deep evaluation of each component contribution in [PCA] can be inspected here:
+
+```{r PCAcompoments, results='hold'}
+kable(tmp, align="c", digits = ROUND_dig) # only 3 decimals
+# remove needless variables
+rm(tmp)
+```
+
+
+
+
+### Sample grouping {-}
+
+In constrast to the clustering with raw data, different clustering methods will be checked to obtain only the best clustering result. Both `x.filt.norm` and `x.filt.ctf` data will be compared.
+
+1. Convert expression to logarithm values, irrespective of `LOG_EXPR` configuration. Then, they are standardised with `scale()`. The results is a matrix `m.??`.
+    ```{r log-scale}
+    m.tmm <- log2(x.filt.norm$counts + 1)
+    m.ctf <- log2(x.filt.ctf + 1)
+    
+    m.tmm.sc <- scale(m.tmm)
+    m.ctf.sc <- scale(m.ctf)
+    ```
+
+2. Detect the best clustering method using `CalcAgglomCoef()` function defined in this script. 
+    ```{r bestClustMethod}
+    # define linkage methods for agnes()
+    meth <- c("average", "single", "complete", "ward", "weighted")
+    # method names change from agnes() to hclust(): ward -> ward.D2 and weighted -> mcquitty
+    names(meth) <- c("average", "single", "complete", "ward.D2", "mcquitty")
+
+    # agnes() requires matrix transposition to analyse samples in columns
+    ac_tmm_samp <- sapply(meth, CalcAgglomCoef, df = t(m.tmm.sc))
+    # the best method is the one with the highest agglomerative coefficient
+    best_meth_tmm <- names(ac_tmm_samp[ac_tmm_samp == max(ac_tmm_samp)])
+    message("The best clustering method for TMM normalised samples is **", best_meth_tmm, "**")
+    
+    ac_ctf_samp <- sapply(meth, CalcAgglomCoef, df = t(m.ctf.sc))
+    best_meth_ctf <- names(ac_ctf_samp[ac_ctf_samp == max(ac_ctf_samp)])
+    message("The best clustering method for CTF normalised samples is **", best_meth_ctf, "**")
+    ```
+
+3. Calculating distances and then clustering with the best linkage method. Correlations are `r_??` variables, distances are `d_??` and the `hclust()` results are `HC_??`.
+    ```{r bestDist}
+    # Convert scaled expressions in distances
+    # for TMM
+    r_tmm_samp <- cor(m.tmm.sc, method = CORR_METHOD)
+    d_tmm_samp <- as.dist(1 - r_tmm_samp)
+    # for CTF
+    r_ctf_samp <- cor(m.ctf.sc, method = CORR_METHOD)
+    d_ctf_samp <- as.dist(1 - r_ctf_samp)
+    
+    # calculate hierarchical clustering.
+    HC_tmm_samp <- hclust(d_tmm_samp, method = best_meth_tmm)
+    HC_ctf_samp <- hclust(d_ctf_samp, method = best_meth_ctf)
+    ```
+
+4. Plotting dendrograms for samples
+
+    ```{r dendroplots, fig.width=6, fig.height=6, out.width=c('50%', '50%'), fig.show='hold'}
+    plot(HC_tmm_samp, main = paste0("TMM.std - d:", CORR_METHOD, " — HC: ", best_meth_tmm))
+    plot(HC_ctf_samp, main = paste0("CTF.std - d:", CORR_METHOD, " — HC: ", best_meth_ctf))
+    ```
+
+
+> **IMPORTANT:** Sample replicates should group better now than [before](#clustering). If this is not the case, the final result may not be due to the experimental consideration. Consider repeating with new samples.
+
+
+
+## Save normalised CPMs
+
+```{r datatableNorm}
+normCPM_TMM <- cpm(x.filt.norm)
+fileName <- SaveTSV(normCPM_TMM, "TMMnormalisedCPMs-")
+message("TMM-normalised CPMs were saved in\n", fileName)
+
+normCPM_CTF <- cpm(x.filt.ctf)
+fileName <- SaveTSV(normCPM_CTF, "CTFnormalisedCPMs-")
+message("CTF-normalised CPMs were saved in\n", fileName)
+
+# remove needless variables
+rm(normCPM_TMM,normCPM_CTF)
+```
