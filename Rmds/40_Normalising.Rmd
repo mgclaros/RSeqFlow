@@ -182,10 +182,19 @@ In constrast to the clustering with raw data, different clustering methods will 
 ## Save normalised CPMs
 
 ```{r datatableNorm}
+# TMM normalised CPMs
 normCPM_TMM <- cpm(x.filt.norm)
 fileName <- SaveTSV(normCPM_TMM, "TMMnormalisedCPMs-")
 message("TMM-normalised CPMs were saved in\n", fileName)
 
+# TMM normalised counts, from https://support.bioconductor.org/p/133671/
+norm_counts <- estimateCommonDisp(x.filt.norm, verbose=FALSE)
+norm_counts <- estimateTagwiseDisp(norm_counts, trend="none")
+norm_count_matrix <- t(t(norm_counts$pseudo.counts)*(norm_counts$samples$norm.factors))
+fileName <- SaveTSV(norm_count_matrix, "TMMnormalisedCounts-")
+message("TMM-normalised **counts** were saved in\n", fileName)
+
+# CTF normalised CPMs
 normCPM_CTF <- cpm(x.filt.ctf)
 fileName <- SaveTSV(normCPM_CTF, "CTFnormalisedCPMs-")
 message("CTF-normalised CPMs were saved in\n", fileName)

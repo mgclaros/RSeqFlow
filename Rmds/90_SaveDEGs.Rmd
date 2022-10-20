@@ -1,7 +1,7 @@
 
-### Global estimates {#global-estimates}
+### Per contrast {#global-estimates}
 
-A single value for each statistic estimate will be save considering all samples an contrasts. It will be performd in two steps:
+Every contrast will be saved in a different file with every statistic estimate. It will be performd in two steps:
 
 1. **First step**: `topTreat()` function (`topTable()` if `eBayes()` was used instead of `treat()`) produces the statistics for each gene in every contrast. The resulting columns for every gene are:
 * ***logFC*** (_Coef_ [below](#per-contrast)): global estimate of the log2-fold-change over all samples
@@ -11,45 +11,81 @@ A single value for each statistic estimate will be save considering all samples 
 * ***adj.P.Val*** (_p.value.adj_ [below](#per-contrast)): adjusted _P_-value, also known as _q_-value
 * ***B***: log-odds that the gene is differentially expressed, only when `topTable()` is used.
 
-Let's filter by `P` and `FC` thresholds to obtain values only from DEGs. This means that each gene is a DEG it at least one of the contrasts.
+Let's produce the files after filtering genes per `P` and `FC` thresholds to obtain only DEGs. 
 
-```{r AllDEGsEstimates}
-degs.to.save.eB <- topTable(v.tmm.fit.eB, 
-                       p.value = P, 
-                       lfc = logFC, 
-                       coef = ncol(v.tmm.fit.eB$contrasts),
-                       sort.by = "logFC",
-                       resort.by = "P",
-                       number = Inf)                # all genes
-degs.to.save.treat <- topTreat(v.tmm.fit.treat, 
-                          p.value = P, 
-                          lfc = logFC, 
-                          coef = ncol(v.tmm.fit.treat$contrasts),
-                          sort.by = "logFC",
-                          resort.by = "P",
-                          number = Inf)             # all genes
+1. DEGs obtained using the classical bayesian approach:
 
-# show counts of the first 50 genes
-datatable(head(degs.to.save.eB, n = 50L), 
-          rownames = TRUE, 
-          filter="top", 
-          options = list(pageLength = 5, scrollX = T), 
-          caption = "DEGs from eBayes analysis")
+    ```{r SaveDEGs-ebayes}
+    i <- 1
+    allFiles <- vector()
+    for (i in 1:NUM_CONTRASTS) {
+      theContrast <- colnames(v.tmm.fit.eB$contrasts)[i]
+      degs.to.save.eB <- topTable(v.tmm.fit.eB, 
+                                          coef = i, 
+                                          p.value = P, 
+                                          lfc = logFC, 
+                                          adjust.method = "BH",
+                                          sort.by = "logFC",
+                                          resort.by = "P",
+                                          number = Inf)
+      fileName <- SaveTSV(degs.to.save.eB, paste0("DEGs_", theContrast, "_eB_P-", P, "_FC-", FC, "_"))
+      allFiles <- c(allFiles, fileName)
+    }
+    message("**DEGs** for every contrast after **GLM-eBayes** were saved in files \n", toString(allFiles))
+    ```
 
-datatable(head(degs.to.save.treat, n = 50L), 
-          rownames = TRUE, 
-          filter="top", 
-          options = list(pageLength = 5, scrollX = T), 
-          caption = "DEGs from treat analysis")
-```
 
-Let's see that filtering both by `FC` and `P`, the use of `topTreat()` is more stringent than `decideTests()`. 
+2. DEGs obtained using the limma-trend (`treat()`) approach:
+
+    ```{r SaveDEGs-treat}
+    i <- 1
+    allFiles <- vector()
+    for (i in 1:NUM_CONTRASTS) {
+      theContrast <- colnames(v.tmm.fit.treat$contrasts)[i]
+      degs.to.save.treat <- topTreat(v.tmm.fit.treat, 
+                                          coef = i, 
+                                          p.value = P, 
+                                          lfc = logFC, 
+                                          adjust.method = "BH",
+                                          sort.by = "logFC",
+                                          resort.by = "P",
+                                          number = Inf)
+      fileName <- SaveTSV(degs.to.save.treat, paste0("DEGs_", theContrast, "_TREAT_P-", P, "_FC-", FC, "_"))
+      allFiles <- c(allFiles, fileName)
+    }
+    message("**DEGs** for every contrast after **GLM-Treat** were saved in files \n", toString(allFiles))
+    ```
+
+3. In the case you are interested in genes that do not comply with _P_ and _FC_ thresholds, the same parameters for all genes are now saved:
+
+    ```{r SaveDEGs-treat}
+    i <- 1
+    allFiles <- vector()
+    for (i in 1:NUM_CONTRASTS) {
+      theContrast <- colnames(v.tmm.fit.treat$contrasts)[i]
+      all.to.save.treat <- topTreat(v.tmm.fit.treat, 
+                                          coef = i, 
+                                          adjust.method = "BH",
+                                          sort.by = "P",
+                                          resort.by = "logFC",
+                                          number = Inf)
+      fileName <- SaveTSV(all.to.save.treat, paste0("Allgenes_", theContrast, "_TREAT_"))
+      allFiles <- c(allFiles, fileName)
+    }
+    message("**All genes** for every contrast after **GLM-Treat** were saved in files \n", toString(allFiles))
+    ```
+
+
+Now we can compare the differences when limma-trend DEGs filtered both by `FC` and `P` are decided with `topTreat()` or the less stringent `decideTests()`:
 
 ```{r decidetest-vs-topTreat}
 # DEGs defined by decideTest()
 degs.decideTest <- names(which(rowSums(abs(status.treat)) > 0))
-# DEGs defined by topTable()
+# DEGs defined by topTreat()
 degs.topTreat <- rownames(degs.to.save.treat)
+# remove needless variables
+rm(degs.to.save.eB, degs.to.save.treat)
+
 # prepare Venn diagram
 venn.list <- list(DEGs_topTreat = degs.topTreat, 
                     DEGs_decideTests = degs.decideTest)
@@ -65,23 +101,9 @@ gv
 ```
 
 
-2. **Second step**: Save tables in a file
-    ```{r save_DEGs_treat}
-    fileName <- SaveTSV(degs.to.save.eB, paste(sep = "", "allDEGs_eB_P-", P, "_FC-", FC, "_"))
-    message("Average statistics for **all DEGs** after **eBayes** were saved in\n", fileName)
-    
-    
-    fileName <- SaveTSV(degs.to.save.treat, paste(sep = "", "allDEGs_TREAT_P-", P, "_FC-", FC, "_"))
-    message("Average statistics for **all DEGs** after **TREAT** were saved in\n", fileName)
-    
-    # remove needless variables
-    rm(degs.to.save.eB, degs.to.save.treat)
-    ```
+### All contrast in one file {#per-contrast}
 
-
-### Per contrast {#per-contrast}
-
-It is absolutely necessary to obtain the statistic estimates for each gene in each contrast. This can be easily achieved using `write.fit()` function from [limma] package. The first column of the table is ***AveExpr***, that is the average log2-intensity of the gene. Then, the following columns are repeated for each contrast:
+In many cases, having all results in a single file is more convenient. This can be easily achieved using `write.fit()` function from [limma] package. The first column of the table is ***AveExpr***, that is the average log2-intensity of the gene. Then, the following columns are repeated for each contrast:
 
 * ***Coef*** (_logFC_ [above](#global-estimates)):  coefficients of contrasts as log2-fold-changes, 
 * ***t***: moderated _t_-statistics, 
@@ -96,7 +118,7 @@ Then, the analysis of the _F_ statistics is presented in two columns when more t
 Finally, the last columns are the ***Results*** for each contrast, where as indicated above, -1, 0 and +1 are, respectively, down-regulated, not-significant, up-regulated.
 
 ```{r save_all_gene_estimates}
-fileName <- paste(sep = "", WD, "AllGenes_eB_allContrast_P-", P, "_FC-", FC, "_", HOY, ".tsv")
+fileName <- paste(sep = "", WD, "AllGenes_allContrast_eB_P-", P, "_FC-", FC, "_", HOY, ".tsv")
 write.fit(v.tmm.fit.eB, 
           status.eB, 
           file = fileName, 
@@ -105,7 +127,7 @@ write.fit(v.tmm.fit.eB,
           adjust = "BH")
 message("Estimates for **all genes** after **eBayes** were saved in\n", fileName)
 
-fileName <- paste(sep = "", WD, "AllGenes_TREAT_allContrast_P-", P, "_FC-", FC, "_", HOY, ".tsv")
+fileName <- paste(sep = "", WD, "AllGenes_allContrast_TREAT-P-", P, "_FC-", FC, "_", HOY, ".tsv")
 write.fit(v.tmm.fit.treat, 
           status.treat, 
           file = fileName, 

@@ -29,7 +29,7 @@ Benefits of the `limma + voom` approach combimed with `treat()` function are the
 1. production of accurate results for RNA-seq [@Law2014tt; @Li2022cf];
 2. resilience for unequal library sizes [@Law2014tt];
 3. dealing with outliers better than other parametric approaches [@Soneson2013];
-4. exacerbation of experimental errors when normalisation is based on less suitable adjustments, such as RPKM, CPM or TMP instead or [TMM].
+4. exacerbation of experimental errors when normalisation is based on less suitable adjustments, such as RPKM, CPM or TMP instead of [TMM].
 
 Taking all the above together explains why this `r paste(SOFT_NAME, VERSION_CODE)` script is based only on `limma + voom` [GLM].
 
@@ -56,7 +56,9 @@ But this approach is highly dependent on _P_ values, that are misused in many ca
 [START EXPANDIBLE]: #
 `r EXPAND_bx` Expand to read about <b>the usual misinterpretation of <i>P</i>-values</b></summary>
 
-The American Statistical Association (ASA) is claiming the proper use and interpretation of the _P_-value highlighting that **scientific conclusions should not be based only on whether a _P_-value passes a specific threshold since, by itself, a _P_-value does not provide a good measure of evidence regarding a model or hypothesis**. Moreover, since associating statistically significant findings with $P < 0.05$ (as arbitrarily introduced by Ronald Fisher in 1925) results in a **high rate of false positives**, the ASA also recommends that **declarations of _statistical significance_ should be abandoned** since statistical significance was never meant to imply scientific importance [@Wasserstein2019]. The situation is so worrying that some authors claim that most published research findings are false [@Ioannidis2005ud] or biased [@Altman2017mv]. Hence, Amrhein [@Amrhein2019]  asserts that:
+Statistical significance offers the benefit of simplicity and clarity on the one hand. 
+But the size of the effect is not indicated by the statistical significance.
+Those and others drawbacks of the _P_-value led some to advocate for more sophisticated models (such as the Bayesian approach mentioned above). One of those _claimers_ in seeking the proper use and interpretation of the _P_-value is The American Statistical Association (ASA), which highlights that **scientific conclusions should not be based only on whether a _P_-value passes a specific threshold since, by itself, a _P_-value does not provide a good measure of evidence regarding a model or hypothesis**. Moreover, since associating statistically significant findings with $P < 0.05$ (as arbitrarily introduced by Ronald Fisher in 1925) results in a **high rate of false positives**, the ASA also recommends that **declarations of _statistical significance_ should be abandoned** since statistical significance was never meant to imply scientific importance [@Wasserstein2019]. The situation is so worrying that some authors claim that most published research findings are false [@Ioannidis2005ud] or biased [@Altman2017mv]. Hence, Amrhein [@Amrhein2019]  asserts that:
 
 * Never conclude there is _no difference_ or _no association_ just because $P < 0.05$ because a confidence interval includes zero. 
 * Never conclude that two studies conflict because one had a statistically significant result and the other did not.
@@ -70,9 +72,12 @@ It is obvious that all statistics naturally vary from study to study and can lea
 If researchers have to discard statistical significance, what should they do instead?
 
 1. Many authors suggest to change to $P < 0.005$ or include a Bayesian perspective to improve the reproducibility [@Benjamin2018sj], but the main disadvantage is the enormous false negative results that it gives. 
-2. Others propose to at least avoid _dichotomisation_ (significant vs. non-significant) [@Amrhein2019] and learn to deal with uncertainty. 
-3. One of the best proposal to mitigate _P_-value misuse is that they must be integrated with secondary results to arrive at valid conclusions [@Lu2015wd]. In the case of RNA-seq, the secondary result is the **expression fold-change**.
-4. The last proposal is in agreement to the idea that researchers should seek to analyse data in multiple ways to see whether different analyses converge on the same answer [@Nature2019].
+2. Others propose to at least avoid _dichotomisation_ (significant vs. non-significant) [@Amrhein2019] and learn to deal with uncertainty.
+
+However, it is recognised that _P_-values and statistical significance are a prerequisite since they proof that the outcomes are not random. But for understanding the effect magnitude, at least a second parameter should be considered. To mitigate _P_-value misuse, the proposed solutions are: 
+
+1. _P_-values must be integrated with secondary results to arrive at valid conclusions [@Lu2015wd]. In the case of RNA-seq, the secondary result is the **expression fold-change**, that reflects the change magnitude.
+2. Researchers should seek to analyse data in multiple ways (including statistics) to see whether different analyses converge on the same answer [@Nature2019].
 
 </details> 
 [END EXPANDIBLE]: #
@@ -204,7 +209,7 @@ rm(degs.ebayes, degs.treat, venn.list)
 gv
 ```
 
-### Plots per contrasts
+### Plot every contrast
 
 Now let's see the differences of DEGs depending on the `eBayes()` and `treat()` methods.
 

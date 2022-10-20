@@ -22,8 +22,8 @@ Unfortunately, networks derived from omics data are often very large (often incl
 * ***Connectivity***: the total number of links in the network.
 * ***Path***: menor número de conexiones que conectan dos nodos. Use `mean_distance()`.
 * ***Diameter***: the longest geodesic distance (length of the shortest path between two nodes) in the network. `diameter()` returns the distance, while `get_diameter()` returns the nodes along the first found path of that distance.
-* ***Hub***: a node concentrating many _outgoing links_ that can bridge autonomous modules. Hubs may be regarded as **regulators**. Use `hub_score(net, weights=NA)$vector` for the Kleinberg's index.
-* ***Authorities***: a node concentrating many _incoming links_ from _hubs_ that may be interpreted as containng relevant information. Therefore, they may be regarded as **regulated gene**. Use `authority_score(net, weights=NA)$vector`. 
+* ***Hub***: a node concentrating many _outgoing links_ that can bridge autonomous modules. Hubs may be regarded as **regulators**. Use `hub_score(net, weights=NA)$vector` for the [Kleinberg's centrality index](https://www.sci.unich.it/~francesc/teaching/network/kleinberg.html) [@Kleinberg1999]. For undirected matrices the adjacency matrix is symmetric and [Hub and Authorities scores are the same](https://igraph.org/r/html/latest/aaa-igraph-package.html).
+* ***Authorities***: a node concentrating many _incoming links_ from _hubs_ that may be interpreted as containng relevant information. Therefore, they may be regarded as **regulated gene**. Use `authority_score(net, weights=NA)$vector`. As indicated above, for undirected matrices the adjacency matrix is symmetric and Hub and Authorities scores are the same.
 * ***Node degree***: the number of connections of a node with other nodes in the network. Use `degree(net, mode="all")` with different modes for directed networks, combined with `degree_distribution()`.
 * ***Density***: the proportion of present edges from all possible edges in the network. Use `edge_density(net, loops = F)`.
 * ***Betweenness of a node***: the sum of the shortest paths connecting all pair of nodes in the network, passing through that specific node; that is, centrality based on a broker position connecting others. Use `betweenness()`.
@@ -68,7 +68,8 @@ txt <- "AHC_Clust_"
 i <- 1
 for (i in 1:final_k) {
   id <- paste0(txt, i)
-  CLUSTER_LIST[[id]][["expr_matrix"]] <- t(m.ctf.std[groups_k == i, ])
+  # CLUSTER_LIST[[id]][["expr_matrix"]] <- t(m.ctf.std[groups_k == i, ])
+  CLUSTER_LIST[[id]] <- list(expr_matrix = t(m.ctf.std[groups_k == i, ]))
 }    
 
 txt <- "kMeans_Clust_"
@@ -108,6 +109,7 @@ To avoid the multitesting problem in large number of data sets, the adjusted _P_
 ```{r, results='asis'}
 # An analysis for each CLUSTER_LIST element
 i <- 1
+removable_elements <- vector()
 for (i in 1:list_length) {
   # tab header
   cluster_name <- names(CLUSTER_LIST)[i]
@@ -126,27 +128,37 @@ for (i in 1:list_length) {
   
   # retain only significant correlations
   corr_df = corr_list[abs(corr_list$r) >= R_MIN & corr_list$P.adj <= P, ]
+  # retain data only if significant correlations exist
+  if (nrow(corr_df) > 0) {
+    # use only 3 decimals for r and 4 for P
+    corr_df$r <- format(round(corr_df$r, 3), nsmall = 3)
+    corr_df$P <- format(round(corr_df$P, 4), nsmall = 4)
+    corr_df$P.adj <- format(round(corr_df$P.adj, 4), nsmall = 4)
+    # show top pairs
+    print(kable(head(corr_df), caption = "Top correlations of this cluster"))
   
-  # use only 3 decimals for r and 4 for P
-  corr_df$r <- format(round(corr_df$r, 3), nsmall = 3)
-  corr_df$P <- format(round(corr_df$P, 4), nsmall = 4)
-  corr_df$P.adj <- format(round(corr_df$P.adj, 4), nsmall = 4)
-  # show top pairs
-  print(kable(head(corr_df), caption = "Top correlations of this cluster"))
+    # Add corr_df to the list of clusters
+    CLUSTER_LIST[[i]][["corr_df"]] <- corr_df
   
-  # Add corr_df to the list of clusters
-  CLUSTER_LIST[[i]][["corr_df"]] <- corr_df
-  
-  # save correlation for Cytoscape
-  thisFile <- paste0("BestCorrelations_", cluster_name, "-")
-  fileName <- SaveTSV(corr_df, 
+    # save correlation for Cytoscape
+    thisFile <- paste0("BestCorrelations_", cluster_name, "-")
+    fileName <- SaveTSV(corr_df, 
                       thisFile, 
                       colN = TRUE,
                       rowN = FALSE)
-  message(fileName, "\n", "contains significant correlations of ", cluster_name)
+    message(fileName, "\n", "contains significant correlations of ", cluster_name)
+  } else {
+    warning(cluster_name, " does not contain any significant correlation and has been removed")
+    removable_elements <- c(removable_elements, i)
+  }
 }
 # cat("## {.unlisted .unnumbered} \n")
-rm(r_genes_clust, r_clust, p_clust, corr_list, corr_df)
+# remove elements from CLUSTER_LIST
+if (length(removable_elements) > 0) {
+  CLUSTER_LIST <- CLUSTER_LIST[-removable_elements]
+  list_length <- length(CLUSTER_LIST)
+}
+rm(r_genes_clust, r_clust, p_clust, corr_list, corr_df, removable_elements)
 ```
 
 

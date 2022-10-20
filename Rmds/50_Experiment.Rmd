@@ -11,7 +11,7 @@ Let's mathematically define the experiment considering that we have a control (`
     ```
 
 
-2. The contrasts are automatically obtained from the `CONTRAST` list defined in `configure_wf.R` file. **Pay attention** since this es very tricky. Combined with the experimental `design`, it enables all comparisons.
+2. The contrasts are automatically obtained from the `CONTRAST` list defined in `configure_wf.R` file that was internally converted into `allContrasts`. **Pay attention** since this es very tricky. Combined with the experimental `design`, it enables all comparisons.
     ```{r contrasts}
     # allContrasts was calculated from `CONTRAST` in execute_wf.R file
     # defining contrast matrix for all comparisons

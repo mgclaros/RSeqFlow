@@ -12,7 +12,7 @@ SAVE_RAW_DATA <- (length(DATA_FILES) > 1)
 ```
 
 
-## Assigning data colours
+## Assigning colours to factors
 
 Based on `EXP_FACTORS`, the number of different experimental factors will be extracted to define specific colours for them throughout the report.
 

@@ -1,6 +1,6 @@
 # libraries_wf -> RSeqFlow
 # Gonzalo Claros
-# 2022-07-15
+# 2022-09-28
 
 # Already installed packages
 # more details https://www.r-bloggers.com/an-efficient-way-to-install-and-load-r-packages/
@@ -21,6 +21,7 @@ libs_anova <- "statmod"
 libs_clustering <- c("igraph", "psych", "corrplot", "cluster", "NbClust", "dendextend",
                       "pheatmap", "factoextra", "WGCNA", "fpc", "mclust")
 libs_metagen <- c("vegan")
+libs_wordcloud <- c("tm", "wordcloud", "wordcloud2", "SnowballC")
 
 from_CRAN <- c(libs_general, 
                libs_descomprimir_gz, 
@@ -29,10 +30,11 @@ from_CRAN <- c(libs_general,
                libs_scholar, 
                libs_anova,
                libs_clustering, 
-               libs_metagen)
+               libs_metagen,
+               libs_wordcloud)
                    
 # remove needless variables
-rm(libs_general, libs_descomprimir_gz, libs_diagramas_Venn, libs_Rmd, libs_scholar, libs_anova, libs_clustering, libs_metagen)
+rm(libs_general, libs_descomprimir_gz, libs_diagramas_Venn, libs_Rmd, libs_scholar, libs_anova, libs_clustering, libs_metagen, libs_wordcloud)
 
 ## Obtain absent libraries that must be installed ####
 # libraries not pressent in 'intalled_libs'
@@ -46,7 +48,7 @@ if (length(new_libs_CRAN)) {
   writeLines(paste("Following", length(new_libs_CRAN), "CRAN libraries were installed at\n    ", R.home()))
   writeLines(new_libs_CRAN, sep = ", ")
 } else if (PKG_UPDATE) {
-	update.packages(ask = FALSE)
+	update.packages(ask = FALSE, checkBuilt = TRUE))
 } else {
 	message("Everything is updated")
 }

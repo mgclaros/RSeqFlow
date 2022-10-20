@@ -126,8 +126,8 @@ EXPAND_bx <- '<details  style="background-color: SeaShell;
 | :---- | :--- |
 | **Workflow** name and version | `r SOFT_NAME` v. `r VERSION_CODE` |
 | Run **date & time**           | `r HOY` |
-| **`r COMPUTER`**              | `r VERSION_R$platform` |
-| **R** version                 | `r VERSION_R$version.string` |
+| **`r COMPUTER`**              | `r R.version$platform` |
+| **R** version                 | `r R.version.string` |
 | **BioConductor** version      | `r VERSION_BIOC` |
 | **User**                      | `r YO` |
 | PATH to **results**           | `r WD` |

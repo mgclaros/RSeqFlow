@@ -1,21 +1,25 @@
 # functions_wf -> RSeqFlow
 # Gonzalo Claros
-# 2022-07-20
+# 2022-10-02
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # DETERMINING THE COMPUTER ####
 
-GetComputer <- function(thisPlatform) {
-    # determine computer for graphical functions
-    if (grepl("linux", thisPlatform)) {
-      comput <- "linux"
-    } else if (grepl("pc", thisPlatform)) { 
-      comput <- "pc"
-    } else if (grepl("apple", thisPlatform)) {
-      comput <- "mac" 
+GetComputer <- function() {
+    # .Platform and R.version are defined by the system
+    if (grepl("linux", R.version$platform)) {
+      comput <- "Linux"
+    } else if (grepl("pc", R.version$platform)) { 
+      comput <- "Windows"
+    } else if (grepl("w64", R.version$platform)) { 
+      comput <- "Windows64"
+    } else if (grepl("apple", R.version$platform)) {
+      comput <- "Mac" 
+    } else {
+      comput <- "Other" 
     }
-    return(comput)
+    return(paste0(comput, " - ", .Platform$OS.type))
 }
 # /////////////////////////////
 
@@ -35,14 +39,11 @@ CreateDir <- function(adir = DATA_DIR,
 		msg <- paste0("Directory '", name.wd, "' created")
 	} else {
 		# no se puede crear el directorio, msg de error y abortar
-		msg <- paste0("\n** ERROR **:")
 		msg <- paste0(msg, "   Directory ", name.wd ," cannot be created in")
 		msg <- paste0(msg, "   ", adir, "\n")
 		stop(msg, call.=FALSE)
 	}
-	
-	message(msg)
-	
+	message(msg)	
 	return(name.wd)
 }
 # /////////////////////////////////
@@ -87,8 +88,7 @@ LoadExpressionData <- function (files = DATA_FILES,
 	}
 
 	message("Counts from ", msg, " were read. The corresponding DGEList object was created")
-	# print(head(counts_obj$samples))
-	
+	# print(head(counts_obj$samples))	
 	return(counts_obj)
 }
 # //////////////////////////////////

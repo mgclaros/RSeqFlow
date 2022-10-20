@@ -2,7 +2,7 @@
 #
 # execute_wf -> RSeqFlow
 # Gonzalo Claros
-# 2022-07-28
+# 2022-10-02
 #
 # Main file, invoked after source(configure_wf.R)
 # Alternative usage from terminal: Rscript execute_wf.R aConfigFile.R 
@@ -28,7 +28,7 @@ if (length(ARGS) >= 1) {
   # load the corresponding configuration parameters
   source(ARGS[1])
 } else if (!(interactive())) {
-  message("No argument (configuration file) supplied\n")
+  warning("No argument (configuration file) supplied\n")
   stop(errMsg, call.=FALSE)
 } else if (!("MIN_CPM" %in% ls())) {
   stop(errMsg, call.=FALSE)
@@ -70,18 +70,14 @@ rm(fileToSource)
 SOFT_NAME <- "RSeqFlow"
 VERSION_CODE <- 1.0
 
-## Information about R ####
-VERSION_R <- R.Version()
-
 ## get computer type ####
-COMPUTER <- GetComputer(VERSION_R$platform)
+COMPUTER <- GetComputer()
 
 ## User ID in the computer ####
 YO <- system ("whoami", intern = TRUE)
 
 ## Checking data directory defined by users in the 'configure' file ####
 if (!file.exists(DATA_DIR)) {
-	msg <- paste0("\n** ERROR **:\n") 
 	msg <- paste0(msg, "** Directory ", 
 	             DATA_DIR, " does not exist for user ", YO, " **\n")
 	# quit script to fix the error
