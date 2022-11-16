@@ -3,7 +3,13 @@
 [START EXPANDIBLE]: #
 `r EXPAND_bx` Expand to read about <b>clustering</b></summary>
 
-[**Clustering**](https://data-flair.training/blogs/clustering-in-r-tutorial/) is the most widespread and popular method of _unsupervised learning_ in data analysis and data mining. It is a technique of data segmentation that [partitions the data into several groups](https://www.hackerearth.com/practice/machine-learning/machine-learning-algorithms/clustering-algorithms-evaluation-r/tutorial/) based on their similarity (vector distances). In fact, clustering is simply attempting to find structure within a dataset without being trained by any response variable. But be careful: the structure revealed by clustering does not mean that it is biologically relevant and informative. A careful interpretation by a trained scientist is required, as for any other mathematical operation on biological data.
+To comprehend the data, they can be used as input to create a model to estimate or predict an output (also called **supervised learning**, such as linear or logistic regression, linear or quadratic discriminant analysis, decision trees, gradient boostitng, naive Bayes, support vector machines or neural networks), or they can be analysed to identify underlying structures, patterns and relationships (also called **unsupervised learning**). Unsupervised algorithms can be split into the followint categories:
+
+* _Clustering_ algorithms to try to discriminate and separate the observations in different groups.
+* _Dimensionality reduction_ algorithms (such as [PCA], ICA or autoencoder) to  find the best representation of the data with fewer dimensions.
+* _Anomaly detections_ to find outliers.
+
+The highly popular [**clustering algorithms**](https://data-flair.training/blogs/clustering-in-r-tutorial/) produce some data segmentation that [partitions the data into several groups](https://www.hackerearth.com/practice/machine-learning/machine-learning-algorithms/clustering-algorithms-evaluation-r/tutorial/) based on their similarity (e.g., vector distances). In fact, clustering is simply attempting to find structure within a dataset without being trained by any response variable. But be careful: the structure revealed by clustering does not mean that it is biologically relevant and informative. A careful interpretation by a trained scientist is required, as for any other mathematical operation on biological data.
 
 As advanced above, data for clustering must be _scaled_ (standardised or _Z_-normalised) to reduce spurious variations and expression level differences, resulting in a global reduction of diversity. Then, **distances** should be calculated based on one on these methods:
 

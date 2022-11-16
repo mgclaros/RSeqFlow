@@ -1,5 +1,5 @@
 
-The `Mclust()` function in [the `mclust` package](https://mclust-org.github.io/mclust/articles/mclust.html) selects the optimal model initialised by hierarchical clustering for parameterised Gaussian mixture models using maximum likelihood criterium. One chooses the model and number of clusters with the largest BIC (_Bayesian Information Criterion_) in comprehensive strategies for clustering, density estimation and discriminant analysis: a large BIC score indicates strong evidence for the corresponding model.
+The `Mclust()` function in [the `mclust` package](https://mclust-org.github.io/mclust/articles/mclust.html) [@Scrucca2016] selects the optimal model initialised by hierarchical clustering for parameterised Gaussian mixture models using maximum likelihood criterium. One chooses the model and number of clusters with the largest BIC (_Bayesian Information Criterion_) in comprehensive strategies for clustering, density estimation and discriminant analysis: a large BIC score indicates strong evidence for the corresponding model.
 
 ```{r MClustResults, results='hide'}
 # See also PAGE 173

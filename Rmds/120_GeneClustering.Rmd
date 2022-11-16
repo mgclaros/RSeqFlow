@@ -67,7 +67,7 @@ The [optimal number of clusters](https://www.r-bloggers.com/2021/04/cluster-anal
   * Using the ***GAP statistic*_*** [@Tibshirani2002] that compares the total intra-cluster variation for different values of _k_ with their expected values under null reference distribution of the data. The idea is to obtain the highest gap statistic as the number of ideal clusters. It can be done using the `clusGap()` function from the `cluster` package. `clusGap()` calculates a goodness of clustering measure via bootstrapping by means of the `gap` statistic. The bootstrapping is set to `B = 50` for practical purposes (after 500 bootstraps, the result will not change, but is too long). A plot of clusters vs. gap statistic using the `fviz_gap_stat()` function shows the result. We have developed the function `ExtractFirstMax()` to obtain this optimal _k_.
   * The ***silhouette method*** has been used above to inspect the contribution of samples to sample clusters. But the average silhouette approach determines how well each observation (_gene_) lies within its cluster for a wide range of _k_: a high average silhouette width indicates a good clustering and can provide the best number of clusters.
 
-2. A method **based on 30 metrics** can be obtained using `NbClust()` function from the `NbClust` package. Using the parameter `index = "all"` is very quick but uses only 26 metrics, excluding GAP. The complete set is more time-consuming and requires to change the function call with  with `index = "alllong"`.
+2. A method **based on 30 metrics** can be obtained using `NbClust()` function from the `NbClust` package [@Charrad2014]. Using the parameter `index = "all"` is very quick but uses only 26 metrics, excluding GAP. The complete set is more time-consuming and requires to change the function call with  with `index = "alllong"`.
 
 3. **Dynamic clustering** includes a [novel dynamic branch cutting methods](https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/WORKSHOP/2014/Langfelder-NetworkDay-clustering.pdf) for detecting clusters in a dendrogram depending on their shape [@Langfelder2008tf], instead of using constant height cutoff methods (as performed  by `cutree()` function): it launches several clustering methods to perform an adaptive branch pruning of hierarchical clustering dendrograms. It also uses a minimal number of genes per cluster (by default is `20`) to avoid very small clusters, giving better detection of outliers. It is implemented in `dynamicTreeCut` package implements  
 
@@ -117,7 +117,7 @@ kable(t(as.data.frame(table(groups_orient))), caption = "Groups using the orient
 
 #### Best-of-30
 
-The **optimal cluster number** `k_30` can be calculated with a longer method based on 26 (`index = "all"`) metrics to be sure that the selected value is supported by most methods, not only one. Severla plots and messages are generated during the evaluation.
+The **optimal cluster number** `k_30` can be calculated with a longer method based on 26 (`index = "all"`) metrics to be sure that the selected value is supported by most methods, not only one. Several plots and messages are generated during the evaluation.
 
 ```{r k-30}
 # calculation the opt of k_30

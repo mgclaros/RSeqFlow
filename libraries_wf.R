@@ -1,6 +1,6 @@
 # libraries_wf -> RSeqFlow
 # Gonzalo Claros
-# 2022-09-28
+# 2022-11-02
 
 # Already installed packages
 # more details https://www.r-bloggers.com/an-efficient-way-to-install-and-load-r-packages/
@@ -48,7 +48,7 @@ if (length(new_libs_CRAN)) {
   writeLines(paste("Following", length(new_libs_CRAN), "CRAN libraries were installed at\n    ", R.home()))
   writeLines(new_libs_CRAN, sep = ", ")
 } else if (PKG_UPDATE) {
-	update.packages(ask = FALSE, checkBuilt = TRUE))
+	update.packages(ask = FALSE, checkBuilt = TRUE)
 } else {
 	message("Everything is updated")
 }

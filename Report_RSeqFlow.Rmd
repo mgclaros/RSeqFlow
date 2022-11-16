@@ -212,7 +212,7 @@ This is to show if original data already can group replicates in separate groups
 
 # Differential expression
 
-Differential expression (DE) of genes means that a gene is expressed differently in a series of biological conditions due to the process where different genes are activated in a cell, giving that cell a specific purpose that defines its function. 
+Differential expression (DE) of genes means that a gene is expressed differently in a series of biological conditions due to the process where different genes are activated in a cell, giving that cell a specific purpose that defines its function.
 
 [START EXPANDIBLE]: #
 `r EXPAND_bx` Expand to read about <b>differential expression methods</b></summary>
@@ -221,10 +221,18 @@ Detecting [DE] is extremely important because it allows living organisms, includ
 
 There is no reliable method for differential expression in RNA-seq [@Rapaport2013]. However, the most reliable and widely used [DE] methods when a few replicates are available are those based in [DESeq2](https://www.bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html) and [edgeR] libraries. 
 
+Since [**linear regression**](https://mlu-explain.github.io/linear-regression/) is a simple and powerful model for predicting a numeric response from a set of one or more independent variables, it is a suitable approach to detect [DEG]s. Additionally, it is effective and easy to interpret. Typically, any linear model imply the [following assumptions](https://www.r-bloggers.com/2021/10/simple-linear-regression-in-r/):
+
+* **Log-linearity**: a straight line between the log values of _x_ and _y_ (a constant change in a predictor leads to a constant change in the response variable); in terms of gene expression, the response variable _y_ is assumed to follow an exponential family distribution with _mean_ ($\mu$).
+* **Homoskedasticity**: noise hase the same variance along the variables.
+* **Normality**: noise is normally distributed.
+* **Independence**: error is independent of variables and does now follow a gaussian/normal distribution.
+
 </details> 
 [END EXPANDIBLE]: #
 
-The following steps are to reduce data dispersion, homogenise them around the mean, and adjust a linear model to obtain the most reliable [DEG]s.
+The following steps are to reduce data dispersion, homogenise them around the mean, and adjust a linear model to obtain the most reliable [DEG]s based on linear models.
+
 
 ## Experimental design
 
