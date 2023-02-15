@@ -1,6 +1,6 @@
 # libraries_wf -> RSeqFlow
 # Gonzalo Claros
-# 2022-11-02
+# 2023-02-09
 
 # Already installed packages
 # more details https://www.r-bloggers.com/an-efficient-way-to-install-and-load-r-packages/
@@ -19,7 +19,7 @@ libs_Rmd <- c("knitr", "knitcitations", "rmarkdown", "markdown", "bibtex", "DT")
 libs_scholar <- "scholar"
 libs_anova <- "statmod"
 libs_clustering <- c("igraph", "psych", "corrplot", "cluster", "NbClust", "dendextend",
-                      "pheatmap", "factoextra", "WGCNA", "fpc", "mclust")
+                      "pheatmap", "factoextra", "WGCNA", "fpc", "mclust", "visNetwork")
 libs_metagen <- c("vegan")
 libs_wordcloud <- c("tm", "wordcloud", "wordcloud2", "SnowballC")
 
@@ -72,8 +72,7 @@ writeLines("\n*** Checking Bioconductor libraries that must be installed  ***")
 
 ## Checking if BiocManager was installed ####
 # Install BiocManager before installing any BioConductor library
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
+if (!("BiocManager" %in% intalled_libs)) install.packages("BiocManager")
 
 ## BiocManager installation or update ####
 if (PKG_UPDATE) {
@@ -84,15 +83,16 @@ if (PKG_UPDATE) {
 VERSION_BIOC <- BiocManager::version()
  
 ## Vector with required Bioconductor packages ####
-from_BioC <- c("edgeR", 
-               "limma", 
-               "Glimma", 
-               "gplots",
+from_BioC <- c("gplots",
                "RColorBrewer",
-               "GO.db", "impute",
-               "preprocessCore",
+               "GO.db",
                "phyloseq",
-               "chromPlot")
+               "chromPlot", 
+               "limma", 
+               "edgeR",
+               "Glimma", 
+               "impute",
+               "preprocessCore")
                     
 ## Obtain absent libraries that must be installed ####
 # libraries not pressent in 'intalled_libs'

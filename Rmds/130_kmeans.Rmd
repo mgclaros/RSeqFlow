@@ -39,7 +39,7 @@ fviz_gap_stat(gap_stat) + labs(subtitle = "Gap statistic for k-means")
 
 Let's now calculate the _k_ from the **best-of-30** methods:
 
-```{r kmeans-of-30}
+```{r kmeans-of-30, warning=VERBOSE_MODE}
 # bext-of-30 for kmeans
 nb <- NbClust(m.ctf.std, 
               distance = "euclidean", 
@@ -47,8 +47,8 @@ nb <- NbClust(m.ctf.std,
               max.nc = 10, 
               index = "all",
               method = "kmeans")
-# graphical representation
-fviz_nbclust(nb)
+# graphical representation that usually crashes
+# fviz_nbclust(nb)
 
 # data from the barplot
 table(nb$Best.nc[1,])
@@ -106,7 +106,7 @@ kable(t(as.data.frame(n_genes_group_kmeans)), caption = "Final K-means groups")
 
 Since the distribution of genes depends on more than two dimensions (variables), the plot calculated with `fviz_cluster()` will perform principal component analysis (PCA) and plot the data points according to the first two principal components that explain the majority of the variance.
 
-```{r kmeansVisu, fig.width=6, fig.height=6, fig.show='hold', warning=FALSE}
+```{r kmeansVisu, fig.width=6, fig.height=6, fig.show='hold', warning=VERBOSE_MODE}
 # see the distribution of genes per cluster
 fviz_cluster(kmeans_ctf, 
              data = m.ctf.std, 
@@ -134,9 +134,10 @@ fviz_cluster(kmeans_ctf,
 
 Since we know that the genes sould be distributed by the experimental factors, does the _k_-means clustering matches with the true structure of the data? 
 
-We should compute a cross-tabulation between _k_-means clusters and the experimental factors
 
 ```{r TODO, echo=FALSE}
+# We should compute a cross-tabulation between _k_-means clusters and the experimental factors
+
 # table(iris$Species, km.res$cluster) PAGE 149
 
 # table(m.ctf.std$ExpFactor, km.res$cluster)

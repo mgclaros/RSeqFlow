@@ -2,7 +2,7 @@
 #
 # execute_wf -> RSeqFlow
 # Gonzalo Claros
-# 2022-10-02
+# 2023-02-01
 #
 # Main file, invoked after source(configure_wf.R)
 # Alternative usage from terminal: Rscript execute_wf.R aConfigFile.R 
@@ -133,8 +133,6 @@ logFC <- log2(FC)
 CORR_METHOD = "pearson"
 # Set correlation threshold considering that r^2 = (0,75)^2 = 0,5625
 R_MIN <- 0.75
-# Maximal number of nodes to peform network analysis
-NODE_MAX <- 250    # maybe increased up to 1000 - 2000, but it takes much more time
 
 ## Set code-folding for Rmd
 # my_codefolding <- ifelse(VERBOSE_MODE, "show", "hide")

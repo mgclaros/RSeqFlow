@@ -6,7 +6,7 @@ The `Mclust()` function in [the `mclust` package](https://mclust-org.github.io/m
 fit <- Mclust(m.ctf.std)
 ```
 
-Let's see the results of the model-based clustering based on [BIC], as explained [above](#clustbkg).
+Let's see the results of the [MBC] based on [BIC], as explained [above](#clustbkg).
 
 ```{r show-Mclust-results}
 plot(fit, what = "BIC")
@@ -21,7 +21,7 @@ message("The number of **Mclust** clusters is: **", mclust_k, "**")
 
 ## Clustering comparisons
 
-The function `cluster.stats()` from `fpc` package returns a list containing many components useful for analysing the intrinsic characteristics of all clusterings performed (AHC, _k_-means and model-based), that can be used to evaluate its internal quality. Let's calculate these estimates:
+The function `cluster.stats()` from `fpc` package returns a list containing many components useful for analysing the intrinsic characteristics of all clusterings performed (AHC, _k_-means and MBC), that can be used to evaluate its internal quality. Let's calculate these estimates:
 
 ```{r}
 # Statistics for clusterings using distances in d_ctf_genes
@@ -33,7 +33,7 @@ mclust_stats <- cluster.stats(d_ctf_genes, groups_mclust, groups_k)
 The comparative results are the following:
 
 
-Metrics | Meaning | AHC | k-means | Model-based
+Metrics | Meaning | AHC | k-means | MBC
 :---    | :---    | :---    | :--- | :---
 ***cluster.number*** | Number of clusters | `r ahc_stats$cluster.number` | `r km_stats$cluster.number` | `r mclust_stats$cluster.number`
 ***cluster.size*** | Vector containing the number of points in each cluster | `r toString(ahc_stats$cluster.size)` | `r toString(km_stats$cluster.size)` | `r toString(mclust_stats$cluster.size)`
@@ -52,3 +52,13 @@ Metrics | Meaning | AHC | k-means | Model-based
 `r NOTE_bx`
   You have information about the different clustering approaches to decide your preferences for posterior analyses
 </div>
+
+## Saving all clusters
+
+```{r saveclust}
+# append cluster labels to original data
+m.putat.std.clust <- cbind(as.data.frame(m.ctf.std), AHC = groups_k, kMeans = groups_kmeans, MClust = groups_mclust )
+
+fileName <- SaveTSV(m.putat.std.clust, "ClustersCTF-")
+message(fileName, "\n", "contains standardised counts and cluster membership of genes")
+```

@@ -1,6 +1,6 @@
 # functions_wf -> RSeqFlow
 # Gonzalo Claros
-# 2022-10-02
+# 2022-11-19
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -128,9 +128,11 @@ PlotMyPCA <- function(datatable,
                       thisScale = TRUE,  # raw data must set this to FALSE due to zeros or constant  vaules 
                       factorColors = EXP_COLORS) {
 	pca <- prcomp(t(datatable), scale = thisScale, center = TRUE)
-	pc_comp <- summary(pca)$importance
-	pc1_contrib <- round(pc_comp[3, 1] * 100) 
-	pc2_contrib <- round((pc_comp[3, 2] - pc_comp[3, 1]) * 100)
+	# scale = TRUE makes each of the variables in datatable to have a mean of 0 
+	# and a standard deviation of 1 before calculating the principal component
+	pc_comp <- summary(pca)$importance # to see the importance of principal components
+	pc1_contrib <- round(pc_comp[3, 1] * 100, digits = 1) 
+	pc2_contrib <- round((pc_comp[3, 2] - pc_comp[3, 1]) * 100, digits = 1)
 
 	plot(pca$x[, 1], pca$x[, 2], 
 	     pch = ".", 
@@ -141,11 +143,8 @@ PlotMyPCA <- function(datatable,
 	     col = factorColors, 
 	     labels = colnames(datatable))
 	     
-	return(pc_comp)
+	return(list(PCA = pca, CumulativeProp = pc_comp))
 }
-# https://cran.r-project.org/web/packages/ggfortify/vignettes/plot_pca.html
-# https://towardsdatascience.com/principal-component-analysis-pca-101-using-r-361f4c53a9ff
-# https://www.geeksforgeeks.org/how-to-make-pca-plot-with-r/
 # ////////////////////////////////
 
 

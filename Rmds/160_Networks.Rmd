@@ -48,12 +48,12 @@ We will produce network for the following datasets using the method `r CORR_METH
 
 * The most variable genes (those with `CV > ` `r CV_MIN`)
 * All variant DEGs with `CV > ` `r CV_MIN` 
-* AHC clusters
+* [AHC] clusters
 * _k_-means clusters
-* Model-based clusters
+* [MBC] clusters
 
 
-## List of clusters
+## Clusters for analysis
 
 The [DEG]s have been [already filtered](#filtering) as `putative` and then the most variable ones were then [scaled](#scaling) and stored in `m.ctf.std`. We will now obtain the significant correlation as the quantifiable link to perform a net [@Provart2012tj]. Let's create a list (`CLUSTER_LIST`) with all clusters that we want to analyse.
 
@@ -79,7 +79,7 @@ for (i in 1:kmeans_k) {
   CLUSTER_LIST[[id]] <- list(expr_matrix = t(m.ctf.std[groups_kmeans == i, ]))
 }    
 
-txt <- "ModelBased_Clust_"
+txt <- "MBC_Clust_"
 i <- 1
 for (i in 1:mclust_k) {
   id <- paste0(txt, i)
@@ -98,7 +98,7 @@ list_length <- length(CLUSTER_LIST)
 
 The correlation in expression pattern between pairs of genes is measured, and those exhibiting strong correlations are joined in a graphical representation to create a network, which can be visualised with graph network viewers [@Provart2012tj]. This will reveal genes with similar patterns of expression in the same or equivalent tissues.
 
-When large numbers of data sets are used when computing correlation, values of as low as 0.2 will have good _P_ values. Thus it is often useful to use a higher cutoff and to consider the **coefficient of determination** $r^2$ that reflects the amount of variance in common: $r^2 = {{Variation_{explained}} \over {Variation_{total}}}$. Thus a pair of genes with a coexpression score of 0.75 is commonly used as a cutoff, because $r^2 = (0.75)^2 = 0.56$ meaning that genes exhibiting such a score would have 56% ($r^2 \cdot 100$) of their variance in common [@Usadel2009su] leaving 44% ($100 - r^2$) to randomness. This seems biologically meaningful in the sense that this variance might be directed by _cis_-regulatory elements in common in the promoters of co-expressed genes.
+When large numbers of data sets are used when computing correlation, values of as low as 0.2 will have good _P_ values. Thus it is often useful to use a higher cutoff and to consider the **coefficient of determination** (proportion of the variation in the dependent variable that is predictable from the independent variables) that reflects the amount of variance in common. Its calculation based on ${{Variation_{explained}} \over {Variation_{total}}}$, but can be easily obtained as the square of the coefficient of correlation $r^2$ (but not $R^2$, that is the [coefficient of multiple determination](https://www.r-bloggers.com/2022/11/the-coefficient-of-determination-is-it-the-r-squared-or-r-squared/)). Thus a pair of genes with a coexpression score of 0.75 is commonly used as a cutoff, because $r^2 = (0.75)^2 = 0.56$ meaning that genes exhibiting such a score would have 56% ($r^2 \cdot 100$) of their variance in common [@Usadel2009su] leaving 44% ($100 - r^2$) to randomness. This seems biologically meaningful in the sense that this variance might be directed by _cis_-regulatory elements in common in the promoters of co-expressed genes.
 
 To avoid the multitesting problem in large number of data sets, the adjusted _P_ values should also be added to the significance filtering, keeping always in mind that correlation is not causation [@Maurage2013]. However, _P_-values should be calculated for small datasets since it is computationally demanding. Hence, the correlation matrix will be converted in a **list of edges** only for those genes (nodes) whose correlation is over `r R_MIN` and `P.adj <` `r P`. The edge list is then saved as a table ready-to-use in Cytoscape.
 
@@ -362,7 +362,24 @@ for (i in 1:list_length) {
      aNet, 
      vertex.label = NA,
      main = paste0("Sub-graphs in ", cluster_name))
+  
+  plot(aNet,
+     main = paste0("Labelled communities in ", cluster_name),
+     vertex.size = 5,   # tamaño del nodo
+     vertex.label.cex = 0.5,  # tamaño de la etiqueta
+     vertex.label.color = "darkblue",
+     edge.arrow.size = 0.3,   # intenta cambiar el tamaño del conector
+     mark.groups = ceb, # colorea las comunidades
+     margin = -0.1,  # aumenta el área de impresión
+     asp = 0)  # no reescala la imagen
 
+  cat("   \n")  # required to combine markdown with plots
+
+  # red interactiva con etiquetas
+  ggp_tmp <- visIgraph(aNet) %>% 
+                visNodes(size = 10)
+  print(ggp_tmp)
+  
   cat("   \n")  # required to combine markdown with plots
   
   # print some information

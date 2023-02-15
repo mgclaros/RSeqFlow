@@ -35,7 +35,7 @@ Clustering methods can be classified in the following [main classes](https://dat
 
 2. **Non-hierarchical**: this technique groups the data in order to maximise or minimise some evaluation criteria,  involving the iterative formation of new clusters by merging or splitting the clusters instead of following a hierarchical order. Although it is less intuitive, it is considered [faster and more reliable than hierarchical clustering](https://www.geeksforgeeks.org/difference-between-hierarchical-and-non-hierarchical-clustering/), and is preferred for large datasets. There are many algorithms, such as K-medians, self-organising maps, or gene shaving, but **[K-means](https://data-flair.training/blogs/clustering-in-r-tutorial/)** is the most popular and simple. _K_-means algorithm is commonly randomnly initialized, so different runs may yield different results. Additionally, _k_-means requires the specification of the the optimal number of clusters _k_. Since there is no solid solution for such a determination, a _Within Sum of Squares_ ([WSS]) evaluated in an _Elbow plot_ is the usual criterium. The result can be checked with the _Silhouette Score_, that should be positive and close to +1. More details can be obtained [below](#bestgeneclusterk). 
 
-3. **Model-based clustering**, also known as **mixture models**, is a broad family of algorithms designed for modelling an unknown distribution as a mixture of simpler distributions [@Fraley2002]. It considers the data as multivariate, coming from a distribution that is mixture of two or more clusters with variety of data models, and applies maximum likelihood estimation and Bayes criteria to identify the most likely model and number of clusters. In contrast to the hirarchical and non-hierarchical, model-based clustering is no heuristic but based on formal models. The model parameters can be estimated using the _Expectation-Maximization_ (EM) algorithm initialised by hierarchical model-based clustering. Among the different model selections to provide the most realistic _true clusters_, the _Bayesian Information Criterion_ ([BIC]) remains the criterion of choice [@McNicholas2016vo], that is, a large [BIC] score indicates strong evidence for the corresponding model.
+3. **Model-based clustering** ([MBC]), also known as **mixture models**, is a broad family of algorithms designed for modelling an unknown distribution as a mixture of simpler distributions [@Fraley2002]. It considers the data as multivariate, coming from a distribution that is mixture of two or more clusters with variety of data models, and applies maximum likelihood estimation and Bayes criteria to identify the most likely model and number of clusters. In contrast to the hirarchical and non-hierarchical, [MBC] is no heuristic but based on formal models. The model parameters can be estimated using the _Expectation-Maximization_ (EM) algorithm initialised by hierarchical [MBC]. Among the different model selections to provide the most realistic _true clusters_, the _Bayesian Information Criterion_ ([BIC]) remains the criterion of choice [@McNicholas2016vo], that is, a large [BIC] score indicates strong evidence for the corresponding model.
 
 
 In the case of gene expression, you can cluster both samples (columns) and genes (rows). The best way to represent this is bi-dimensionally by means of a **heatmap**. A heatmap depicts values for a main variable of interest (gene expressión) across samples (factors, conditions) as a grid of coloured squares. It gives obvious visual cues about the magnitude of gene expression across samples to infer clustering, association or correlation. 
@@ -51,8 +51,9 @@ Two initial subsets will be defined only after `treat()`:
 * **Ubiquitous**: genes that are DEGs in ***ALL*** contrasts (`ubi`)
 * **Putative**: genes that are DEGs in at least one contrast (`putative`)
 
-1. If there is any **`ubi`** DEG, save it, since they can be good **biomarker candidates**, although their utility for clustering, networking functional analyses is less significant.
-    ```{r DEGs-in-all, results='hold'}
+1. Look for any **`ubi`** DEG, preferentially after `treat()` but also after `eBayes()` since it is frequent that the first method do not provide any ubiquous genes
+
+    ```{r ubiDEGs-in-all, results='hold'}
     keep.treat.ubi <- rowSums(abs(status.treat)) == dim(status.treat)[2]
     # keep.ubiquitous <- rowSums(status.treat != 0) == dim(status.treat)[2]
     ubis.treat.IDs <- names(keep.treat.ubi[keep.treat.ubi == TRUE]) # ID of best 'ubis'
@@ -61,9 +62,13 @@ Two initial subsets will be defined only after `treat()`:
     ubi.DEGs <- as.data.frame(status.eB[keep.eB.ubi, ]) # information of eBayes 'ubis'
     ubis.eB <- nrow(ubi.DEGs)
 
-    cat("Number of ubiquitous genes after treat(): ", ubis.treat,
+    cat("Number of ubiquitous genes after treat():  ", ubis.treat,
         "\nNumber of ubiquitous genes after eBayes(): ", ubis.eB, "\n")
-    
+    ```
+
+2. If there is any **`ubi`** DEG, save it, since they can be good **biomarker candidates**, even though they are less useful for clustering, networking and functional analyses.
+
+    ```{r SaveUbis, results='hold'}
     # Save ubiquitous DEGs for further utility
     if (ubis.eB >= 1) {
       fileName <- SaveTSV(ubi.DEGs, "ubiquitousDEGs_")
@@ -84,7 +89,8 @@ Two initial subsets will be defined only after `treat()`:
     ```
 
 
-2. Retain **`putative`** genes based on the `treat()` analysis for further clustering, networking and functional analysis. Only CTF normalised data will be considered as [previoulsy explained](#normBkg).
+3. Retain **`putative`** genes based only on the `treat()` analysis for further clustering, networking and functional analysis. Only CTF normalised data will be considered as [previoulsy explained](#normBkg).
+
     ```{r putativeDEGs}
     keep.putative <- rowSums(status.treat != 0) >= 1
     # putative in CTF
@@ -93,12 +99,13 @@ Two initial subsets will be defined only after `treat()`:
     x.filt.tmm.putat <- x.filt.norm$counts[keep.putative, ]
     
     rm(keep.putative)
-    cat("Number of putative DEGs: ", nrow(x.filt.ctf.putat), "\n")
+    message("Number of putative DEGs: ", nrow(x.filt.ctf.putat), "\n")
     ```
 
 
-3. Correlations and distances should be calculated with **logarithmic counts** to group highly variant genes. However, this is configured in `configure_wf.R` in the variable `LOG_EXPR`. As explained above and in [@Johnson2022fn], only [CTF] transformation is affected.
+4. Correlations and distances should be calculated with **logarithmic counts** to group highly variant genes. However, this is configured in `configure_wf.R` in the variable `LOG_EXPR`. As explained above and in [@Johnson2022fn], only [CTF] transformation is affected.
 The new log-counts are stored in `m.??` variables.
+
     ```{r calcLogCtf}
         if (LOG_EXPR) {
           m.x <- log2(x.filt.ctf + 1) # add 1 to avoid log(0) ; complete x object
@@ -114,7 +121,8 @@ The new log-counts are stored in `m.??` variables.
     ```
 
 
-4. Retain the **most variable genes** (rows) by filtering `putative` DEGs by [CV] as configured in `configure_wf.R`. When the `m` variables are in log-counts, CV will be much lower than CV for regular counts. Hence, configure `LOG_EXPR` to FALSE only when your experiment does not contain many variable genes.
+5. Retain the **most variable genes** (rows) by filtering `putative` DEGs by [CV] as configured in `configure_wf.R`. When the `m` variables are in log-counts, CV will be much lower than CV for regular counts. Hence, configure `LOG_EXPR` to FALSE only when your experiment does not contain many variable genes.
+
     ```{r filterByCV}
     # the most variant genes
     m.x.cv <- calculaVars(m.x) # complete set of genes
@@ -125,7 +133,24 @@ The new log-counts are stored in `m.??` variables.
     m.x.cv_filt <- m.x.cv[m.x.cv$cv >= CV_MIN,]
     m.putat.ctf.cv_filt <- m.putat.ctf.cv[m.putat.ctf.cv$cv >= CV_MIN,]
     m.putat.tmm.cv_filt <- m.putat.tmm.cv[m.putat.tmm.cv$cv >= CV_MIN,]
-    
+    ```
+
+7. Decreasing the most variable genes at a maximum of `r NODE_MAX` genes to avoid neverending calculations
+
+    ```{r decrease-putat-DEGs}
+    # verificar el número de genes que pasan
+    # si supera el NODE_MAX, baja el CV_MIN en -0.2 en un bucle hasta que ya haya esos genes
+    ini_CV_MIN <- CV_MIN # retain the initial value
+    while (length(rownames(m.putat.ctf.cv_filt)) > NODE_MAX){
+      CV_MIN <- CV_MIN + 0.002
+      # remove genes with CV < CV_MIN
+      m.x.cv_filt <- m.x.cv[m.x.cv$cv >= CV_MIN,]
+      m.putat.ctf.cv_filt <- m.putat.ctf.cv[m.putat.ctf.cv$cv >= CV_MIN,]
+      m.putat.tmm.cv_filt <- m.putat.tmm.cv[m.putat.tmm.cv$cv >= CV_MIN,]
+    }
+    if (ini_CV_MIN != CV_MIN) message("CV threshold was increased to ", CV_MIN)
+    rm(ini_CV_MIN)
+
     # remove additional columns introduced by calculaVars()
     m.x.CV <- as.matrix(m.x.cv_filt[,1:ncol(x.filt.ctf)])
     m.putat.ctf.CV <- as.matrix(m.putat.ctf.cv_filt[,1:ncol(x.filt.ctf)])
@@ -133,22 +158,22 @@ The new log-counts are stored in `m.??` variables.
     ```
 
 
-5. A brief **summary** of the new sets of data for clustering:
+6. A brief **summary** of the new sets of data for clustering:
 
-Result            | Total | After CV > `r CV_MIN`
-:---              | ---:  | ---:
-***Total matrix***      |
-Samples (columns) | `r ncol(m.x)`             | `r ncol(m.x.CV)`
-Genes (files)     | `r nrow(m.x)`             | `r nrow(m.x.CV)`
-***Ubiquitous DEGs***    |  | 
-eBayes() genes    | `r ubis.eB`    | -
-treat() genes     | `r ubis.treat` | -
-***Putative DEGs in CTF***    |  |
-Samples (columns) | `r ncol(m.putat.ctf)`         | `r ncol(m.putat.ctf.CV)`
-Genes (files)     | `r nrow(m.putat.ctf)`         | `r nrow(m.putat.ctf.CV)`
-***Putative DEGs in TMM***    |  |
-Samples (columns) | `r ncol(m.putat.tmm)`         | `r ncol(m.putat.tmm.CV)`
-Genes (files)     | `r nrow(m.putat.tmm)`         | `r nrow(m.putat.tmm.CV)`
+Result                      | Total                 | After CV > `r CV_MIN`
+:---                        | ---:                  | ---:
+***Total matrix***          |                       | 
+Samples (columns)           | `r ncol(m.x)`         | `r ncol(m.x.CV)`
+Genes (files)               | `r nrow(m.x)`         | `r nrow(m.x.CV)`
+***Ubiquitous DEGs***       |  | 
+eBayes() candidates         | `r ubis.eB`           | -
+treat() candidates          | `r ubis.treat`        | -
+***Putative DEGs in CTF***  |  |
+Samples (columns)           | `r ncol(m.putat.ctf)` | `r ncol(m.putat.ctf.CV)`
+Genes (files)               | `r nrow(m.putat.ctf)` | `r nrow(m.putat.ctf.CV)`
+***Putative DEGs in TMM***  |  |
+Samples (columns)           | `r ncol(m.putat.tmm)` | `r ncol(m.putat.tmm.CV)`
+Genes (files)               | `r nrow(m.putat.tmm)` | `r nrow(m.putat.tmm.CV)`
 
 
 

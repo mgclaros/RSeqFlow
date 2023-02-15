@@ -37,7 +37,7 @@ Let's produce the files after filtering genes per `P` and `FC` thresholds to obt
 
 2. DEGs obtained using the limma-trend (`treat()`) approach:
 
-    ```{r SaveDEGs-treat}
+    ```{r SaveDEGs-treat-limma-trend}
     i <- 1
     allFiles <- vector()
     for (i in 1:NUM_CONTRASTS) {
@@ -58,7 +58,7 @@ Let's produce the files after filtering genes per `P` and `FC` thresholds to obt
 
 3. In the case you are interested in genes that do not comply with _P_ and _FC_ thresholds, the same parameters for all genes are now saved:
 
-    ```{r SaveDEGs-treat}
+    ```{r SaveDEGs-treat2}
     i <- 1
     allFiles <- vector()
     for (i in 1:NUM_CONTRASTS) {

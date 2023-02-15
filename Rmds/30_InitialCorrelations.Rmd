@@ -112,6 +112,7 @@ Genes (files)     | `r nrow(matriz)` | `r nrow(matriz_filt)`
 [START EXPANDIBLE]: #
 `r EXPAND_bx` Expand to read about <b>calculating correlations</b></summary>
 
+Correlation is a statistical measure that tells us about the association between the two variables. It describes how one variable behaves if there is some change in the other variable.
 The correlation matrix is calculated for the columns of a matrix or data frame.
 There are many R functions that can calculate it, but here you are two of them:
 
@@ -124,15 +125,15 @@ Correlations will be plotted using function `corrplot()` from `corrplot` package
 
 The most used method to calculate association between paired samples is Pearson, the Spearman and in some cases Kendall or MI [@Serin2016uw; @Emamjomeh2017tn]:
 
-* **Pearson**'s _r_ is the most popular correlation measure, although it assumes a linear correlation and normally distributed values, but it is sensitive to outliers. It measures the correlation between a pair of expression profiles.
-* **Spearman**'s $\rho$ rank correlation is more robust (less sensitive to outliers), but also less powerful than _r_ because it distributes values in ranges and looks for linear correlation between ranks. Useful when you have at least one qualitative variable.
-* **Kendall**'s $\tau$ is less powerful, but useful when all values are qualitative.
-* **Mutual Information** (MI) attempts to measure sthe tatistical dependence between two variables
+* **Pearson**'s _r_ is the most popular correlation measure of the linear relationship between two continuous random variables. It does not assume normality although it does assume finite variances and finite covariance, ant it is [sensitive to outliers](https://anyi-guo.medium.com/correlation-pearson-vs-spearman-c15e581c12ce). It must not be confused with _R_ (coefficient of multiple correlation), used in the context of multiple regression, that represents measure of how well a given variable can be predicted using a linear function.
+* **Spearman**'s $\rho$ correlation (also called $r_S$) applies to ranks and so provides a measure of a monotonic relationship between two continuous random variables. It determines the _strength and direction of the monotonic relationship_ between your two variables rather than the strength and direction of the linear relationship between your two variables (as performed by Pearson's). Monotonic relationships differ from linear relationships in that the two variables tend to move in the same/opposite direction but not necessarily at a constant rate. That is why monotonicity is **less restrictive** than that of a linear relationship. It is applicable to ordinal data (qualitative factors) and robust (less sensitive) to outliers. However, it is less powerful than _r_ because it distributes values in ranges and looks for linear correlation between those ranks. When you have $|\rho| > |r|$, you have a correlation that is monotonic but not linear. $|\rho| > 0.7$ indicates a strong monotonic relationship.
+* **Kendall**'s $\tau$ is thougth less powerful, but useful when all values are qualitative. However, a 2002 paper [@Newson2002] argued for the superiority of Kendall's $\tau$ over Spearman's $\rho$ correlation since confidence intervals for $\rho$ are less reliable and less interpretable than confidence intervals for $\tau$. Another article indicates that $\tau$ is more robust and slightly more efficient than $\rho$ [@Croux2010]. Unfortunately, Kendall's $\tau$ still runs a lot slower in R than Spearman's $\rho$, which is important in genomics, where datasets are large.
+* **Mutual Information** (MI) attempts to measure sthe tatistical dependence between two variables.
 
 </details> 
 [END EXPANDIBLE]: #
 
-> **IMPORTANT:** Since all variables are quantitative, `pearson` method can be used, or you may prefer `spearman` to correlate tendencies (instead of linearity). 
+> **IMPORTANT:** Since all variables are quantitative, `pearson` method can be used, or you may prefer `spearman` to [correlate tendencies (instead of linearity)](https://medium.com/analytics-vidhya/covariance-vs-pearson-correlation-coefficient-vs-spearmans-rank-correlation-coefficient-1d2d8789a728). 
 
 `r NOTE_bx` 
   Since this step is only exploratory, no _P_ value will be calcuate to speed up the analysis.

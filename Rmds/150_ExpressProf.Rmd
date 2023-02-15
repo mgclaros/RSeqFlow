@@ -63,7 +63,7 @@ Show the cluster correspondence to colours in the left heatmap
 
 We will convert the expression of sample replicates in a single value by applying the `mean()` since it is more representative than me median when few replicates are available. The columns to be considered replicates of the same experimental condition was declared on `EXP_CONDITIONS` in `configure_wf-R`, and this was then converted into the new variable `EXP_FACTORS`.
 
-Aggregation will be performed both with scaled values and with [CPM] values. The new expression matrix aggregated by sample will then be used to plot cluster profiles, both from [AHC], _k_-means and model-based clustering.
+Aggregation will be performed both with scaled values and with [CPM] values. The new expression matrix aggregated by sample will then be used to plot cluster profiles, both from [AHC], _k_-means and [MBC].
 
 1. Aggregate the **scaled matrix** `m.ctf.std` by sample using the mean. Transposition is required since the function will apply to columns.
 
@@ -102,11 +102,11 @@ Aggregation will be performed both with scaled values and with [CPM] values. The
 
 Using the sample-aggregated matrices, genes will be aggregated by cluster by means of the `median()`, that is less sensitive to outliers than the mean when there are many data to gather. To plot error bars, the standard deviation will be also calculated using `sd()`.
 
-> **IMPORTANT**: the list `agg_list` will contain the aggregated genes by all AHC and _k_-means clusters for each aggregated set of replicates
+> **IMPORTANT**: the list `agg_list` will contain the aggregated genes by all [AHC] and _k_-means clusters for each aggregated set of replicates
 
 ### AHC-clusters
 
-1. Aggregate AHC clusters using scaled data:
+1. Aggregate [AHC] clusters using scaled data:
 
     ```{r aggregateBy-AHCclusters-scaled}
     # create the list to gather aggregated data
@@ -200,12 +200,12 @@ Using the sample-aggregated matrices, genes will be aggregated by cluster by mea
     ```
 
 
-### Model-based clusters
+### MBC clusters
 
-Aggregate model-based clusters using scaled data and using [CPM]s.
+Aggregation of [MBC] clusters using scaled data and using [CPM]s.
 
 ```{r aggregate-ByMclust}
-thisID <- "ModelBased_scaled"
+thisID <- "MBC_scaled"
 n_genes_model_based <- table(groups_mclust)
 
 aggr_median <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_mclust), mean)
@@ -218,9 +218,9 @@ agg_list[[thisID]]$k <- mclust_k
 kable(cbind(No_genes = as.data.frame(n_genes_model_based)$Freq, aggr_median), 
       align = "r", 
       digits = ROUND_dig, 
-      caption = "Scaled, aggregate expression of model-based clusters per experimental condition")
+      caption = "Scaled, aggregate expression of MBC clusters per experimental condition")
 
-thisID <- "ModelBased_cpm"
+thisID <- "MBC_cpm"
 aggr_median <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_mclust), median)
 aggr_sd <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_mclust), sd)
 
@@ -348,27 +348,27 @@ While this may be aesthetically somewhat satisfactory, it is clear that the clus
     ```
 
 
-### Model-based groups
+### MBC groups
 
 1. Gene profiles as **scaled** values **scaled** values
 
-    ```{r matplots-model-based-Scaled, fig.width=4, fig.height=6, out.width=c('25%', '25%', '25%', '25%'), fig.show='hold'}
+    ```{r matplots-MBC-Scaled, fig.width=4, fig.height=6, out.width=c('25%', '25%', '25%', '25%'), fig.show='hold'}
     i <- 1
     for (i in 1:mclust_k) {
       m2Plot <- t(m.ctf.std[groups_mclust == i, ])
-      theTitle <- paste0(n_genes_model_based[i], " genes | model-based group ", i)
+      theTitle <- paste0(n_genes_model_based[i], " genes | MBC group ", i)
       print(PlotGeneProfiles(m2Plot, theTitle))
     }    
     ```
 
-2. Gene profiles of **model-based groups** as **CPM** values
+2. Gene profiles of **MBC groups** as **CPM** values
 
-    ```{r maplots-model-based-cpm, fig.width=4, fig.height=6, out.width=c('25%', '25%', '25%', '25%'), fig.show='hold'}
+    ```{r maplots-MBC-cpm, fig.width=4, fig.height=6, out.width=c('25%', '25%', '25%', '25%'), fig.show='hold'}
         # ORIGINAL COUNTS
     i <- 1
     for (i in 1:mclust_k) {
       m2Plot <- t(m.ctf.cpm[groups_mclust == i, ])
-      theTitle <- paste0(n_genes_model_based[i], " genes | model-based group ", i)
+      theTitle <- paste0(n_genes_model_based[i], " genes | MBC group ", i)
       print(PlotGeneProfiles(m2Plot, theTitle, ylab_cpm))
     }
     ```

@@ -1,6 +1,6 @@
 ---
 title: "`r PROJECT_NAME`"
-subtitle: "Using `r SOFT_NAME` pipeline; updated on 29-VII-2022"
+subtitle: "Using `r SOFT_NAME` pipeline; updated on 9-II-2023"
 author: "M. Gonzalo Claros & Amanda Bullones"
 date: "`r format(Sys.time(), '%A %d, %B %Y. %H.%M.%S')`"
 bibliography: Refs_RSeqFlow.bib
@@ -92,6 +92,8 @@ EXPAND_bx <- '<details  style="background-color: SeaShell;
 
 [BIC]: https://www.datanovia.com/en/lessons/model-based-clustering-essentials/ "Bayesian Information Criterion"
 
+[MBC]: https://www.datanovia.com/en/lessons/model-based-clustering-essentials/ "Model-based clustering"
+
 [WSS]: https://data-flair.training/blogs/clustering-in-r-tutorial/ "within-cluster sum of square"
 
 [DE]: "Differential expression"
@@ -153,6 +155,7 @@ All **contrasts** to analyse    | `r toString(allContrasts)`
 **Fold-change** threshold       | `r FC` (**logFC = `r logFC`**)
 **P-value** threshold           | `r P`
 **LOG2** for correlations       | `r LOG_EXPR`
+Maximal **genes** for correlation and clustering | `r NODE_MAX`
 **Optimal clusters**            | `r OPT_CLUST`
 **Min no. genes** in cluster    | `r MIN_GENES_PER_CLUSTER`
 **Kleinberg score** threshold   | `r MIN_KLEINBERG`
@@ -161,7 +164,6 @@ All **contrasts** to analyse    | `r toString(allContrasts)`
 **Decimal digits** for rounding  | `r ROUND_dig`
 **Correlation method**           | `r CORR_METHOD`
 **Correlation threshold**        | `r R_MIN`
-Maximal **node** count           | `r NODE_MAX`
 
 
 ***

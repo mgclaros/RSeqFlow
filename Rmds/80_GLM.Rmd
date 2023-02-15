@@ -58,13 +58,13 @@ Those and others drawbacks of the _P_-value led some to advocate for more sophis
 * _P_-values should be given with a precise value ($P = 0.021$), without adornments such as stars, and not as binary inequalities (~~$P < 0.05$~~)
 
 ![Beware false conclusions](https://media.nature.com/lw800/magazine-assets/d41586-019-00857-9/d41586-019-00857-9_16551622.jpg)
-It is obvious that all statistics naturally vary from study to study and can lead to large disparities in _P_-values, far beyond falling just to either side of the 0.05 threshold (see the image above). Therefore, we must consider **uncertainity** and, for example, rename _confidence intervals_ as _compatibility intervals_ to transmit the idea that all the values between the interval's limits are reasonably compatible with the data. Hece, because the interval gives the values most compatible with the data, it doesn't mean values outside it are incompatible: they are just less compatible
+It is obvious that all statistics naturally vary from study to study and can lead to large disparities in _P_-values, far beyond falling just to either side of the 0.05 threshold (see the image above). Therefore, we must consider **uncertainity** and, for example, re-think _confidence intervals_ as _compatibility intervals_ to transmit the idea that [all the values between the interval's limits are reasonably compatible with the data](https://github.com/matloff/regtools/blob/master/inst/NoPVals.md). Hece, because the interval gives the values most compatible with the data, it doesn't mean values outside it are incompatible: they are just less compatible. Therefore, confidence/compatibility intervals are more informative and more intuitive. 
 
 **Possible solutions**: 
 
 If researchers have to discard statistical significance, what should they do instead?
 
-1. Many authors suggest to change to $P < 0.005$ or include a Bayesian perspective to improve the reproducibility [@Benjamin2018sj], but the main disadvantage is the enormous false negative results that it gives. 
+1. Many authors suggest to change to $P < 0.005$ or include a Bayesian perspective to improve the reproducibility [@Benjamin2018sj], but the main disadvantage is the enormous false negative results that it gives and the new perception that [low _P_ values does not imply more significance or more importance](https://github.com/matloff/regtools/blob/master/inst/NoPVals.md). 
 2. Others propose to at least avoid _dichotomisation_ (significant vs. non-significant) [@Amrhein2019] and learn to deal with uncertainty.
 
 However, it is recognised that _P_-values and statistical significance are a prerequisite since they proof that the outcomes are not random. But for understanding the effect magnitude, at least a second parameter should be considered. To mitigate _P_-value misuse, the proposed solutions are: 

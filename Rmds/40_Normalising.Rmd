@@ -110,10 +110,25 @@ tmp <- PlotMyPCA(x.filt.ctf.lcpm, "CTF sample similarities by PCA")
 In case that samples are grouped worse than [before](#filterdSizeMDSPCA), data should be questioned, or the further analyses put in caution.
 </div>
 
-Since only the two first components appear in the plots, a deep evaluation of each component contribution in [PCA] can be inspected here:
+The number of pincipal components in [PCA] that merit consideration are those whose `eigenvalues > 1` (where an eigenvalue is the standard deviation of such component) since they are components actually explaining more than a single explanatory variable. This can be inspected in the following scree plot:
 
-```{r PCAcompoments, results='hold'}
-kable(tmp, align="c", digits = ROUND_dig) # only 3 decimals
+
+```{r PCAcompoments, results='hold', fig.width=8, fig.height=6, eval=FALSE, echo=FALSE}
+numPCs <- 10  # number of PCs to be plotted
+# el tmp tiene que ser el presultado de prcomp() y no el summary
+screeplot(tmp, 
+          type = "l", 
+          npcs = 1:numPCs,  
+          main = paste0("Screeplot of the first ", numPCs, " PCs")
+)
+abline(h = 1, col = "red", lty = 5)
+legend("topright", 
+       legend = c("Eigenvalue = 1"),
+       col = c("red"), 
+       lty = 5, 
+       cex = 0.6
+)
+
 # remove needless variables
 rm(tmp)
 ```
