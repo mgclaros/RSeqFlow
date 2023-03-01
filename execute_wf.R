@@ -2,7 +2,7 @@
 #
 # execute_wf -> RSeqFlow
 # Gonzalo Claros
-# 2023-02-01
+# 2023-03-01
 #
 # Main file, invoked after source(configure_wf.R)
 # Alternative usage from terminal: Rscript execute_wf.R aConfigFile.R 
@@ -118,11 +118,20 @@ ROUND_dig <- 3
 ## Convert experimental conditions into factors
 EXP_FACTORS <-  factor(EXP_CONDITIONS)
 
+## Frequency of every condition
+COND_FREQ <- table(EXP_CONDITIONS)
+
 ## Convert contrast list into the required vector of contrasts
 i <- 1
 allContrasts <- c()
 for (i in 1:length(CONTRASTS)) {
-	allContrasts <- c(allContrasts, paste0(CONTRASTS[[i]][1], "-", CONTRASTS[[i]][2]))
+  contrast_coef <- COND_FREQ[[CONTRASTS[[i]][2]]] / COND_FREQ[[CONTRASTS[[i]][1]]]
+  allContrasts <- c(allContrasts, paste0(contrast_coef, 
+                                         "*", 
+                                         CONTRASTS[[i]][1], 
+                                         "-", 
+                                         CONTRASTS[[i]][2])
+  )
 }
 
 ## Set the log2 of fold-change ####
