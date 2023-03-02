@@ -125,13 +125,11 @@ COND_FREQ <- table(EXP_CONDITIONS)
 i <- 1
 allContrasts <- c()
 for (i in 1:length(CONTRASTS)) {
-  contrast_coef <- COND_FREQ[[CONTRASTS[[i]][2]]] / COND_FREQ[[CONTRASTS[[i]][1]]]
-  allContrasts <- c(allContrasts, paste0(contrast_coef, 
-                                         "*", 
-                                         CONTRASTS[[i]][1], 
-                                         "-", 
-                                         CONTRASTS[[i]][2])
-  )
+  allContrasts <- c(allContrasts, 
+                    paste0(CONTRASTS[[i]][1], 
+                           "-",
+                           CONTRASTS[[i]][2])
+                    )
 }
 
 ## Set the log2 of fold-change ####
