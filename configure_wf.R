@@ -1,6 +1,6 @@
 # configure_wf -> RSeqFlow
 # Gonzalo Claros
-# 2023-02-09
+# 2023-03-21
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # DON'T TOUCH: CLEAN START ####
@@ -249,13 +249,13 @@ P <- 0.1
 # An excessive number of DEGs can take too much time to calculate
 # correlation and networking parameters. You can determine here the
 # maximal number of genes you want to correlate and clusterise. 
-# Beyond 1000 - 2000 genes may take hours
+# Beyond 700 genes, it may take hours
 #
 # Example:
 #   NODE_MAX <- 250
 
 # Maximal number of nodes to peform network analysis
-NODE_MAX <- 750
+NODE_MAX <- 350
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

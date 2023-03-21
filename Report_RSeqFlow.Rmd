@@ -1,6 +1,6 @@
 ---
 title: "`r PROJECT_NAME`"
-subtitle: "Using `r SOFT_NAME` pipeline; updated on 9-II-2023"
+subtitle: "Using `r SOFT_NAME` pipeline; updated on 21-III-2023"
 author: "M. Gonzalo Claros & Amanda Bullones"
 date: "`r format(Sys.time(), '%A %d, %B %Y. %H.%M.%S')`"
 bibliography: Refs_RSeqFlow.bib
