@@ -2,7 +2,7 @@
 #
 # execute_wf -> RSeqFlow
 # Gonzalo Claros
-# 2023-03-01
+# 2023-03-21
 #
 # Main file, invoked after source(configure_wf.R)
 # Alternative usage from terminal: Rscript execute_wf.R aConfigFile.R 
@@ -180,5 +180,6 @@ message(paste(SOFT_NAME, VERSION_CODE, "report successfully fihished."))
 cat("\n", "*** Report and results saved in the new folder ***", "\n")
 message(WD)
 
-message("\nReal time taken by the current run: ", round(T_total[[3]]/60, digits = 3), " min")
-print(T_total)
+T_total2 <- proc.time() - T00
+message("\nReal time taken by the current run: ", round(T_total2[[3]]/60, digits = 3), " min")
+print(T_total2)

@@ -105,4 +105,3 @@ corPlot(r_tmm_s,
 ```
 
 > **IMPORTANT:** Usually, correlations based on highly variant genes do not cluster samples appropriately
-

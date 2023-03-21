@@ -1,6 +1,6 @@
 # libraries_wf -> RSeqFlow
 # Gonzalo Claros
-# 2023-02-09
+# 2023-03-21
 
 # Already installed packages
 # more details https://www.r-bloggers.com/an-efficient-way-to-install-and-load-r-packages/
@@ -12,7 +12,7 @@ intalled_libs <- rownames(installed.packages())
 
 ## Listing packages as vectors ####
 writeLines("\n*** Checking CRAN libraries that must be installed ***")
-libs_general <- c("ggplot2", "gridExtra", "tidyverse", "ggpubr", "scales", "reshape2")
+libs_general <- c("ggplot2", "gridExtra", "tidyverse", "ggpubr", "scales", "reshape2", "plotly")
 libs_descomprimir_gz <- c("R.utils", "R.methodsS3", "R.oo")
 libs_diagramas_Venn <- c("ggvenn", "gplots", "VennDiagram", "grid", "futile.logger")
 libs_Rmd <- c("knitr", "knitcitations", "rmarkdown", "markdown", "bibtex", "DT")

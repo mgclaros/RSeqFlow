@@ -1,6 +1,6 @@
 # functions_wf -> RSeqFlow
 # Gonzalo Claros
-# 2022-11-19
+# 2023-03-21
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -337,27 +337,28 @@ SelectedGeneProfilePlots <- function(m,
   # reshape wide data.frame to a long format for ggplot
   df2 <- melt(df,  id.vars = 'new_x', variable.name = 'GeneID')
   new_col_names <- colnames(df2)
-  ggplot(df2, aes(x = new_x, y = value)) + # equivalent to aes(x=df2[, 1], y=df2[, 3])
-    # colour lines per gene
-    geom_line(aes(colour = GeneID, group = GeneID), size = 0.9, alpha = 0.3) + # GeneID is df[, 2]
-    # resize points with the same colour than lines
-    geom_point(size = 1.25, aes(colour = GeneID)) +
-    # change x continuous labels for sample names
-    scale_x_continuous(name = "Samples", breaks = 1:length(samples_names), labels = samples_names) + 
-    # change legend and Y title
-    scale_y_continuous(name = y_label) +
-    # add the title
-    ggtitle(aTitle) +
-    theme_linedraw() + 
-    # change orientation and size of sample names, title, background, legend, axis...
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-          # legend.position = "none",
-          legend.text = element_text(colour="black", size = 8),
-          legend.key.size = unit(4, units = "mm"),
-          # panel.border = element_rect(fill = NA, color = "black"),
-          # panel.grid = element_line(color = "lightgray", size = 0.5),
-          # panel.background = element_rect(fill = "white"),
-          plot.title = element_text(lineheight = 0.8, face = "bold", size = 12, colour = "darkgreen"))
+  ggp <- ggplot(df2, aes(x = new_x, y = value)) + # equivalent to aes(x=df2[, 1], y=df2[, 3])
+        # colour lines per gene
+        geom_line(aes(colour = GeneID, group = GeneID), size = 0.9, alpha = 0.3) + # GeneID is df[, 2]
+        # resize points with the same colour than lines
+        geom_point(size = 1.25, aes(colour = GeneID)) +
+        # change x continuous labels for sample names
+        scale_x_continuous(name = "Samples", breaks = 1:length(samples_names), labels = samples_names) + 
+        # change legend and Y title
+        scale_y_continuous(name = y_label) +
+        # add the title
+        ggtitle(aTitle) +
+        theme_linedraw() + 
+        # change orientation and size of sample names, title, background, legend, axis...
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+              legend.position = "none",
+              # legend.text = element_text(colour="black", size = 8),
+              # legend.key.size = unit(4, units = "mm"),
+              # panel.border = element_rect(fill = NA, color = "black"),
+              panel.grid = element_line(color = "lightgray", size = 0.5),
+              # panel.background = element_rect(fill = "white"),
+              plot.title = element_text(lineheight = 0.8, face = "bold", size = 12, colour = "darkgreen"))
+  ggplotly(ggp)
 }
 # //////////////////////////////////
 

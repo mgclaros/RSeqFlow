@@ -9,19 +9,23 @@ Those genes merit a particular analysis by themselves.
 
 ## Automatically selected
 
-Preparing data for representations:
-
-```{r prepSelectedGenes, fig.width=8, fig.height=6, fig.align='center', out.width=c('60%')}
+```{r summary}
 selected_summary <- c(length(OUTSTANDING_GENE_LIST),
                       length(unlist(OUTSTANDING_GENE_LIST)),
                       length(unique(unlist(OUTSTANDING_GENE_LIST))))
+
+# sort outstanding genes by decreasing frequency
 outstand_sorted <- sort(table(unlist(OUTSTANDING_GENE_LIST)), decreasing = TRUE)
-barplot(outstand_sorted, las = 2, main = "Outstanding genes", ylab = "Selection frequency")
 
 # select the most outstanding genes (above the median frequency of selection)
 outst_median <- median(outstand_sorted)
 most_outs <- names(outstand_sorted[outstand_sorted > outst_median])
+
+# genes qualified as outstanding in all conditions
+outst_max <- max(outstand_sorted)
+max_outs <- names(outstand_sorted[outstand_sorted == outst_max])
 ```
+
 
 Summary: 
 
@@ -30,23 +34,30 @@ Feature | Amount
 Conditions with significant hubs | `r selected_summary[1]`
 Total ID selected                | `r selected_summary[2]`
 Unique ID from the total         | `r selected_summary[3]`
-The most outstanding IDs         | `r length(most_outs)`
+More freqquent outstanding IDs   | `r length(most_outs)`
+Outstanding IDs in all conditions | `r length(max_outs)`
 
-Let's show the gene profiles of the most frequently selected genes at left and the others at right.
+Preparing data for representations:
 
-```{r selgeneprof, fig.width=5, fig.height=4, out.width=c('50%', '50%'), fig.show='hold'}
-# represent the most frequent and the others, using the median as boundary
+```{r prepSelectedGenes, fig.width=9, fig.height=5, fig.align='center', out.width='85%'}
+barplot(outstand_sorted, las = 2, main = "Outstanding genes", ylab = "Selection frequency")
+```
+
+
+Let's show the gene profiles of outstanding genes in all conditions (left) and the most frequent outstanding IDs (right).
+
+```{r selgeneprof, fig.width=7, fig.height=5, out.width='90%'}
+# Profiles of the outstanding genes in all conditions
+myIDs_2Plot <- t(m.ctf.std[rownames(m.ctf.std) %in% max_outs, ])
+theTitle <- paste0(length(max_outs), " outstanding genes in all conditions")
+SelectedGeneProfilePlots(myIDs_2Plot,
+                         aTitle = theTitle)
+
+# Profiles the most frequent IDs, using the median as boundary
 myIDs_2Plot <- t(m.ctf.std[rownames(m.ctf.std) %in% most_outs, ])
-theTitle <- "Gene profiles of most outstanding genes"
+theTitle <- paste0(length(most_outs), " gene profiles of most outstanding genes")
 SelectedGeneProfilePlots(myIDs_2Plot,
                          aTitle = theTitle)
-
-other_outs <- names(outstand_sorted[outstand_sorted <= outst_median])
-myIDs_2Plot <- t(m.ctf.std[rownames(m.ctf.std) %in% other_outs, ])
-theTitle <- "Profiles for other selected genes"
-SelectedGeneProfilePlots(myIDs_2Plot,
-                         aTitle = theTitle)
-
 ```
 
 ## Selected by the user

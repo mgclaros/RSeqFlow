@@ -61,27 +61,32 @@ Two initial subsets will be defined only after `treat()`:
     keep.eB.ubi <- rowSums(abs(status.eB)) == dim(status.eB)[2]
     ubi.DEGs <- as.data.frame(status.eB[keep.eB.ubi, ]) # information of eBayes 'ubis'
     ubis.eB <- nrow(ubi.DEGs)
-
-    cat("Number of ubiquitous genes after treat():  ", ubis.treat,
-        "\nNumber of ubiquitous genes after eBayes(): ", ubis.eB, "\n")
     ```
+
+Balance of ubiquitous candidates:
+
+Method     | Amount
+:---       | :---
+`treat()`  | `r ubis.treat`
+`eBayes()` | `r ubis.eB`
+
 
 2. If there is any **`ubi`** DEG, save it, since they can be good **biomarker candidates**, even though they are less useful for clustering, networking and functional analyses.
 
     ```{r SaveUbis, results='hold'}
+    # Create an empty list to store any interesting or outstanding candidate
+    OUTSTANDING_GENE_LIST <- list()
+    
     # Save ubiquitous DEGs for further utility
     if (ubis.eB >= 1) {
-      fileName <- SaveTSV(ubi.DEGs, "ubiquitousDEGs_")
+      fileName <- SaveTSV(ubi.DEGs, "ubiquitousDEGs-eB_")
       message("IDs of ubiquitous DEGs have been saved in file", "\n", fileName)
       if (ubis.treat > 0) {
-        cat("\n -- Main BIOMARKER CANDIDATES -- \n", toString(ubis.treat.IDs))
+        fileName <- SaveTSV(ubis.treat.IDs, "ubiquitousDEGs-TREAT_")
+        message("IDs of ubiquitous DEGs based on **TREAT** have been saved in file", "\n", fileName)
+        # keep ubi IDs as the first outstanding genes
+        OUTSTANDING_GENE_LIST[["Ubiquitous"]] <- ubis.treat.IDs
       }
-    }
-    
-    # keep ubi IDs as the first outstanding genes
-    OUTSTANDING_GENE_LIST <- list()
-    if (length(ubis.treat.IDs) > 0) { 
-      OUTSTANDING_GENE_LIST[["Ubiquitous"]] <- ubis.treat.IDs
     }
     
     # remove needless variables
@@ -99,7 +104,7 @@ Two initial subsets will be defined only after `treat()`:
     x.filt.tmm.putat <- x.filt.norm$counts[keep.putative, ]
     
     rm(keep.putative)
-    message("Number of putative DEGs: ", nrow(x.filt.ctf.putat), "\n")
+    message("Number of putative DEGs: **", nrow(x.filt.ctf.putat), "** \n")
     ```
 
 
@@ -174,7 +179,6 @@ Genes (files)               | `r nrow(m.putat.ctf)` | `r nrow(m.putat.ctf.CV)`
 ***Putative DEGs in TMM***  |  |
 Samples (columns)           | `r ncol(m.putat.tmm)` | `r ncol(m.putat.tmm.CV)`
 Genes (files)               | `r nrow(m.putat.tmm)` | `r nrow(m.putat.tmm.CV)`
-
 
 
 ## Scaling
