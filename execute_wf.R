@@ -94,6 +94,7 @@ if (P < 0) theVar <- c(theVar, "P")
 if (length(theVar) > 0) stop("\n   ", toString(theVar), " must be > 0.", msg)
 
 if (P > 0.5) stop("\n   P-value ", P, " is too high.", msg)
+if (NODE_MAX > 700) stop("\n   NODE_MAX ", NODE_MAX, " is too high. The execution will take hours unnecessarily", msg)
 
 # remove needless variable
 rm(theVar)
