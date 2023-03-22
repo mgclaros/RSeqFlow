@@ -64,7 +64,7 @@ SelectedGeneProfilePlots(myIDs_2Plot,
 
 Some genes may be selected by the user during this analysis, and can be seen here, provided that `MY_IDs` is not empty in `configure_wf.R`.
 
-```{r myIDs, fig.width=5, fig.height=4, out.width=c('50%', '50%'), fig.show='hold', eval=exists("MY_IDs"), include=exists("MY_IDs")}
+```{r myIDs, fig.width=7, fig.height=5, out.width='90%', eval=exists("MY_IDs"), include=exists("MY_IDs")}
 # Add user selected genes to the OUTSTANDING variable for further saving
 OUTSTANDING_GENE_LIST[["User_defined"]] <- MY_IDs
 
