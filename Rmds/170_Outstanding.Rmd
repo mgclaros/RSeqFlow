@@ -17,13 +17,17 @@ selected_summary <- c(length(OUTSTANDING_GENE_LIST),
 # sort outstanding genes by decreasing frequency
 outstand_sorted <- sort(table(unlist(OUTSTANDING_GENE_LIST)), decreasing = TRUE)
 
-# select the most outstanding genes (above the median frequency of selection)
-outst_median <- median(outstand_sorted)
-most_outs <- names(outstand_sorted[outstand_sorted > outst_median])
-
 # genes qualified as outstanding in all conditions
 outst_max <- max(outstand_sorted)
 max_outs <- names(outstand_sorted[outstand_sorted == outst_max])
+
+# select the most outstanding genes (above the median frequency of selection)
+outst_median <- median(outstand_sorted)
+most_outs <- names(outstand_sorted[outstand_sorted > outst_median])
+if (length(most_outs) < 1) {
+  most_outs <- max_outs
+  warning("**No outstanding** transcript detected. Be careful!!!")
+}
 ```
 
 
@@ -31,11 +35,11 @@ Summary:
 
 Feature | Amount
 :---    | :---
-Conditions with significant hubs | `r selected_summary[1]`
-Total ID selected                | `r selected_summary[2]`
-Unique ID from the total         | `r selected_summary[3]`
-More freqquent outstanding IDs   | `r length(most_outs)`
-Outstanding IDs in all conditions | `r length(max_outs)`
+Conditions with significant hubs      | `r selected_summary[1]`
+Total ID selected                     | `r selected_summary[2]`
+Unique ID from the total              | `r selected_summary[3]`
+The most frequent outstanding IDs     | `r length(most_outs)`
+Outstanding IDs in nearly all samples | `r length(max_outs)`
 
 Preparing data for representations:
 

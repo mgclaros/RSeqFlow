@@ -1,6 +1,6 @@
 # functions_wf -> RSeqFlow
 # Gonzalo Claros
-# 2023-03-21
+# 2023-03-24
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -303,9 +303,9 @@ PlotGeneProfiles <- function(m,
   ggplot(df2, aes(x = new_x, y = value)) + # equivalent to aes(x=df2[, 1], y=df2[, 3])
     # colour lines per GeneID
     # geom_line(aes(colour = GeneID)) +
-    geom_line(aes(colour = GeneID, group = GeneID), size = 0.5, alpha = 0.3) + # GeneID is df[, 2]
+    geom_line(aes(colour = GeneID, group = GeneID), linewidth = 0.5, alpha = 0.3) + # GeneID is df[, 2]
     # add ranges and the trend line in orange
-    geom_smooth(method = 'loess', formula = y ~ x, size = 2, se = TRUE, color = "orange") +
+    geom_smooth(method = 'loess', formula = y ~ x, linewidth = 2, se = TRUE, color = "orange") +
     # change x continuous labels for sample names
     scale_x_continuous(name = "Samples", breaks = 1:length(samples_names), labels = samples_names) + 
     # change legend and Y title
@@ -339,7 +339,7 @@ SelectedGeneProfilePlots <- function(m,
   new_col_names <- colnames(df2)
   ggp <- ggplot(df2, aes(x = new_x, y = value)) + # equivalent to aes(x=df2[, 1], y=df2[, 3])
         # colour lines per gene
-        geom_line(aes(colour = GeneID, group = GeneID), size = 0.9, alpha = 0.3) + # GeneID is df[, 2]
+        geom_line(aes(colour = GeneID, group = GeneID), linewidth = 0.9, alpha = 0.3) + # GeneID is df[, 2]
         # resize points with the same colour than lines
         geom_point(size = 1.25, aes(colour = GeneID)) +
         # change x continuous labels for sample names
@@ -355,7 +355,7 @@ SelectedGeneProfilePlots <- function(m,
               # legend.text = element_text(colour="black", size = 8),
               # legend.key.size = unit(4, units = "mm"),
               # panel.border = element_rect(fill = NA, color = "black"),
-              panel.grid = element_line(color = "lightgray", size = 0.5),
+              panel.grid = element_line(color = "lightgray", linewidth = 0.5),
               # panel.background = element_rect(fill = "white"),
               plot.title = element_text(lineheight = 0.8, face = "bold", size = 12, colour = "darkgreen"))
   ggplotly(ggp)

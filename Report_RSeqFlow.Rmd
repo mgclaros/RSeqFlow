@@ -1,6 +1,6 @@
 ---
 title: "`r PROJECT_NAME`"
-subtitle: "Using `r SOFT_NAME` pipeline; updated on 21-III-2023"
+subtitle: "Using `r SOFT_NAME` pipeline; updated on 230509"
 author: "M. Gonzalo Claros & Amanda Bullones"
 date: "`r format(Sys.time(), '%A %d, %B %Y. %H.%M.%S')`"
 bibliography: Refs_RSeqFlow.bib
@@ -182,7 +182,7 @@ Load data file(s) and convert it(them) in a `DGEList` object.
 
 # Gene filtering
 
-A living being with about 20 000 genes usually have only **9 000-20 000 genes** whose expressions worth analysing.
+A living being with about 20~000 genes usually have only **9~000-20~000 genes** whose expressions worth analysing.
 
 ```{r gene_filtering, child='Rmds/20_Filtering.Rmd'}
 ```

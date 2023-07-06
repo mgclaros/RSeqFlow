@@ -1,4 +1,13 @@
 
+Before next calculations, the matrix `m.ctf.std` or `m.tmm.std` must have some genes. If no transcript is present, the execution will stop just here.
+
+```{r}
+if (nrow(m.ctf.std) == 0 | nrow(m.tmm.std) == 0) {
+    warning("Execution stopped due to absence of variant genes")
+    knit_exit(paste0(DANGER_bx, " An ERROR occurred </div>"))
+}
+```
+
 ### Sample distances
 
 The usual way to connect/link/associate samples is to analyse distances in scaled data. Distances can be calculated as follows:
@@ -28,6 +37,7 @@ d_tmm_samp <- as.dist(1 - r_tmm_samp)
 
 
 ### Sample linkage
+
 
 1. Let's use `agnes()` within our function `CalcAgglomCoef()` to obtain the **best linkage method** to calculate distances. This is based on the agglomerative coefficient (`ac`) for each clustering linkage method with a transposed version of the scaled matrix.
     ```{r SampleDistances, results='hold'}

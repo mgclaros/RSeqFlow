@@ -289,7 +289,7 @@ MIN_GENES_PER_CLUSTER <- 10
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # MINIMAL KLEINBERG SCORE ####
 #
-# You CAN specify minimal Kleinber score to qualify genes as putative hubs
+# You CAN specify minimal Kleinberg score to qualify genes as putative hubs
 # when analysing networks. This score ranges from 0 (bad) to 1 (maximum)
 #
 # Example:
