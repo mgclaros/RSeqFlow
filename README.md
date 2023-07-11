@@ -26,6 +26,25 @@ Alternatively, you can go to <https://github.com/mgclaros/RSeqFlow/> and click o
 Then you can navigate inside _RSeqFlow_ using shell commands or window interface.
 
 
+***
+
+## Components
+
+The GitHub repository and your local version will contain the following files and folders:
+
+- `README.md`: this file
+- `LICENSE`: details about the CC-BY license
+- `configure_wf.R`: a file containing all parameters necessary to execute _RSeqFolder_. This file can be located anywhere in your computer and is the only file that requires user intervention.
+- `libraries_wf.R`: a file that loads, installs and updates the _RSeqFile_ required libraries.
+- `functions_wf.R`: a file gathering all functions called within the code.
+- `execute_wf.R`: a file that starts the execution of _RSeqFile_ using the parameters indicated in `configure_wf.R` and the markdown skeleton in `Report_RSeqFlow.Rmd`.
+- `Refs_RSeqFlow.bib`: a text file in bib format containing all references cited in the final report.
+- `Report_RSeqFlow.Rmd`: a markdown file where other Rmd fragments are incorporated.
+- `Rmds`: a folder containing the Rmd fragments needed for the pipeline. 
+
+
+***
+
 ## Prerequisites and dependencies
 
 Minimum **RAM** required (depending on dataset size): 16 GB. Recommended RAM: 32 GB+
@@ -37,6 +56,9 @@ _RSeqFlow_ has been developed with **R 4.1.3** on mac and linux computers. Older
 You should have some begginer experience with **bash** (Unix Shell) and R to execute this pipeline and transfer datasets to and from directories or computers.
 
 You should understand the steps of a **canonical RNA-Seq analysis** (trimming, alignment, counting, etc.).
+
+
+***
 
 
 ## Quick Start
@@ -56,7 +78,10 @@ $ Rscript ~/PATH_TO/execute_wf.R ~/PATH_TO/aConfigFile.R
 If you try this just after downloading _RSeqFlow_, it will not work because you have to accommodate it to your computer environment. So, read carefully the next section before launching _RSeqFlow_ for the first time.
 
 
-## Configuration of RSeqFlow
+***
+
+
+## Configuration
 
 _RSeqFlow_ can be customised to your needs in the 'self-explained' `configure_wf.R` file. Open this file and you will see an initial segment entitled `DON'T TOUCH: CLEAN START` marking the three commands that you must not modify. They will clean memory variables before a _RSequFlow_ run.
 
@@ -97,6 +122,11 @@ Parameters customisable in the `configure_wf.R`:
 
 As a result of this `configure_wf.R` file customisation, you can have as many copies of this file as you want (with the name you prefer) for different data or different parameters. These copies can be located wherever you want in your computer. 
 
+
+***
+
+
+
 ## Compulsory customisation before the first run
 
 ### Define SOURCE_DIR
@@ -105,12 +135,12 @@ You can find `SOURCE_DIR` in the segment `PATH TO THE DIRECTORY CONTAINING THE S
 
 **TIP**: Use, as in the original file, `~/` when your `RSeqFlow` directory is inside your `$HOME`, which is highly recommended. You can ask your computer for this path using the `pwd` bash command when you are within the _RSeqFow_ code folder using the `cd` command:
 
-~~~
-# Move into the RSeqFlow code folder:
-cd ~/MyFiles/RScripts/RSeqFlow/ 
-# ask for the complete path to this folder
-pwd
-~~~
+```bash
+$ # Move into the RSeqFlow code folder:
+$ cd ~/MyFiles/RScripts/RSeqFlow/ 
+$ # ask for the complete path to this folder
+$ pwd
+```
 
 that will render, for example,
 
@@ -127,54 +157,144 @@ or, in another computer,
 
 that you must incorporate within quotes as any of this three commands:
 
-`SOURCE_DIR = "/Users/myusername/MyFiles/RScripts/RSeqFlow/"`
-
-`SOURCE_DIR = "~/MyFiles/RScripts/RSeqFlow/"`
-
-`SOURCE_DIR = "/mnt/home/users/myusername/MyFiles/RScripts/RSeqFlow/"`
-
-> Do not forget the `/` at the end of the path.
-
-
-#### Define DATA_DIR
-
-asassas
+```r
+SOURCE_DIR <- "/Users/myusername/MyFiles/RScripts/RSeqFlow/"
+SOURCE_DIR <- "~/MyFiles/RScripts/RSeqFlow/"
+SOURCE_DIR <- "/mnt/home/users/myusername/MyFiles/RScripts/RSeqFlow/"
+```
 
 > Do not forget the `/` at the end of the path.
 
 
+### Define DATA_DIR
 
-#### Define PROJECT_NAME
+The variable `DATA_DIR` is in the configure segment entitled `PATH TO DATA-CONTAINING DIRECTORY`. Hence, it should contain **a path to the directory**, ~~not the files~~, where the expression data can be found. This will be the working directory, and all _RSeqFlow_ runs will save a new folder within it containing the corresponding results.
 
-You are invited to give a project name to your run to appear at the begining of the report. This name is stored in the configuration variable `PROJECT_NAME`.
+**TIP**: Refer to the `SOURCE_DIR` definition above to know how to obtain the required path. 
 
-
-## Pipeline components
-
-The GitHub repository and your local version will contain the following files and folders:
-
-**Instrucciones para un buen readme** <https://remarkablemark.org/blog/2021/01/03/how-to-write-a-great-readme/>
+> Do not forget the `/` at the end of the path.
 
 
-**FALTA ESCRIBIRLO** 
+### Define DATA_FILES, FIRST_COLUMN and OTHER_COLUMN
 
-- Command-line interface: `bin/workflow.sh`
-- Text logger of STDOUT/STDERR: `bin/logger.sh`
-- Read QC checks: `bin/fastqc.sh`
-- Read Trimming and filtering: `bin/prinseq.sh`
-- Mapping reference preparation:`bin/rsem_ref.sh`
-- Read mapping and TPM calculation: `bin/rsem_tpm.sh`
+These variables is in the configure segment entitled `LOAD YOUR EXPRESSION DATA`. The three are required to read the data, but mean different things depending on the way the data are presented.
+
+#### Counts are in one single table
+
+After mapping read libraries on the reference, most software enable the possibility to gather genes, samples and counts in one single file. For _RSeqFlow_, this table must be in **tsv format**, where:
+
+* rows are genes, 
+* columns are samples, 
+* the values are the count of each gene in every sample.
+
+A brief example of data table is the following:
+
+GeneID | Sample_1.1 | Sample_1.2 | Sample_1.3 | Sample_2.1 | Sample_2.2 | ...
+:---   | :---       | :---       | :---       | :---       | :---       | :---
+Gene1  | 10         | 13         | 9          |  453       | 632        | ...
+Gene2  | 100        | 87         | 99         |  0         | 2          | ...
+...    | ...        | ...        | ...        | ...        | ...        | ... 
+
+In this case the three variables are defined as follows:
+
+* `DATA_FILES` must contain the **name of one single file** containing the table:
+
+    ```r
+    DATA_FILES <- "Counts-of-my-experiment.tsv"
+    ```
+
+* `FIRST_COLUMN` is column number of the **first sample** that will be read, taking into account that the first sample is `1` ('Sample_1.1' in the example).
+
+* `OTHER_COLUMN` is the column number of the **last sample** that will be read. For example, `4` correspond to 'Sample_2.1' in the example.
 
 
-* config/samples.tsv: a file containing sample names and the paths to the forward and eventually reverse reads (if paired-end). This file has to be adapted to your sample names before running the pipeline.
-* config/refs/: a folder containing
-* .fastq/: a (hidden) folder containing subsetted paired-end fastq files used to test locally the pipeline. Generated using Seqtk: seqtk sample -s100 <inputfile> 250000 > <output file> This folder should contain the fastq of the paired-end RNA-seq data, you want to run.
-* envs/: a folder containing the environments needed for the pipeline:
+#### Samples are in individual files
+
+Other mapping software do not offer the possibility of gathering the mapping results in one single file. In this case, provided that each file is in tsv format and all of them have the same structure (it is usually the case). Let's see two different exemplary outputs.
+
+1. The output of the pseudomapper _kallisto_ has the following structure:
+
+    target_id	| length | eff_length	| est_counts | tpm
+    :---      | :---   | :---       | :---       | :---
+    Gene1     |	2016	 | 1982	      | 3	         | 25.7055
+    Gene2     |	339	   | 305	      | 2	         | 111.362
+    Gene3     |	1122	 | 1088	      | 3.83058	   | 59.792
+
+2. The output for _Bowtie2_ is 
+
+    ID	  | align_bowtie_sort_file.bam
+    :---  | :---
+    Gene1 |	254
+    Gene2	| 92
+    Gene3	| 1546
 
 
+Hence, the three variables are defined as follows:
+
+* `DATA_FILES` must contain a **vector of several file names** with the same structure (rows are genes and one of the columns must be the number of counts). Each file is expected to be the result of mapping one library on the reference. In this case, the tsv table is constructed by _RSeqFlow_ (and saved), the columns being in the same order as files in the vector.
+
+    ```r
+    DATA_FILES <- c("sample1.txt", "sample2.txt", "sample3.txt")
+    ```
+
+* `FIRST_COLUMN` is column number of the **gene IDs**, usually is the _first column_ of every file, so `FIRST_COLUMN <- 1`
+
+* `OTHER_COLUMN` is the column number of the **counts**. Do not use ~~TPMs~~ if provided. In the above examples, the value will be `3` for the `est_counts` of _kallisto_ output and `1` for the `align_bowtie_sort_file.bam` column in _Bowtie2_ output.
 
 
-### Input files
+### Define experimental factors (CTRL, TREAT...) and assing them to samples (EXP_CONDITIONS)
+
+The analysis requires at least two experimental factors, that must be assigned to variables `CTRL` (control) and `TREAT` (treatment) that you will find in the segment entitled `DEFINE YOUR FACTORS (EXPERIMENTAL CONDITIONS)`. Optionally, you can add more factors as required with the names that you want, although we suggest `TREAT2`, `TREAT3`, or even `CTRL2, CTRL3...` and so on in the search of clarity. Remember that these factors will be used to define the factor of columns and comparisons.
+
+Examples of experimental factors:
+
+```r
+# Compulsory factors
+CTRL <- "Wild type"
+TREAT <- "My mutant"
+# Optional factors
+TREAT2 <- "Stressed wild type"
+TREAT3 <- "NaCl 15 mM"
+```
+
+Once you defined the experimental factor, you have to define the factor of each column (sample) in the variable `EXP_CONDITIONS` that you can find in the segment entitled `ASSIGN CONDITIONS TO SAMPLES (COLUMNS) IN DATA_FILES`.
+
+If you have loaded data where the 3 first columns are the controls (defined as `CTRL`), the next 3 columns are one treatment (defined as `TREAT`), and the last 3 columns correspond to another treatment (defined as `TREAT2`), you can define the `EXP_CONDITIONS` as the following vector:
+
+```r
+EXP_CONDITIONS <- c(CTRL, CTRL, CTRL, TREAT, TREAT, TREAT, TREAT2, TREAT2, TREAT2)
+````
+
+
+### Define CONTRASTS
+
+One of the main advantages de _RSeqFlow_ is that you can perform all the comparisons (contrasts) you want at once. Hence, you define the constrast as the consecutive variables `C1, C2, C3...` where the first condition/factor will be the first term of the fold-change logaritm and the second factor the second term:
+
+```r
+logFC <- log(First-factor/Second-factor)
+logFC <- log(First-factor) - log(Second-factor)
+```
+
+so that positive `logFC` are genes up-regulated in the first factor, and negative `logFC` correspond to up-regulated genes in the second factor.
+
+Considering the same three conditions indicated above, we can calculate the following contrasts:
+
+```r
+C1 <- c(TREAT, CTRL)
+C2 <- c(TREAT2, TREAT)
+C3 <- c(TREAT3, TREAT2)
+```
+
+These individual contrasts are then gathered in a list in the `CONTRASTS` variable:
+
+```r
+CONTRASTS <- list(C1, C2, C3, C4)
+```
+
+
+***
+
+## Input files
 
 **FALTA ESCRIBIRLO** 
 
@@ -281,6 +401,8 @@ Ejemplo: <https://github.com/UMCUGenetics/RNASeq>
 
     Run `docker-compose run --rm rna-seq-pipeline --help` for more details of options.
 
+**Instrucciones para un buen readme** <https://remarkablemark.org/blog/2021/01/03/how-to-write-a-great-readme/>
+
 
 
 
@@ -293,6 +415,7 @@ Version | Date      | Comments
 :---    | :---      | :---
 0.9     | 9-Jun-22  | Initial release
 1.0     | 21-Jul-22 | First stable release
+1.01    | 07-Jul-23 | Small improvements avoiding unexpected crashes
 ... | ... | ...
 
 ***
@@ -311,6 +434,6 @@ COLOCAR REFERENCIA CUANDO LA HAYA
 ![](https://licensebuttons.net/l/by/3.0/88x31.png)
 [CC-BY](https://creativecommons.org/licenses/by/4.0/)
 
-**Authors**: M. Gonzalo Claros, Amanda Bullones, Noé Fernández-Pozo
+**Authors**: M. Gonzalo Claros, Amanda Bullones
 
 Any concern, suggestion, bug or whatelse can be addressed to [Gonzalo Claros](mailto:claros@uma.es)

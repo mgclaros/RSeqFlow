@@ -1,6 +1,6 @@
 # libraries_wf -> RSeqFlow
 # Gonzalo Claros
-# 2023-03-21
+# 2023-07-07
 
 # Already installed packages
 # more details https://www.r-bloggers.com/an-efficient-way-to-install-and-load-r-packages/
@@ -13,28 +13,21 @@ intalled_libs <- rownames(installed.packages())
 ## Listing packages as vectors ####
 writeLines("\n*** Checking CRAN libraries that must be installed ***")
 libs_general <- c("ggplot2", "gridExtra", "tidyverse", "ggpubr", "scales", "reshape2", "plotly")
-libs_descomprimir_gz <- c("R.utils", "R.methodsS3", "R.oo")
+# libs_descomprimir_gz <- c("R.utils", "R.methodsS3", "R.oo")
 libs_diagramas_Venn <- c("ggvenn", "gplots", "VennDiagram", "grid", "futile.logger")
 libs_Rmd <- c("knitr", "knitcitations", "rmarkdown", "markdown", "bibtex", "DT")
-libs_scholar <- "scholar"
-libs_anova <- "statmod"
+# libs_anova <- "statmod"
 libs_clustering <- c("igraph", "psych", "corrplot", "cluster", "NbClust", "dendextend",
-                      "pheatmap", "factoextra", "WGCNA", "fpc", "mclust", "visNetwork")
-libs_metagen <- c("vegan")
-libs_wordcloud <- c("tm", "wordcloud", "wordcloud2", "SnowballC")
+                      "pheatmap", "factoextra", "fpc", "mclust", "visNetwork")
+# libs_wordcloud <- c("tm", "wordcloud", "wordcloud2", "SnowballC")
 
 from_CRAN <- c(libs_general, 
-               libs_descomprimir_gz, 
                libs_diagramas_Venn, 
                libs_Rmd, 
-               libs_scholar, 
-               libs_anova,
-               libs_clustering, 
-               libs_metagen,
-               libs_wordcloud)
+               libs_clustering)
                    
 # remove needless variables
-rm(libs_general, libs_descomprimir_gz, libs_diagramas_Venn, libs_Rmd, libs_scholar, libs_anova, libs_clustering, libs_metagen, libs_wordcloud)
+rm(libs_general, libs_diagramas_Venn, libs_Rmd, libs_clustering)
 
 ## Obtain absent libraries that must be installed ####
 # libraries not pressent in 'intalled_libs'
@@ -86,11 +79,9 @@ VERSION_BIOC <- BiocManager::version()
 from_BioC <- c("gplots",
                "RColorBrewer",
                "GO.db",
-               "phyloseq",
                "chromPlot", 
                "limma", 
                "edgeR",
-               "Glimma", 
                "impute",
                "preprocessCore")
                     
@@ -114,4 +105,4 @@ sapply(from_BioC, require, character.only = TRUE)
 # remove needless variables
 rm(intalled_libs, from_BioC, nuevos_BioC)
 
-message("All libraries installed and loaded\n")
+message("All libraries installed and loaded. On your computer, you can find them at\n", .libPaths(), "\n")
