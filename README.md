@@ -239,7 +239,7 @@ Hence, the three variables are defined as follows:
 
 * `FIRST_COLUMN` is column number of the **gene IDs**, usually is the _first column_ of every file, so `FIRST_COLUMN <- 1`
 
-* `OTHER_COLUMN` is the column number of the **counts**. Do not use ~~TPMs~~ if provided. In the above examples, the value will be `3` for the `est_counts` of _kallisto_ output and `1` for the `align_bowtie_sort_file.bam` column in _Bowtie2_ output.
+* `OTHER_COLUMN` is the column number of the **counts**. Do not use ~~TPMs~~ if provided. In the above examples, the value will be `4` for the `est_counts` of _kallisto_ output and `2` for the `align_bowtie_sort_file.bam` column in _Bowtie2_ output.
 
 
 ### Define experimental factors (CTRL, TREAT...) and assing them to samples (EXP_CONDITIONS)
