@@ -2,7 +2,7 @@
 #
 # execute_wf -> RSeqFlow
 # Gonzalo Claros
-# 2023-03-21
+# 2023-07-17
 #
 # Main file, invoked after source(configure_wf.R)
 # Alternative usage from terminal: Rscript execute_wf.R aConfigFile.R 
@@ -68,7 +68,7 @@ rm(fileToSource)
 
 ## This should be changed every time you produce a main change ####
 SOFT_NAME <- "RSeqFlow"
-VERSION_CODE <- 1.0
+VERSION_CODE <- 1.01
 
 ## get computer type ####
 COMPUTER <- GetComputer()

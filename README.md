@@ -103,7 +103,7 @@ Parameters customisable in the `configure_wf.R`:
   + `FIRST_COLUMN` and `OTHER_COLUMN`: define the columns in the table or the files that contain the counts. **Compulsory**
   + `CHARS_TO_REMOVE`: define the removable initial part of each file 'name', usually when data come from GEO database. *Optional*
 * Experimental factors that you want to analyse:
-  + `CTRL` and `TREAT`: the minimum 2 factors (control and treatment, respectively) required for the analysis. **Compulsory**
+  + `CTRL` and `TREAT`: the minimum $2$ factors (control and treatment, respectively) required for the analysis. **Compulsory**
   + `TREAT2` to `TREATn`: additional factor for multiple comparisons. The names can be changed by the user. *Optional*
 * `EXP_CONDITIONS`: the correspondence between experimental factors and read data. **Compulsory**
 * `C1, C2, C3...`:the contrast that you will analyse using the experimental factors expressed as a vector, where the first term will be for up-regulated genes and the second term the down-regulated ones (`fold change = first factor / second factor`). **Compulsory**
@@ -129,7 +129,7 @@ As a result of this `configure_wf.R` file customisation, you can have as many co
 
 ## Compulsory customisation before the first run
 
-### Define SOURCE_DIR
+### Define `SOURCE_DIR`
 
 You can find `SOURCE_DIR` in the segment `PATH TO THE DIRECTORY CONTAINING THE SOURCE FILES`. This variable must contain the path on your computer to the `RSeqFlow` directory. This spares the use of the file path every time you use the pipeline and allows multiple configuration files wherever you want in your computer. 
 
@@ -166,7 +166,7 @@ SOURCE_DIR <- "/mnt/home/users/myusername/MyFiles/RScripts/RSeqFlow/"
 > Do not forget the `/` at the end of the path.
 
 
-### Define DATA_DIR
+### Define `DATA_DIR`
 
 The variable `DATA_DIR` is in the configure segment entitled `PATH TO DATA-CONTAINING DIRECTORY`. Hence, it should contain **a path to the directory**, ~~not the files~~, where the expression data can be found. This will be the working directory, and all _RSeqFlow_ runs will save a new folder within it containing the corresponding results.
 
@@ -175,7 +175,7 @@ The variable `DATA_DIR` is in the configure segment entitled `PATH TO DATA-CONTA
 > Do not forget the `/` at the end of the path.
 
 
-### Define DATA_FILES, FIRST_COLUMN and OTHER_COLUMN
+### Define `DATA_FILES`, `FIRST_COLUMN` and `OTHER_COLUMN`
 
 These variables is in the configure segment entitled `LOAD YOUR EXPRESSION DATA`. The three are required to read the data, but mean different things depending on the way the data are presented.
 
@@ -203,12 +203,12 @@ In this case the three variables are defined as follows:
     DATA_FILES <- "Counts-of-my-experiment.tsv"
     ```
 
-* `FIRST_COLUMN` is column number of the **first sample** that will be read, taking into account that the first sample is `1` ('Sample_1.1' in the example).
+* `FIRST_COLUMN` is column number of the **first sample** that will be read, taking into account that the first sample is $1$, that is, **Sample_1.1** in the example.
 
-* `OTHER_COLUMN` is the column number of the **last sample** that will be read. For example, `4` correspond to 'Sample_2.1' in the example.
+* `OTHER_COLUMN` is the column number of the **last sample** that will be read. For example, $5$ corresponds to **Sample_2.2** in the example.
 
 
-#### Samples are in individual files
+#### Samples counts are in individual files
 
 Other mapping software do not offer the possibility of gathering the mapping results in one single file. In this case, provided that each file is in tsv format and all of them have the same structure (it is usually the case). Let's see two different exemplary outputs.
 
@@ -237,12 +237,12 @@ Hence, the three variables are defined as follows:
     DATA_FILES <- c("sample1.txt", "sample2.txt", "sample3.txt")
     ```
 
-* `FIRST_COLUMN` is column number of the **gene IDs**, usually is the _first column_ of every file, so `FIRST_COLUMN <- 1`
+* `FIRST_COLUMN` is column number of the **gene IDs**, usually is the _first column_ of every file, so `FIRST_COLUMN <-` $1$
 
-* `OTHER_COLUMN` is the column number of the **counts**. Do not use ~~TPMs~~ if provided. In the above examples, the value will be `4` for the `est_counts` of _kallisto_ output and `2` for the `align_bowtie_sort_file.bam` column in _Bowtie2_ output.
+* `OTHER_COLUMN` is the column number of the **counts**. Do not use ~~TPMs~~ if provided. In the above examples, the value will be $4$ for the `est_counts` of _kallisto_ output and $2$ for the `align_bowtie_sort_file.bam` column in _Bowtie2_ output.
 
 
-### Define experimental factors (CTRL, TREAT...) and assing them to samples (EXP_CONDITIONS)
+### Define experimental factors (`CTRL`, `TREAT`...)
 
 The analysis requires at least two experimental factors, that must be assigned to variables `CTRL` (control) and `TREAT` (treatment) that you will find in the segment entitled `DEFINE YOUR FACTORS (EXPERIMENTAL CONDITIONS)`. Optionally, you can add more factors as required with the names that you want, although we suggest `TREAT2`, `TREAT3`, or even `CTRL2, CTRL3...` and so on in the search of clarity. Remember that these factors will be used to define the factor of columns and comparisons.
 
@@ -252,42 +252,56 @@ Examples of experimental factors:
 # Compulsory factors
 CTRL <- "Wild type"
 TREAT <- "My mutant"
+
 # Optional factors
 TREAT2 <- "Stressed wild type"
 TREAT3 <- "NaCl 15 mM"
 ```
 
-Once you defined the experimental factor, you have to define the factor of each column (sample) in the variable `EXP_CONDITIONS` that you can find in the segment entitled `ASSIGN CONDITIONS TO SAMPLES (COLUMNS) IN DATA_FILES`.
+### Define `EXP_CONDITIONS` using experimental factors
 
-If you have loaded data where the 3 first columns are the controls (defined as `CTRL`), the next 3 columns are one treatment (defined as `TREAT`), and the last 3 columns correspond to another treatment (defined as `TREAT2`), you can define the `EXP_CONDITIONS` as the following vector:
+Once you defined the two or more experimental factors, you have to define the factor of each column (sample) in the variable `EXP_CONDITIONS` that you can find in the segment entitled `ASSIGN CONDITIONS TO SAMPLES (COLUMNS) IN DATA_FILES`.
+
+If you have loaded data where the $3$ first columns are the controls (defined as `CTRL`), the next $3$ columns are one treatment (defined as `TREAT`), and the last $3$ columns correspond to another treatment (defined as `TREAT2`), you can define the `EXP_CONDITIONS` as the following vector:
 
 ```r
 EXP_CONDITIONS <- c(CTRL, CTRL, CTRL, TREAT, TREAT, TREAT, TREAT2, TREAT2, TREAT2)
-````
-
-
-### Define CONTRASTS
-
-One of the main advantages de _RSeqFlow_ is that you can perform all the comparisons (contrasts) you want at once. Hence, you define the constrast as the consecutive variables `C1, C2, C3...` where the first condition/factor will be the first term of the fold-change logaritm and the second factor the second term:
-
-```r
-logFC <- log(First-factor/Second-factor)
-logFC <- log(First-factor) - log(Second-factor)
 ```
 
-so that positive `logFC` are genes up-regulated in the first factor, and negative `logFC` correspond to up-regulated genes in the second factor.
-
-Considering the same three conditions indicated above, we can calculate the following contrasts:
+Imagine that you have only two replicates of controls and treatments in a paired fashion, so you want to place each control besides its treatment. In such a case, the definition will be
 
 ```r
+EXP_CONDITIONS <- c(CTRL, TREAT, CTRL, TREAT)
+```
+
+
+### Define `CONTRASTS`
+
+One of the main advantages de _RSeqFlow_ is that you can perform all **the comparisons** (contrasts) you want at once. Hence, you define the contrast as the consecutive variables `C1, C2, C3...` where the first condition/factor will be the first term of the fold-change logaritm and the second factor the second term:
+
+```r
+# both equations are equivalent
+logFC <- log(first_factor/second_factor)
+logFC <- log(first_factor) - log(second_factor)
+```
+
+> **Positive** `logFC` are genes up-regulated in the first factor.
+
+> **Negative** `logFC` correspond to up-regulated genes in the second factor.
+
+Considering the same three conditions indicated above, we can calculate the following three contrasts:
+
+```r
+# define any possible contrast
 C1 <- c(TREAT, CTRL)
 C2 <- c(TREAT2, TREAT)
 C3 <- c(TREAT3, TREAT2)
 ```
 
-These individual contrasts are then gathered in a list in the `CONTRASTS` variable:
+Individual contrasts are then gathered in a list in the `CONTRASTS` variable:
 
 ```r
+# the list of contrast that will be analised
 CONTRASTS <- list(C1, C2, C3, C4)
 ```
 
@@ -296,114 +310,42 @@ CONTRASTS <- list(C1, C2, C3, C4)
 
 ## Input files
 
-**FALTA ESCRIBIRLO** 
+You need to customise the `configure_wf.Rmd` file with the variables indicated above. Data for your specific experiment are defined in the `DATA_FILES` variable. You have two possibilities (see above):
 
-1. FASTA: Genome Assembly of your choice as a single FASTA file. <br/>
-2. GTF: Gene Annotation File in GTF format
-3. TX2GENE: A Transcript ID to Gene ID Conversion table for RSEM. IMPORTANT: Has to match IDs in your GTF file.
-
-* RNA-seq fastq files as listed in the config/samples.tsv file. Specify a sample name (e.g. “Sample_A”) in the sample column and the paths to the forward read (fq1) and to the reverse read (fq2). If you have single-end reads, leave the fq2 column empty.
-* A genomic reference in FASTA format. For instance, a fasta file containing the 12 chromosomes of tomato (Solanum lycopersicum).
-* A genome annotation file in the `GTF format <https://useast.ensembl.org/info/website/upload/gff.html>`__. You can convert a GFF annotation file format into GTF with the gffread program from Cufflinks: gffread my.gff3 -T -o my.gtf. :warning: for featureCounts to work, the feature in the GTF file should be exon while the meta-feature has to be transcript_id.
+1. ONE TSV TABLE containing all genes (in rows) and all samples (in columns) with the raw counts. Specifi the single name in the `DATA_FILES` variable
+2. MANY TSV TABLES containing the counts for each gene (rows) for one sample per file. You should pass as many files as samples. The file names must define a vector to be assigned to `DATA_FILES` variable
 
 
-
-## Usage
-Explain how to run and use the project. This is a good place to describe what each script, class, function, or option does. Further examples can also beneficial.
-
-1. Create a Tab-delimited file with SRA Accession IDs in first column <br/>
-2. Specify your inputs in Config.sh File <br/>
-3. Navigate to the RNA-Seq-Pipeline directory 
-4. Run the following command: <br/>
-```bash
-./Run.sh
-```
-
-
-
-
-##### Steps:
-  1. Lo primoer
-  2. lo segundo
-  
-```sh
-$ docker image pull dceoy/rna-seq-pipeline
-```
-
-```r
-> do things
-```
+***
 
 
 ## Output files
 
-- A table of raw counts called raw_counts.txt: this table can be used to perform a differential gene expression analysis with DESeq2.
-- A table of DESeq2-normalised counts called scaled_counts.tsv: this table can be used to perform an Exploratory Data Analysis with a PCA, heatmaps, sample clustering, etc.
-- fastp QC reports: one per fastq file.
-- bam files: one per fastq file (or pair of fastq files).
+Each execution of _RSeqFlow_ will create a separate folder close to your data, that is, within the `DATA_DIR` folder. The created folder will be called
 
-Ejemplo: <https://github.com/UMCUGenetics/RNASeq>
+> `RSeqFlow101_results_{DATETIME}`
 
+where `{DATETIME}` is the date and time of the execution (for example, *2023-07-09_18.01.39*) to guarantee that a different folder is created on every execution and no overwriting will occur.
 
-## Usage
+The folder will contain 
 
-##### Example: Human RNA-seq
-
-1.Open a Shell window and type: singularity run docker://bleekerlab/snakemake_rnaseq:4.7.12 to retrieve a Docker image that includes the pipeline required software (Snakemake and conda and many others).
-2. Run the pipeline on your system with singularity run snakemake_rnaseq_4.7.12.sif and add any options for snakemake (-n, --cores 10) etc. The directory where the sif file is stored will automatically be mapped to /home/snakemake. Results will be written to a folder named $PWD/results/ (you can change results to something you like in the result_dir parameter of the config.yaml).
-
-3.  Check out the repository.
-
-    ```sh
-    $ git clone https://github.com/dceoy/rna-seq-pipeline.git
-    $ cd rna-seq-pipeline
-    ```
-
-2.  Download reference genome data in `input/ref`.
-
-    ```sh
-    $ mkdir -p input/ref
-    $ ./misc/download_GRCh38.sh input/ref
-    ```
-
-    `misc/download_GRCh38.sh` requires `wget`.
-
-3.  Put paired-end FASTQ data in `input/fq`.
-
-    - File name format:
-      - R1: `<sample_name>.R1.fastq.gz`
-      - R2: `<sample_name>.R2.fastq.gz`
-
-    ```sh
-    $ mkdir input/fq
-    $ cp /path/to/fastq/*.R[12].fastq.gz input/fq
-    ```
-
-4.  Execute the pipeline.
-
-    ```sh
-    $ mkdir output
-    $ docker-compose up
-    ```
-
-    Execution using custom reference data:
-
-    ```sh
-    $ mkdir output
-    $ docker-compose run --rm rna-seq-pipeline \
-        --qc \
-        --ref-gtf=/path/to/<ref>.gtf.gz \
-        --ref-fna=/path/to/<ref>.fna.gz \
-        --in-dir=input/fq \
-        --out-dir=output \
-        --seed=0
-    ```
-
-    Run `docker-compose run --rm rna-seq-pipeline --help` for more details of options.
-
-**Instrucciones para un buen readme** <https://remarkablemark.org/blog/2021/01/03/how-to-write-a-great-readme/>
-
-
+* a comprehensive **HTML report** called ` Report.html` explaining the analysis and plots (figures), analysis rationale, bibliography and explanation of each saved file.
+* **many tables in `tsv` format** for correlations, clusters, normalisation, etc., now explained in alphabetical order (all files finishing with `{DATETIME}.tsv`, that has been removed for clarity):
+    + `AllGenes_allContrast_TREAT-{P-value}_{FC}_`: Average expression, coefficient (LogFC), _t_ statistic, _P_ value, adjusted _P_ value, _F_ statistic, and DEG result for all genes in each of the contrasts using the _treat()_ method and the _P_ and _FC_ indicated in the filename by `{P-value}_{FC}`. 
+    + `AllGenes_allContrast_eB_{P-value}_{FC}_`: Average expression, coefficient (LogFC), _t_ statistic, _P_ value, adjusted _P_ value, _F_ statistic, and DEG result for all genes in each of the contrasts using the _eBayes()_ method and the _P_ and _FC_ indicated in the filename by `{P-value}_{FC}`. 
+    + `AllGenes_{CONTRAST}_TREAT_`: LogFC, average expression, _P_ value, and adjusted _P_ value, for all genes in the contrast indicated in `{CONTRAST}` using the _treat()_ method. 
+    + `BestCorrelations_{METHOD}_{CLUSTER}-`: Correlation (_r_), _P_ value, and adjusted _P_ value for the pair of genes (Item1 and Item2) in each `{CLUSTER}` obtained with the indicated `{METHOD}`. 
+    + `ClustersCTF-`: Averaged CTFs of the DEGs present in any cluster, indicating the number of the cluster and method where it appears.
+    + `CTFnormalisedCPMs-`: Normalised CPMs for each gene (rows) in each sample replicate (columns) using the CTF algorithm.
+    + `DEGs_{CONTRAST}_TREAT_{P-value}_{FC}_`: LogFC, average expression, _t_ statistic, _P_ value, and adjusted _P_-value, for all DEGs (rows) obtained for the `{CONTRAST}` using the _treat()_ method and the _P_ and _FC_ indicated in the filename by `{P-value}_{FC}`. 
+    + `DEGs_{CONTRAST}_eB_{P-value}_{FC}_`: LogFC, average expression, _t_ statistic, _P_ value, adjusted _P_-value, and _B_ statistic for all DEGs (rows) for the `{CONTRAST}` using the _eBayes()_ method and the _P_ and _FC_ indicated in the filename by `{P-value}_{FC}`. 
+    + `filteredData-`: Raw counts in all sample replicates (columns) for genes (rows) that presented a reliable expression.
+    + `List_of_clusters-{DATETIME}.Rds`: R object containing all the information about clusters obtained with the three clustering methods AHC, _k_-means and MBC. It must be read with the R function _readRDS()_ to inspect or use its contents.
+    + `normHomoscedCPM-`: TMM-normalised and homeoscedastic counts of reliable genes (rows) in all sample replicates (columns).
+    + `OutstandingGenes-`: Highly linked genes in the different clusters that can be considered hub genes.
+    + `TMMnormalisedCounts-`: Normalised counts for each gene (rows) in each sample replicate (columns) using the TMM algorithm.
+    + `TMMnormalisedCPMs-`: Normalised CPMs for each gene (rows) in each sample replicate (columns) using the TMM algorithm.
+    + `ubiquitousDEGs_`: List of genes that are DEGs in all the contrast performed in the analysis, including if it is up-regulated ($1$) or down-regulated ($-1$) in each contrast.
 
 
 
@@ -424,7 +366,7 @@ Version | Date      | Comments
 
 You can reference this pipeline and its documentation as follows:
 
-COLOCAR REFERENCIA CUANDO LA HAYA
+Amanda Bullones, Antonio Jesús Castro, Elena Lima-Cabello, Noé Fernández-Pozo, Rocío Bautista, Juan de Dios Alché and M. Gonzalo Claros (2023) Transcriptomic insight into the pollen tube growth of _Olea europaea_ L. subsp. _europaea_ reveals reprogramming and pollen-specific genes including new transcription factors. Submitted.
 
 
 ***
