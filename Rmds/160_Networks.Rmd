@@ -184,6 +184,7 @@ The process of building networks includes:
 # An analysis for each CLUSTER_LIST element
 i <- 1
 for (i in 1:list_length) {
+  if (ncol(CLUSTER_LIST[[i]]$expr_matrix) < 2) next # avoid representation of one-membered clusters
   # tab header
   cluster_name <- names(CLUSTER_LIST)[i]
   cat(paste0("  \n### ", cluster_name, "\n")) # required to combine markdown with plots
@@ -248,6 +249,7 @@ Let's select nodes (genes) with high connectivity and significant centrality (`b
 ```{r hub-detect, results='asis'}
 i <- 1
 for (i in 1:list_length) {
+  if (ncol(CLUSTER_LIST[[i]]$expr_matrix) < 2) next # avoid representation of one-membered clusters
   # tab header
   cluster_name <- names(CLUSTER_LIST)[i]
   cat(paste0("    \n### ", cluster_name, " \n")) # required to combine markdown with plots
@@ -290,6 +292,7 @@ Nodes (genes) having a significant correlation (as a surrogate of co-expression)
 ```{r net-plots, fig.width=5, fig.height=5, out.width=c('33%', '33%', '33%'), results='asis'}
 i <- 1
 for (i in 1:list_length) {
+  if (ncol(CLUSTER_LIST[[i]]$expr_matrix) < 2) next # avoid representation of one-membered clusters
   # tab header
   cluster_name <- names(CLUSTER_LIST)[i]
   cat(paste0("  \n### ", cluster_name, "\n")) # required to combine markdown with plots
@@ -342,6 +345,7 @@ For each network, we wil determine the communities that may form the network. Ge
 ```{r Allcommunities, results='asis'}
 i <- 1
 for (i in 1:list_length) {
+  if (ncol(CLUSTER_LIST[[i]]$expr_matrix) < 2) next # avoid representation of one-membered clusters
   # tab header
   cluster_name <- names(CLUSTER_LIST)[i]
   cat(paste0("  \n### ", cluster_name, "\n")) # required to combine markdown with plots

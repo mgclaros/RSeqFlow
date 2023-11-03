@@ -2,7 +2,7 @@
 #
 # execute_wf -> RSeqFlow
 # Gonzalo Claros
-# 2023-07-17
+# 2023-11-03
 #
 # Main file, invoked after source(configure_wf.R)
 # Alternative usage from terminal: Rscript execute_wf.R aConfigFile.R 
@@ -13,12 +13,15 @@ T00 <- proc.time() # Initial time for elaspsed time
 # RETRIEVE ARGS if ANY ####
 # %%%%%%%%%%%%%%%%%%%%%%%%%
 
+## user ID in the computer ####
+YO <- system ("whoami", intern = TRUE)
+
 errMsg <- "R-SEQ must be launched as 'Rscript execute_wf.R aConfigFile.R'\n       or as 'source(configure_wf.R)'\n"
 
 ## by default, okMsg refers to sourcing the configuration file ####
 okMsg <- "R-SEQ sourced as interactive from 'configure_wf.R'"
 
-## Retrieve inputs to the script when given ####
+## retrieve inputs to the script when given ####
 ARGS <- commandArgs(trailingOnly = TRUE) # Test if there is one input argument
 if (length(ARGS) >= 1) { 
   # non interactive session with one argument that should be a config file
@@ -41,6 +44,35 @@ if (interactive()) {
 } else {
 	message("R-SEQ launched from the COMMAND-LINE terminal")
 }
+
+
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# SOME PARAMETER VERIFICATION ####
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+## verificación del directorio definido en DATA_DIR ####
+if (!file.exists(DATA_DIR)) {
+  msg <- paste0(" ** No existe el directorio ", DATA_DIR, 
+                " indicado en la variable DATA_DIR para el usuario ", YO, " **\n")
+  # salir del programa para arreglar el error
+  stop(msg, call. = FALSE)
+}
+
+## checking other configuration values ####
+theVar <- vector()
+msg <- "\nChange it in configure_wf.R"
+if (MIN_CPM < 0) theVar <- c(theVar, "MIN_CPM")
+if (CV_MIN < 0) theVar <- c(theVar, "CV_MIN")
+if (FC < 0) theVar <- c(theVar, "FC")
+if (P < 0) theVar <- c(theVar, "P")
+if (length(theVar) > 0) stop("\n   ", toString(theVar), " must be >0 ", msg)
+
+if (P > 0.5) stop("\n   P-value ", P, " is too high.", msg)
+if (NODE_MAX > 700) stop("\n   NODE_MAX ", NODE_MAX, " is too high. The execution will take hours unnecessarily", msg)
+
+# remove needless variable
+rm(theVar, msg)
+
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -66,38 +98,12 @@ rm(fileToSource)
 # DECLARE USER-INDEPENDENT VARIABLES AND CONSTANTS ####
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## This should be changed every time you produce a main change ####
+## this should be changed every time you produce a main change ####
 SOFT_NAME <- "RSeqFlow"
-VERSION_CODE <- 1.01
+VERSION_CODE <- 1.02
 
 ## get computer type ####
 COMPUTER <- GetComputer()
-
-## User ID in the computer ####
-YO <- system ("whoami", intern = TRUE)
-
-## Checking data directory defined by users in the 'configure' file ####
-if (!file.exists(DATA_DIR)) {
-	msg <- paste0(msg, "** Directory ", 
-	             DATA_DIR, " does not exist for user ", YO, " **\n")
-	# quit script to fix the error
-	stop(msg, call. = FALSE)
-}
-
-## Checking other configuration values
-theVar <- vector()
-msg <- " Change it in configure_wf.R"
-if (MIN_CPM < 0) theVar <- c(theVar, "MIN_CPM")
-if (CV_MIN < 0) theVar <- c(theVar, "CV_MIN")
-if (FC < 0) theVar <- c(theVar, "FC")
-if (P < 0) theVar <- c(theVar, "P")
-if (length(theVar) > 0) stop("\n   ", toString(theVar), " must be > 0.", msg)
-
-if (P > 0.5) stop("\n   P-value ", P, " is too high.", msg)
-if (NODE_MAX > 700) stop("\n   NODE_MAX ", NODE_MAX, " is too high. The execution will take hours unnecessarily", msg)
-
-# remove needless variable
-rm(theVar)
 
 ## variable to customise each working directory created ####
 HOY <- format(Sys.time(), "%F_%H.%M.%S")
@@ -105,7 +111,7 @@ HOY <- format(Sys.time(), "%F_%H.%M.%S")
 ## create working directory to save results ####
 WD <- CreateDir(DATA_DIR, SOFT_NAME, VERSION_CODE)
 
-## Construct the list with columns to read the input file
+## construct the list with columns to read the input file ####
 # It will depend on the DATA_FILES definition
 if (length(DATA_FILES) == 1) {
 	COLUMNS_TO_READ <- FIRST_COLUMN:OTHER_COLUMN # the range of columns
@@ -113,16 +119,16 @@ if (length(DATA_FILES) == 1) {
 	COLUMNS_TO_READ <- c(FIRST_COLUMN, OTHER_COLUMN) # individual columns
 }
 
-## Set number of decimals for rounding
+## set number of decimals for rounding ####
 ROUND_dig <- 3 
 
-## Convert experimental conditions into factors
+## convert experimental conditions into factors ####
 EXP_FACTORS <-  factor(EXP_CONDITIONS)
 
-## Frequency of every condition
+## frequency of every condition ####
 COND_FREQ <- table(EXP_CONDITIONS)
 
-## Convert contrast list into the required vector of contrasts
+## convert CONTRASTS list into the required vector of contrasts ####
 i <- 1
 allContrasts <- c()
 for (i in 1:length(CONTRASTS)) {
@@ -136,7 +142,7 @@ for (i in 1:length(CONTRASTS)) {
 ## Set the log2 of fold-change ####
 logFC <- log2(FC)
 
-## Correlation parameters
+## set correlation parameters ####
 # Set correlation method pearson or spearman
 CORR_METHOD = "pearson"
 # Set correlation threshold considering that r^2 = (0,75)^2 = 0,5625
@@ -152,10 +158,10 @@ rm(FIRST_COLUMN, OTHER_COLUMN, EXP_CONDITIONS)
 # MAIN EXECUTION USING MARKDOWN ####
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## Set workind directory ####
+## set workind directory ####
 setwd(WD)
 
-## Launch rmarkdown report ####
+## launch rmarkdown report ####
 cat("\n", "*** Creating markdown report ***", "\n")
 
 # the Rmd file must be located with code

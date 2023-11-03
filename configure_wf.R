@@ -1,6 +1,6 @@
 # configure_wf -> RSeqFlow
 # Gonzalo Claros
-# 2023-03-21
+# 2023-11-03
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # DON'T TOUCH: CLEAN START ####
@@ -48,7 +48,7 @@ SOURCE_DIR = "~/Documents/MisScriptsR/RSeqFlow/"
 # TRUE: old packages will be updated after installing the absent ones
 # FALSE: only absent packages will be installed. No update of older ones
 
-PKG_UPDATE = TRUE
+PKG_UPDATE = FALSE
 # /////////////////////////////////////////
 
 
@@ -74,7 +74,7 @@ VERBOSE_MODE = TRUE
 #   DATA_DIR = "~/Documents/My_MA_data/this_experiment/"
 # A final "/" in path is compulsory
 
-DATA_DIR = "~/prueba/R-SEQ/olivo/Pollen_TR/"
+DATA_DIR = "~/Documents/RNASeqData/olivo/Pollen_TR/"
 # //////////////////////////////////////
 
 
@@ -115,13 +115,13 @@ CHARS_TO_REMOVE = 0 # the 11 first chars of all file names will be removed.
 
 # define the expression table filename
 # REQUIRED: the first column must cotain the gene IDs
-DATA_FILES <- "pollen_picual_TR.tsv"
+DATA_FILES <- "pollen_picual_reord_TR3333.tsv"
 
 # The FIRST COLUMN after the gene IDs colum that will be read; 1 is the one after gene IDs column
 FIRST_COLUMN <- 1
 #
 # The LAST COLUMN containing data
-OTHER_COLUMN <- 11
+OTHER_COLUMN <- 12
 # ///////////////////////////////////////
 
 
@@ -130,12 +130,12 @@ OTHER_COLUMN <- 11
 # DEFINE YOUR FACTORS (EXPERIMENTAL CONDITIONS) ####
 #
 # define EVERY experimental condition to analyse. CTRL and TREAT are necessary
-CTRL <- "p_0H"
-TREAT <- "p_1H"
+CTRL <- "MP"
+TREAT <- "GP1h"
 
 # Additional treatments or conditions
-TREAT2 <- "p_3H"
-TREAT3 <- "p_6H"
+TREAT2 <- "GP3h"
+TREAT3 <- "GP6h"
 # ///////////////////////////////////////
 
 
@@ -149,7 +149,7 @@ TREAT3 <- "p_6H"
 # Example: 
 # EXP_CONDITIONS <- c(CTRL, CTRL, CTRL, TREAT, TREAT, TREAT, TREAT2, TREAT2, TREAT2)
 
-EXP_CONDITIONS <-  c(rep(CTRL, 2), rep(TREAT, 3), rep(TREAT2, 3), rep(TREAT3, 3))
+EXP_CONDITIONS <-  c(rep(CTRL, 3), rep(TREAT, 3), rep(TREAT2, 3), rep(TREAT3, 3))
 # ///////////////////////////////////////
 
 

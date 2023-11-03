@@ -22,13 +22,13 @@ Let's produce the files after filtering genes per `P` and `FC` thresholds to obt
       theContrast <- colnames(v.tmm.fit.eB$contrasts)[i]
       degs.to.save.eB <- topTable(v.tmm.fit.eB, 
                                           coef = i, 
-                                          p.value = P, 
-                                          lfc = logFC, 
+                                          p.value = P_eB, 
+                                          lfc = logFC_eB, 
                                           adjust.method = "BH",
                                           sort.by = "logFC",
                                           resort.by = "P",
                                           number = Inf)
-      fileName <- SaveTSV(degs.to.save.eB, paste0("DEGs_", theContrast, "_eB_P-", P, "_FC-", FC, "_"))
+      fileName <- SaveTSV(degs.to.save.eB, paste0("DEGs_", theContrast, "_eB_P-", P_eB, "_FC-", FC, "_"))
       allFiles <- c(allFiles, fileName)
     }
     message("**DEGs** for every contrast after **GLM-eBayes** were saved in files \n", toString(allFiles))
@@ -118,7 +118,7 @@ Then, the analysis of the _F_ statistics is presented in two columns when more t
 Finally, the last columns are the ***Results*** for each contrast, where as indicated above, -1, 0 and +1 are, respectively, down-regulated, not-significant, up-regulated.
 
 ```{r save_all_gene_estimates}
-fileName <- paste(sep = "", WD, "AllGenes_allContrast_eB_P-", P, "_FC-", FC, "_", HOY, ".tsv")
+fileName <- paste(sep = "", WD, "AllGenes_allContrast_eB_P-", P_eB, "_FC-", FC, "_", HOY, ".tsv")
 write.fit(v.tmm.fit.eB, 
           status.eB, 
           file = fileName, 

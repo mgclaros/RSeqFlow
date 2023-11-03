@@ -1,6 +1,6 @@
 # functions_wf -> RSeqFlow
 # Gonzalo Claros
-# 2023-03-24
+# 2023-11-03
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -162,7 +162,7 @@ PlotGeneDensity <- function(obj,
     plot(density(obj[, 1]), 
       col = col[1], 
       lwd = 2, 
-      ylim = c(0, 0.26), # podría parametrizarse este máximo de 0.26
+      # ylim = c(0, 0.26), # podría parametrizarse este máximo de 0.26
       las = 2, 
       main = atext, 
       xlab = "Log-cpm")

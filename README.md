@@ -1,15 +1,13 @@
 # RSeqFlow
 
-A comprehensive pipeline for processing RNA-Seq datasets from count files or tables in non-model organisms. 
-
-The pipeline carries out the following steps:
+A comprehensive R pipeline for processing RNA-Seq datasets from count files or tables in non-model organisms. It carries out the following steps:
 
 1. Read/construct a count table from RNA-seq mappings
 2. Quality control and gene filtering
 3. Normalisation and _biologically relevant_ differential expression
 4. Correlation analyses for clustering
 5. Co-expression networks, including hubs and subgraphs
-6. Outstanding gene profiles
+6. Profiling outstanding genes.
 
 ***
 
@@ -258,7 +256,7 @@ TREAT2 <- "Stressed wild type"
 TREAT3 <- "NaCl 15 mM"
 ```
 
-### Define `EXP_CONDITIONS` using experimental factors
+### Define `EXP_CONDITIONS` using the experimental factors
 
 Once you defined the two or more experimental factors, you have to define the factor of each column (sample) in the variable `EXP_CONDITIONS` that you can find in the segment entitled `ASSIGN CONDITIONS TO SAMPLES (COLUMNS) IN DATA_FILES`.
 
@@ -357,16 +355,26 @@ Version | Date      | Comments
 :---    | :---      | :---
 0.9     | 9-Jun-22  | Initial release
 1.0     | 21-Jul-22 | First stable release
-1.01    | 07-Jul-23 | Small improvements avoiding unexpected crashes
-... | ... | ...
+1.01    | 7-Jul-23  | Small improvements avoiding unexpected crashes
+1.02    | 3-Nov-23  | Minor display improvements, code debugging, more references and explanations
+
+### v 1.02 main changes
+
+* A mew parameter `NODE_MAX` is required in the configuration file to avoid excessive calculations related to correlations and clustering with crowded networks.
+* More theoretical details about the _P_-value misuse are given
+* Raw data are always filtered using `edgeR::filterByExpr()` and then with the `MIN_CPM` threshold.
+* When user-definded thresolds are `P > 0.05` and `FC > 1.5`, thresholds for `eBayes()` are set to `0.05` and `1.5`.
+* MD plots using `treat()` function include the _P_ and _logFC_ thresholds used for `eBayes()` for comparative reasons.
+* Networks with less than 2 nodes are not plotted.
+
 
 ***
 
 ## Citation
 
-You can reference this pipeline and its documentation as follows:
+Please, reference this pipeline and its documentation as follows:
 
-Amanda Bullones, Antonio Jesús Castro, Elena Lima-Cabello, Noé Fernández-Pozo, Rocío Bautista, Juan de Dios Alché and M. Gonzalo Claros (2023) Transcriptomic insight into the pollen tube growth of _Olea europaea_ L. subsp. _europaea_ reveals reprogramming and pollen-specific genes including new transcription factors. Submitted.
+A. Bullones, A. J. Castro, E. Lima-Cabello, N. Fernandez-Pozo, R. Bautista, J. d. D. Alché, and M. G. Claros (2023) Transcriptomic insight into the pollen tube growth of _Olea europaea_ L. subsp. _europaea_ reveals reprogramming and pollen-specific genes including new transcription factors. ***Plants*** 12(16), 2894. [doi: 10.3390/plants12162894](https://doi.org/10.3390/plants12162894).
 
 
 ***

@@ -116,6 +116,7 @@ Using the sample-aggregated matrices, genes will be aggregated by cluster by mea
     # aggregate the m_ctf_std_bysample matrix by clusters, using the median and sd
     aggr_med <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_k), median)
     aggr_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_k), sd)
+    aggr_sd[is.na(aggr_sd)] <- 0 # avoid crashing when NAs are present due to 1-member clusters
     
     # save aggregates in a list for further graphs
     agg_list[[thisID]]$median <- aggr_med
@@ -144,6 +145,7 @@ Using the sample-aggregated matrices, genes will be aggregated by cluster by mea
     aggr_median <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_k), median)
     # standard deviation of calculations
     aggr_sd <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_k), sd)
+    aggr_sd[is.na(aggr_sd)] <- 0 # avoid crashing when NAs are present due to 1-member clusters
     
     # save aggregates in a list for further graphs
     agg_list[[thisID]]$median <- aggr_median
@@ -167,6 +169,7 @@ Using the sample-aggregated matrices, genes will be aggregated by cluster by mea
     aggr_median <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_kmeans), mean)
     # standard deviation of calculations
     aggr_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_kmeans), sd)
+    aggr_sd[is.na(aggr_sd)] <- 0 # avoid crashing when NAs are present due to one-member clusters
     
     # save aggregates in a list for further graphs
     agg_list[[thisID]]$median <- aggr_median
@@ -187,6 +190,7 @@ Using the sample-aggregated matrices, genes will be aggregated by cluster by mea
     aggr_median <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_kmeans), median)
     # standard deviation of calculations
     aggr_sd <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_kmeans), sd)
+    aggr_sd[is.na(aggr_sd)] <- 0 # avoid crashing when NAs are present due to one-member clusters
     
     # save aggregates in a list for further graphs
     agg_list[[thisID]]$median <- aggr_median
@@ -210,6 +214,7 @@ n_genes_model_based <- table(groups_mclust)
 
 aggr_median <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_mclust), mean)
 aggr_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_mclust), sd)
+aggr_sd[is.na(aggr_sd)] <- 0 # avoid crashing when NAs are present due to one-member clusters
 
 agg_list[[thisID]]$median <- aggr_median
 agg_list[[thisID]]$sd <- aggr_sd

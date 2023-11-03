@@ -51,26 +51,55 @@ But this approach is highly dependent on _P_ values, that are misused in many ca
 
 Statistical significance offers the benefit of simplicity and clarity on the one hand. 
 But the size of the effect is not indicated by the statistical significance.
-Those and others drawbacks of the _P_-value led some to advocate for more sophisticated models (such as the Bayesian approach mentioned above). One of those _claimers_ in seeking the proper use and interpretation of the _P_-value is The American Statistical Association (ASA), which highlights that **scientific conclusions should not be based only on whether a _P_-value passes a specific threshold since, by itself, a _P_-value does not provide a good measure of evidence regarding a model or hypothesis**. Moreover, since associating statistically significant findings with $P < 0.05$ (as arbitrarily introduced by Ronald Fisher in 1925) results in a **high rate of false positives**, the ASA also recommends that **declarations of _statistical significance_ should be abandoned** since statistical significance was never meant to imply scientific importance [@Wasserstein2019]. The situation is so worrying that some authors claim that most published research findings are false [@Ioannidis2005ud] or biased [@Altman2017mv]. Hence, Amrhein [@Amrhein2019]  asserts that:
+Those and others drawbacks of the _P_-value led some to advocate for more sophisticated models (such as the Bayesian approach mentioned above). One of those agents claiming the proper use and interpretation of the _P_-value is The American Statistical Association (ASA), which highlights that **scientific conclusions should not be based only on whether a _P_-value passes a specific threshold since, by itself, a _P_-value does not provide a good measure of evidence regarding a model or hypothesis**. 
 
-* Never conclude there is _no difference_ or _no association_ just because $P < 0.05$ because a confidence interval includes zero. 
-* Never conclude that two studies conflict because one had a statistically significant result and the other did not.
-* _P_-values should be given with a precise value ($P = 0.021$), without adornments such as stars, and not as binary inequalities (~~$P < 0.05$~~)
+Since associating statistically significant findings with $P < 0.05$ (as arbitrarily introduced by Ronald Fisher in 1925) results in a high rate of false positives, the ASA also recommends that **declarations realted to _statistical significance_ should be abandoned** since statistical significance was never meant to imply scientific importance [@Wasserstein2019] and it has promoted conscious or unconscious bad practices in research [@Mayo2022aa]. The situation is so worrying that some authors claim that most published research findings are false [@Ioannidis2005ud] or highly biased [@Altman2017mv]. 
+
+**Common misinterpretation of statistical significance**:
+
+The following limitations have been described in detail in [@Amrhein2017aa,@Amrhein2019,@Montero2023aa].
+
+* **$P$-values**: they ~~do not measure the probability that the studied hypothesis is true, or the probability that the data were produced by random chance alone~~, but the probability of the test statistic assuming the null hypothesis. In fact, _P-values depend on your data and are not reliable_.
+* **Confidence intervals**: many researchers incorrectly believe that ~~the confidence interval from an isolated experiment has a 95% chance of containing the true value, or intervals that will contain the parameter with a given probability~~. They simply are a frequency description of samples from a population in large-scale resampling of this population. Be aware that _many researchers wrongly interpret confidence intervals as Bayesian credible intervals_.
+* **Statistical significance**: it was introduced as a tool to suggest interesting results and perform further confirmatory research and not as ~~a true-difference/no-difference decision boundary~~. Subsequently, the variables selected as being truly changed are considered to be scientifically significant and merit more research. _The absence of statistical significance does not indicate an absence of an effect_. And the _presence of statistical significance does not mean scientific significance_.
+* **False discovery rate (FDR)** is usually set to control the ratio of false positives when multiple hypothesis tests are performed, such as in omics studies. But this approach requires independent variables, which is not the case, since many genes/proteins are acting on other genes/proteins, and _FDR test statistic cannot be used since it would drive and potentially bias the extraction of the biological information contained in the omic data_.
+
+
+In fact, in omics sciences, the frequent misuse of _P_-values is limiting the generation of robust scientific knowledge [@Montero2023aa,@Amrhein2019]:
+
+* biological inferences are derived only from biomolecules with statistically significant changes;
+* only the biomolecules with statistically significant changes are selectively reported (biasing the published results); and
+* asterisks or inequalities ($P < 0.05, P < 0.001$) are reported instead of the obtained _P_-values. 
+
+To circumvent these misinterpretations:
+
+* You should never conclude that there is _no difference_ or _no association_ just because $P < 0.05$ because a confidence interval includes zero or your reference in the H0 hypothesis. 
+* You should never conclude that two studies conflict because one had a statistically significant result and the other did not.
+* _P_-values should be given with a precise value ($P = 0.021$), without adornments such as stars or asterisks, and not as binary inequalities (~~$P < 0.05$~~)
+* You must focus on the parameter that measures your biological effect (for example, the fold-change) and not the _P_-values or the confidence intervals.
 
 ![Beware false conclusions](https://media.nature.com/lw800/magazine-assets/d41586-019-00857-9/d41586-019-00857-9_16551622.jpg)
-It is obvious that all statistics naturally vary from study to study and can lead to large disparities in _P_-values, far beyond falling just to either side of the 0.05 threshold (see the image above). Therefore, we must consider **uncertainity** and, for example, re-think _confidence intervals_ as _compatibility intervals_ to transmit the idea that [all the values between the interval's limits are reasonably compatible with the data](https://github.com/matloff/regtools/blob/master/inst/NoPVals.md). Hece, because the interval gives the values most compatible with the data, it doesn't mean values outside it are incompatible: they are just less compatible. Therefore, confidence/compatibility intervals are more informative and more intuitive. 
+
+
 
 **Possible solutions**: 
 
-If researchers have to discard statistical significance, what should they do instead?
+It is obvious that statistics naturally vary from study to study and can lead to large disparities in _P_-values, far beyond falling just to either side of the 0.05 threshold (see the image above). Therefore, **we must consider uncertainity** and, for example, re-think _confidence intervals_ as **compatibility intervals** to transmit the idea that [all the values between the interval's limits are reasonably compatible with the data](https://github.com/matloff/regtools/blob/master/inst/NoPVals.md). Hence, because the interval gives the values most compatible with the data, it doesn't mean values outside it are incompatible: they are just less compatible. Therefore, **compatibility intervals are more informative and more intuitive**. 
 
-1. Many authors suggest to change to $P < 0.005$ or include a Bayesian perspective to improve the reproducibility [@Benjamin2018sj], but the main disadvantage is the enormous false negative results that it gives and the new perception that [low _P_ values does not imply more significance or more importance](https://github.com/matloff/regtools/blob/master/inst/NoPVals.md). 
-2. Others propose to at least avoid _dichotomisation_ (significant vs. non-significant) [@Amrhein2019] and learn to deal with uncertainty.
 
-However, it is recognised that _P_-values and statistical significance are a prerequisite since they proof that the outcomes are not random. But for understanding the effect magnitude, at least a second parameter should be considered. To mitigate _P_-value misuse, the proposed solutions are: 
+Second, it is not a question of abandoning the use of statistical significance since it would favour unjustified claims and mislead science, favouring non-ethical practices [@Wasserstein2019]. However, a better use of hypothesis tests and _P_-values by researchers in the new context of _compatibility intervals_ is necessary:
+
+1. Change to lower _P_-values (for example $P < 0.005$) to reduce the false positives and improve the reproducibility of research [@Benjamin2018sj]. It is simple to implement but would produce an enormeous amount of false negative results that favours the new perception that [low _P_ values does imply more significance or more importance](https://github.com/matloff/regtools/blob/master/inst/NoPVals.md). Additionally, more stringent _P_values will require larger samples (that may not be feasible).
+2. Avoid _dichotomisation_ (significant vs. non-significant) as much as possible [@Amrhein2019] and learn to deal with uncertainty.
+3. Contrary as is commonly thought, ~~do not select genes by the _P_-value and then use the fold-change for priorisation~~, but select them by the fold-change (that focuses on the size of effect you are analysing) and then priorise by the _P_-value only if some filtering is required [@Mayo2022aa,@Montero2023aa]. Then, repeat the experiment to confirm your results, even though you obtain different (but compatible) fold-changes and _P_-values.
+4. Add a Bayesian perspective to the analysis to produce _credible intervals_ corresponding to the distributions of the plausibility of the values of the parameter. Its main drawback is that when the number of samples is low, result may be hihgly biased.
+
+
+However, it is recognised that _P_-values and statistical significance are a prerequisite to proof that the outcomes are not random. But for understanding the effect magnitude, at least a second parameter should be considered, such as the fold-change in genes, proteins or metabolites: 
 
 1. _P_-values must be integrated with secondary results to arrive at valid conclusions [@Lu2015wd]. In the case of RNA-seq, the secondary result is the **expression fold-change**, that reflects the change magnitude.
 2. Researchers should seek to analyse data in multiple ways (including statistics) to see whether different analyses converge on the same answer [@Nature2019].
+3. Avoid selecting genes by statistical significance relying on solid cutoffs. Instead, relax cutoffs and interpret your outcomes in the context of previous knowledge and the known relationships among genes and proteins [@Betensky2019].
 
 </details> 
 [END EXPANDIBLE]: #
@@ -126,11 +155,17 @@ Let's have an overview of DEGs per contrast depending on the `eBayes()` or `trea
 * **Down** (`-1`): genes <span style="color:blue">down-regulated</span> in the contrast
 * **Up** (`+1`): genes <span style="color:red">up-regulated</span> in the contrast
 
-Although using the default `method = separate` makes function is equivalent to `topTable()` (that will be used for saving [DEG]s) but less stringent.
+Although using the default `method = separate` makes function is equivalent to `topTable()` (that will be used for saving [DEG]s) but less stringent. Since `treat()` requires lower `P` and `FC` thresholds than `eBayes()`, the default `P` and `FC` will be increased to `0.05` and `1.5` for the Bayesian approach.
 
 ```{r DEGs-ebayes-treat}
+# reset P and logFC thresholds for eBayes
+P_eB_MIN <- 0.05
+P_eB <- ifelse(P > P_eB_MIN, P_eB_MIN, P)
+logFC_eB_MIN <- log2(1.5)
+logFC_eB <- ifelse(logFC < logFC_eB_MIN, logFC_eB_MIN, logFC)
+
 # NotSig, Down and Up variables from decideTests() will be used to colour plots
-status.eB <- decideTests(v.tmm.fit.eB, p.value = P, lfc = logFC)
+status.eB <- decideTests(v.tmm.fit.eB, p.value = P_eB, lfc = logFC_eB)
 status.treat <- decideTests(v.tmm.fit.treat, p.value = P, lfc = logFC)
 
 # join per rows the summary tables of eBayes and treat, with an intermediate title 
@@ -167,7 +202,7 @@ plotMD(v.tmm.fit.eB,
        hl.cex=0.5,
        main = "DEGs by eBayes()")
 # mark logFC cutoffs
-abline(h = c(-logFC, logFC), col = "magenta")
+abline(h = c(-logFC_eB, logFC_eB), col = "#7FFFD4")
 
 plotMD(v.tmm.fit.treat, 
        status = status.treat, 
@@ -175,6 +210,7 @@ plotMD(v.tmm.fit.treat,
        main = "DEGs by treat()")
 # mark logFC cutoffs
 abline(h = c(-logFC, logFC), col = "magenta")
+abline(h = c(-logFC_eB, logFC_eB), col = "#7FFFD4", lty = 2)
 ```
 
 > **IMPORTANT!**: DEGs obtained with `treat()` must be a subset of those obtained by `eBayes()`.
@@ -220,7 +256,7 @@ for (i in 1:NUM_CONTRASTS) {
          ylim = c(-10, 10),
          hl.cex=0.5)
   # mark logFC cutoffs
-  abline(h = c(-logFC, logFC), col = "magenta")
+  abline(h = c(-logFC_eB, logFC_eB), col = "#7FFFD4")
 
   # plot for treat
   plotMD(v.tmm.fit.treat, 
@@ -232,6 +268,7 @@ for (i in 1:NUM_CONTRASTS) {
          hl.cex=0.5)
   # mark logFC cutoffs
   abline(h = c(-logFC, logFC), col = "magenta")
+  abline(h = c(-logFC_eB, logFC_eB), col = "#7FFFD4", lty = 2)
 }
 ```
 

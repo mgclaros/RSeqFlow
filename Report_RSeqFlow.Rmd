@@ -1,6 +1,6 @@
 ---
 title: "`r PROJECT_NAME`"
-subtitle: "Using `r SOFT_NAME` pipeline; updated on 230509"
+subtitle: "Using `r SOFT_NAME` pipeline; updated on 231103"
 author: "M. Gonzalo Claros & Amanda Bullones"
 date: "`r format(Sys.time(), '%A %d, %B %Y. %H.%M.%S')`"
 bibliography: Refs_RSeqFlow.bib
@@ -110,15 +110,18 @@ EXPAND_bx <- '<details  style="background-color: SeaShell;
 
 [MD plot]: "mean-difference plot"
 
-**`r SOFT_NAME`** is a R framework to:
+**`r SOFT_NAME`** is a comprehensive R pipeline for processing RNA-Seq datasets from count files or tables in non-model organisms. It carries out the following steps:
 
 1. Read/construct a count table for RNA-seq mappings [@Wang2009]
 2. Quality control and gene filtering
 3. Normalisation using `TMM` and `CTF` [@Zhao2021wp; @Johnson2022fn]
-4. Differential expression using `limma/voom` and `treat()` from [edgeR] [@Oshlack2010; @Marioni2008; @Li2022cf].
+4. Differential expression using `limma/voom` and `treat()` from [edgeR] to seek for biological relevance [@Oshlack2010; @Marioni2008; @Li2022cf].
 5. Correlation analyses for clustering with 3 algorithms [@Usadel2009su; @Serin2016uw]
 6. Co-expression networks, including hubs and subgraphs [@Parsana2019jm; @Sia2022]
-7. Outstanding gene profiles
+7. Profiling outstanding genes.
+
+> You can clone/dowload `r SOFT_NAME` from its [GitHub repository](https://github.com/mgclaros/RSeqFlow). 
+> It was described in [@Bullones2023aa].
 
 `r NOTE_bx`
   `r okMsg`. You can use AS IS without any warrants.
