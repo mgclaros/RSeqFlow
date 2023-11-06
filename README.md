@@ -357,6 +357,7 @@ Version | Date      | Comments
 1.0     | 21-Jul-22 | First stable release
 1.01    | 7-Jul-23  | Small improvements avoiding unexpected crashes
 1.02    | 3-Nov-23  | Minor display improvements, code debugging, more references and explanations
+1.02b   | 6-Nov-23  | Two minor bugs in library load and removal of unused variables
 
 ### v 1.02 main changes
 
@@ -367,6 +368,9 @@ Version | Date      | Comments
 * MD plots using `treat()` function include the _P_ and _logFC_ thresholds used for `eBayes()` for comparative reasons.
 * Networks with less than 2 nodes are not plotted.
 
+### v1.03 main changes
+
+* Something
 
 ***
 

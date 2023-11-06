@@ -1,6 +1,6 @@
 # libraries_wf -> RSeqFlow
 # Gonzalo Claros
-# 2023-07-07
+# 2023-11-06
 
 # Already installed packages
 # more details https://www.r-bloggers.com/an-efficient-way-to-install-and-load-r-packages/
@@ -18,7 +18,7 @@ libs_diagramas_Venn <- c("ggvenn", "gplots", "VennDiagram", "grid", "futile.logg
 libs_Rmd <- c("knitr", "knitcitations", "rmarkdown", "markdown", "bibtex", "DT")
 # libs_anova <- "statmod"
 libs_clustering <- c("igraph", "psych", "corrplot", "cluster", "NbClust", "dendextend",
-                      "pheatmap", "factoextra", "fpc", "mclust", "visNetwork")
+                      "pheatmap", "factoextra", "fpc", "mclust", "visNetwork", "dynamicTreeCut")
 # libs_wordcloud <- c("tm", "wordcloud", "wordcloud2", "SnowballC")
 
 from_CRAN <- c(libs_general, 

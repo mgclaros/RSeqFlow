@@ -101,7 +101,7 @@ PlotGeneDensity(x.filt.lcpm, genes.cutoff, "After filtering")
 
 # remove needless variables
 rm(none_is0, all_are0, filteredOK, keep.exprs, filt_tmp) # from previous chunk
-rm(genes.cutoff, x.lcpm, x.filt.lcpm. x.filt_tmp)
+rm(genes.cutoff, x.lcpm, x.filt.lcpm, x.filt_tmp)
 ```
 
 > **IMPORTANT:** After filtering, density lines should be nearly identical following a gauss-shaped profile. Peak at very low logCPM should disappear.
