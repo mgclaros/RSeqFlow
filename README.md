@@ -1,13 +1,13 @@
 # RSeqFlow
 
-A comprehensive R pipeline for processing RNA-Seq datasets from count files or tables in non-model organisms. It carries out the following steps:
+A comprehensive R markdown pipeline for processing RNA-Seq datasets from count files or tables in non-model organisms. It carries out the following steps:
 
-1. Read/construct a count table from RNA-seq mappings
-2. Quality control and gene filtering
-3. Normalisation and _biologically relevant_ differential expression
+1. Read/construct the expression table from RNA-seq mapping counts
+2. Parametrisable quality control and gene filtering
+3. Normalisation and _biologically relevant_ differential expression based on parametrisable _P_-value and fold change.
 4. Correlation analyses for clustering
 5. Co-expression networks, including hubs and subgraphs
-6. Profiling outstanding genes.
+6. Profiling outstanding (likely hub?) genes.
 
 ***
 
@@ -358,6 +358,17 @@ Version | Date      | Comments
 1.01    | 7-Jul-23  | Small improvements avoiding unexpected crashes
 1.02    | 3-Nov-23  | Minor display improvements, code debugging, more references and explanations
 1.02b   | 6-Nov-23  | Two minor bugs in library load and removal of unused variables
+1.03    | 18-Dec-34 | Gene filtering improved, minor bugs resolved
+
+
+### v 1.03 main changes
+
+- The stringency of `filterByExpr()` function can now be configured according to Thawng and Smith 2022 in the chunk `numRepFilt`.
+- Maximum _y_ for density plots is established.
+- General information about differential expression has been updated, including more references
+- More parametrisations to avoid hardcoding variables
+- Minor bugs making RSeqFlow to crash when some variables were empty.
+
 
 ### v 1.02 main changes
 
@@ -367,10 +378,6 @@ Version | Date      | Comments
 * When user-definded thresolds are `P > 0.05` and `FC > 1.5`, thresholds for `eBayes()` are set to `0.05` and `1.5`.
 * MD plots using `treat()` function include the _P_ and _logFC_ thresholds used for `eBayes()` for comparative reasons.
 * Networks with less than 2 nodes are not plotted.
-
-### v1.03 main changes
-
-* Something
 
 ***
 

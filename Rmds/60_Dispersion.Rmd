@@ -35,7 +35,7 @@ To estimate the common, trended and tagwise (gene-wise) dispersions across genes
 [END EXPANDIBLE]: #
 
 The betst way to evaluate dispersion $\alpha$ is **[BCV]** (_biological coefficient of variation_) [@McCarthy2012], based on the coefficient of variation ([CV]). Mathematically, $BCV = \sqrt\alpha$.
-[BCV] reflects the variation with which the (unknown) true abundance of each gene varies between replicate RNA samples. It represents the CV that would remain between biological replicates if sequencing depth could be increased indefinitely. While the [CV][CV2] decreases as the size of the counts increases (the measure is more precise), the BCV does not since more biological variation is considered with more replicates.
+[BCV] reflects the variation with which the (unknown) true abundance of each gene varies between replicate RNA samples. It represents the CV that would remain between biological replicates if sequencing depth could be increased indefinitely. While the [CV][CV2] decreases as the size of the counts increases (the measure is more precise), the BCV does not since more biological variation is considered with more replicates. The laboratory of Gordon Smyth described that [BCV] tends to be in the range `0.05-0.2` for genetically identical mice or cell lines [@Chen2016aa], whereas somewhat larger values (`>0.3-0.4`) are observed for human subjects [@Law2016yj].
 
 
 ```{r dispersionEstimates}
@@ -68,9 +68,9 @@ if (bcv.x < bcv.norm) {
 }
 
 if (bcv.norm > 0.4) {
-  cat("Dispersed data (BCV > 0.4), probably due to biological replications")
+  warning("**Dispersed** data (BCV > 0.4), probably due to biological replications")
 } else {
-  message("Data are very consistent (BCV < 0.4), probably due to technical replications or _good handling_\n")
+  message("**Consistent** data (mainly if BCV < 0.2), probably due to technical replications or _good handling_\n")
 }
 ```
 

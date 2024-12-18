@@ -100,7 +100,7 @@ rm(fileToSource)
 
 ## this should be changed every time you produce a main change ####
 SOFT_NAME <- "RSeqFlow"
-VERSION_CODE <- 1.02
+VERSION_CODE <- 1.03
 
 ## get computer type ####
 COMPUTER <- GetComputer()
@@ -136,7 +136,7 @@ for (i in 1:length(CONTRASTS)) {
                     paste0(CONTRASTS[[i]][1], 
                            "-",
                            CONTRASTS[[i]][2])
-                    )
+  )
 }
 
 ## Set the log2 of fold-change ####

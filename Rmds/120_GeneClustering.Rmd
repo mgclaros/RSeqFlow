@@ -120,16 +120,19 @@ kable(t(as.data.frame(table(groups_orient))), caption = "Groups using the orient
 The **optimal cluster number** `k_30` can be calculated with a longer method based on 26 (`index = "all"`) metrics to be sure that the selected value is supported by most methods, not only one. Several plots and messages are generated during the evaluation.
 
 ```{r k-30, warning=VERBOSE_MODE}
+# to avoid crashing with few genes
+MIN_NC <- 2  # minimal number of clusters
+MAX_NC <- 8  # maximal number of clusters
+
 # calculation the opt of k_30
 nb <- NbClust(m.ctf.std, 
               distance = "euclidean", 
-              min.nc = 2,  # min_nc: minimal number of clusters
-              max.nc = 10, # max.nc: maximal number of clusters
+              min.nc = MIN_NC,
+              max.nc = MAX_NC,
               index = "all", # only 26. The 30 are calculated with alllong
               method = best_meth_ctf)
 
-# graphical representation that is usually crashing
-# fviz_nbclust(nb)
+# fviz_nbclust(nb) # graphical representation that usually crashes
 ```
 
 To assign the `k_30` value and the groups formed, the `nb` variable is inspected. A final message with the result is provided.
@@ -156,7 +159,8 @@ group_dynamic <- cutreeDynamic(dendro = HC_ctf_clust,
 names(group_dynamic) <- HC_ctf_clust$labels
 
 # determine k regarding if 0 (genes not clusterizables) is present in group_dynamic
-dynamic_k <- ifelse((names(table(group_dynamic))[1] != 0), length(table(group_dynamic)), length(table(group_dynamic)) - 1)
+# dynamic_k <- ifelse((names(table(group_dynamic))[1] != 0), length(table(group_dynamic)), length(table(group_dynamic)) - 1)
+dynamic_k <- length(table(group_dynamic))
 
 message("DYNAMIC number of clusters for **genes**: **", dynamic_k, "**")
 

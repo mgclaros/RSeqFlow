@@ -1,12 +1,76 @@
 %% This BibTeX bibliography file was created using BibDesk.
 %% https://bibdesk.sourceforge.io/
 
-%% Created for M. Gonzalo Claros at 2023-10-19 11:23:20 +0200 
+%% Created for M. Gonzalo Claros at 2024-04-09 09:46:42 +0200 
 
 
 %% Saved with string encoding Unicode (UTF-8) 
 
 
+
+@article{Thawng2023aa,
+	abstract = {BACKGROUND: We have been documenting the biological responses to low levels of radiation (natural background) and very low level radiation (below background), and thus these studies are testing mild external stimuli to which we would expect relatively mild biological responses. We recently published a transcriptome software comparison study based on RNA-Seqs from a below background radiation treatment of two model organisms, E. coli and C. elegans (Thawng and Smith, BMC Genomics 23:452, 2022). We reported DNAstar-D (Deseq2 in the DNAstar software pipeline) to be the more conservative, realistic tool for differential gene expression compared to other transcriptome software packages (CLC, Partek and DNAstar-E (using edgeR). Here we report two follow-up studies (one with a new model organism, Aedes aegypti and another software package (Azenta) on transcriptome responses from varying dose rates using three different sources of natural radiation.
+RESULTS: When E. coli was exposed to varying levels of K40, we again found that the DNAstar-D pipeline yielded a more conservative number of DEGs and a lower fold-difference than the CLC pipeline and DNAstar-E run in parallel. After a 30 read minimum cutoff criterion was applied to the data, the number of significant DEGs ranged from 0 to 81 with DNAstar-D, while the number of significant DEGs ranged from 4 to 117 and 14 to 139 using DNAstar-E and the CLC pipelines, respectively. In terms of the extent of expression, the highest foldchange DEG was observed in DNAstar-E with 19.7-fold followed by 12.5-fold in CLC and 4.3-fold in DNAstar-D. In a recently completed study with Ae. Aegypti and using another software package (Azenta), we analyzed the RNA-Seq response to similar sources of low-level radiation and again found the DNAstar-D pipeline to give the more conservative number and fold-expression of DEGs compared to other softwares. The number of significant DEGs ranged 31-221 in Azenta and 31 to 237 in CLC, 19-252 in DNAstar-E and 0-67 in DNAStar-D. The highest fold-change of DEGs were found in CLC (1,350.9-fold), with DNAstar-E (5.9 -fold) and Azenta (5.5-fold) intermediate, and the lowest levels of expression (4-fold) found in DNAstar-D.
+CONCLUSIONS: This study once again highlights the importance of choosing appropriate software for transcriptome analysis. Using three different biological models (bacteria, nematode and mosquito) in four different studies testing very low levels of radiation (Van Voorhies et al., Front Public Health 8:581796, 2020; Thawng and Smith, BMC Genomics 23:452, 2022; current study), the CLC software package resulted in what appears to be an exaggerated gene expression response in terms of numbers of DEGs and extent of expression. Setting a 30-read cutoff diminishes this exaggerated response in most of the software tested. We have further affirmed that DNAstar-Deseq2 gives a more conservative transcriptome expression pattern which appears more suitable for studies expecting subtle gene expression patterns.},
+	author = {Thawng, Cung Nawl and Smith, Geoffrey Battle},
+	date-added = {2024-04-09 09:46:24 +0200},
+	date-modified = {2024-04-09 09:46:24 +0200},
+	doi = {10.1186/s12864-023-09683-w},
+	journal = {BMC Genomics},
+	journal-full = {BMC genomics},
+	keywords = {Fold-changes; Low radiation; Model organisms; Pipeline; RNA-Seq; Transcriptome software},
+	mesh = {Animals; Transcriptome; Caenorhabditis elegans; Escherichia coli; Software; Gene Expression Profiling; Aedes; Sequence Analysis, RNA},
+	month = {Nov},
+	number = {1},
+	pages = {662},
+	pmc = {PMC10623858},
+	pmid = {37919675},
+	pst = {epublish},
+	title = {Transcriptome software results show significant variation among different commercial pipelines},
+	volume = {24},
+	year = {2023},
+	bdsk-url-1 = {https://doi.org/10.1186/s12864-023-09683-w}}
+
+@article{Chen2016aa,
+	abstract = {In recent years, RNA sequencing (RNA-seq) has become a very widely used technology for profiling gene expression. One of the most common aims of RNA-seq profiling is to identify genes or molecular pathways that are differentially expressed (DE) between two or more biological conditions. This article demonstrates a computational workflow for the detection of DE genes and pathways from RNA-seq data by providing a complete analysis of an RNA-seq experiment profiling epithelial cell subsets in the mouse mammary gland. The workflow uses R software packages from the open-source Bioconductor project and covers all steps of the analysis pipeline, including alignment of read sequences, data exploration, differential expression analysis, visualization and pathway analysis. Read alignment and count quantification is conducted using the Rsubread package and the statistical analyses are performed using the edgeR package. The differential expression analysis uses the quasi-likelihood functionality of edgeR.},
+	author = {Chen, Yunshun and Lun, Aaron T L and Smyth, Gordon K},
+	date-added = {2023-11-08 16:28:48 +0100},
+	date-modified = {2023-11-08 16:28:48 +0100},
+	doi = {10.12688/f1000research.8987.2},
+	journal = {F1000Res},
+	journal-full = {F1000Research},
+	keywords = {R software; RNA sequencing; gene expression; molecular pathways},
+	pages = {1438},
+	pmc = {PMC4934518},
+	pmid = {27508061},
+	pst = {epublish},
+	title = {From reads to genes to pathways: differential expression analysis of RNA-Seq experiments using Rsubread and the edgeR quasi-likelihood pipeline},
+	volume = {5},
+	year = {2016},
+	bdsk-url-1 = {https://doi.org/10.12688/f1000research.8987.2}}
+
+@article{Thawng2022aa,
+	abstract = {BACKGROUND: In this comparative study we evaluate the performance of four software tools: DNAstar-D (DESeq2), DNAstar-E (edgeR), CLC Genomics and Partek Flow for identification of differentially expressed genes (DEGs) using a transcriptome of E. coli. The RNA-seq data are from the effect of below-background radiation 5.5 nGy total dose (0.2nGy/hr) on E. coli grown shielded from natural radiation 655 m below ground in a pre-World War II steel vault. The gene expression response to three supplemented sources of radiation designed to mimic natural background, 1952 - 5720 nGy in total dose (71-208 nGy/hr), are compared to this "radiation-deprived" treatment. In addition, RNA-seq data of Caenorhabditis elegans nematode from similar radiation treatments was analyzed by three of the software packages.
+RESULTS: In E. coli, the four software programs identified one of the supplementary sources of radiation (KCl) to evoke about 5 times more transcribed genes than the minus-radiation treatment (69-114 differentially expressed genes, DEGs), and so the rest of the analyses used this KCl vs "Minus" comparison. After imposing a 30-read minimum cutoff, one of the DNAStar options shared two of the three steps (mapping, normalization, and statistic) with Partek Flow (they both used median of ratios to normalize and the DESeq2 statistical package), and these two programs identified the highest number of DEGs in common with each other (53). In contrast, when the programs used different approaches in each of the three steps, between 31 and 40 DEGs were found in common. Regarding the extent of expression differences, three of the four programs gave high fold-change results (15-178 fold), but one (DNAstar's DESeq2) resulted in more conservative fold-changes (1.5-3.5). In a parallel study comparing three qPCR commercial validation software programs, these programs also gave variable results as to which genes were significantly regulated. Similarly, the C. elegans analysis showed exaggerated fold-changes in CLC and DNAstar's edgeR while DNAstar-D was more conservative.
+CONCLUSIONS: Regarding the extent of expression (fold-change), and considering the subtlety of the very low level radiation treatments, in E. coli three of the four programs gave what we consider exaggerated fold-change results (15 - 178 fold), but one (DNAstar's DESeq2) gave more realistic fold-changes (1.5-3.5). When RT-qPCR validation comparisons to transcriptome results were carried out, they supported the more conservative DNAstar-D's expression results. When another model organism's (nematode) response to these radiation differences was similarly analyzed, DNAstar-D also resulted in the most conservative expression patterns. Therefore, we would propose DESeq2 ("DNAstar-D") as an appropriate software tool for differential gene expression studies for treatments expected to give subtle transcriptome responses.},
+	author = {Thawng, Cung Nawl and Smith, Geoffrey Battle},
+	date-added = {2023-11-07 14:36:02 +0100},
+	date-modified = {2023-11-07 14:36:02 +0100},
+	doi = {10.1186/s12864-022-08673-8},
+	journal = {BMC Genomics},
+	journal-full = {BMC genomics},
+	keywords = {Fold-changes; Low radiation; RNA-Seq software; Small treatment differences; Transcriptome software},
+	mesh = {Animals; Caenorhabditis elegans; Escherichia coli; Gene Expression Profiling; Sequence Analysis; Sequence Analysis, RNA; Software; Transcriptome},
+	month = {Jun},
+	number = {1},
+	pages = {452},
+	pmc = {PMC9208185},
+	pmid = {35725382},
+	pst = {epublish},
+	title = {A transcriptome software comparison for the analyses of treatments expected to give subtle gene expression responses},
+	volume = {23},
+	year = {2022},
+	bdsk-url-1 = {https://doi.org/10.1186/s12864-022-08673-8}}
 
 @article{Bullones2023aa,
 	abstract = {The pollen tube is a key innovation of land plants that is essential for successful fertilisation. Its development and growth have been profusely studied in model organisms, but in spite of the economic impact of olive trees, little is known regarding the genome-wide events underlying pollen hydration and growth in this species. To fill this gap, triplicate mRNA samples at 0, 1, 3, and 6 h of in vitro germination of olive cultivar Picual pollen were analysed by RNA-seq. A bioinformatics R workflow called RSeqFlow was developed contemplating the best practices described in the literature, covering from expression data filtering to differential expression and clustering, to finally propose hub genes. The resulting olive pollen transcriptome consisted of 22,418 reliable transcripts, where 5364 were differentially expressed, out of which 173 have no orthologue in plants and up to 3 of them might be pollen-specific transcription factors. Functional enrichment revealed a deep transcriptional reprogramming in mature olive pollen that is also dependent on protein stability and turnover to allow pollen tube emergence, with many hub genes related to heat shock proteins and F-box-containing proteins. Reprogramming extends to the first 3 h of growth, including processes consistent with studies performed in other plant species, such as global down-regulation of biosynthetic processes, vesicle/organelle trafficking and cytoskeleton remodelling. In the last stages, growth should be maintained from persistent transcripts. Mature pollen is equipped with transcripts to successfully cope with adverse environments, even though the in vitro growth seems to induce several stress responses. Finally, pollen-specific transcription factors were proposed as probable drivers of pollen germination in olive trees, which also shows an overall increased number of pollen-specific gene isoforms relative to other plants.},

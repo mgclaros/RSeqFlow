@@ -1,45 +1,60 @@
 ## Removing noisy genes
 
-Unexpressed genes are those with `counts == 0` in all samples (conditions, e.g. columns) and should be removed since they have no biological interest and only introduce noise in statistics.
+**Noisy genes**  (those having very low counts across all the libraries) should be removed prior to downstream analysis due to biological and statistical reasons [@Chen2016aa]. From **biological point of view**, a gene must be expressed at some minimal level before it is likely to be translated into a protein or to be considered biologically important. **Statistically**, genes with consistently low counts are very unlikely be assessed as significantly differentially expressed because low counts do not provide enough statistical evidence for a reliable judgement to be made.
+The minimum requirement is the removal of unexpressed genes (those with `counts == 0` in all samples or conditions, that is all columns).
+
+Let's see how many genes are not expressed in your samples, expressed in all samples and expressed in some samples:
 
 ```{r filter1, results='hold'}
-# Looking for genes expressed in all samples (TRUE)
+# Looking for genes expressed in ALL samples (TRUE)
 none_is0 <- table(rowSums(x$counts == 0) == 0)
+none_is0 <- Avoid_0_counts(none_is0)           # To have TRUE and FALSE values
 
-# Counting genes not expressed in any sample (TRUE)
+
+# Counting genes NOT EXPRESSED in any sample (TRUE)
 COL_NUMBER <- length(COL_NAMES)
 all_are0 <- table(rowSums(x$counts == 0) == COL_NUMBER)
+all_are0 <- Avoid_0_counts(all_are0)           # To have TRUE and FALSE values
 
-# other counts
+
+# Expressed in SOME samples
 total_genes <- dim(x)[1] # or nrow(x$counts)
 at_least_1 <- total_genes - none_is0[["TRUE"]] - all_are0[["TRUE"]]
 ```
 
-We can remove at the same time those unexpressed genes together with any **noisy genes** (genes with unreliable expression because they have low mapping counts [_underexpression_] in most samples). We will consider a minimal reliable expression when genes are expressed in at least one set of replicates.
+But as a rule of thumb, only genes having a count of at least 10–15 in at least one set of replicates (variable `MIN_REPL` calculated below from `EXP_FACTORS`) should be retained [@Chen2016aa].
+Since it was recently demonstrated that the removal of genes mapping less than 30-reads make sure that further fold changes were not skewed by small read counts, with a dramatic decrease of the maximum FC detected [@Thawng2022aa], the minimal number of counts `MIN_COUNTS` was parametrised. We will take advantage of the `filterByExpr()` function that keeps genes that have at least `min.count` reads in a worthwhile number samples (calculated from the dessing matrix if provided or set in the `large.n` parameter).
 
-> **IMPORTANT:** The analysis cannot rely on `counts` since they depend on library sizes. [CPM] (_counts per million_) will be used instead of counts:
+
+> **IMPORTANT:** The filtering cannot rely on `counts` when library sizes are very different. Hence, [CPM] (_counts per million_) should be used instead of counts. This is why the value of the `min.count` argument in `filterByExpr()` is  converted into cpm before using it as a threshold.
 
 
-Removing `CPM > 0` will remove genes with no expression in all samples. We will take advantage of the `filterByExpr()` function to do a low stringency filter and then a new filter increasing the threshold to `MIN_CPM` value defined in `configure_wf.R` to remove also the low-expressed genes that are not removed by `filterByExpr()`.
+To avoid favouring genes that are expressed in larger libraries over those expressed in smaller libraries, an additional removal of genes based on [CPM] was incorporated [@Law2016yj,@Chen2016aa] based on the threshold `MIN_CPM` defined by the user in `configure_wf.R`. Hence, only genes with `cpm > MIN_CPM` in at least one set of replicates (`MIN_REPL`) will be retained.
 
-The minimal number of samples with `cpm > MIN_CPM` is the lowest number of replicates as defined in `EXP_FACTORS`.
+The minimal number of samples with `cpm > MIN_CPM` is the lowest number of replicates as defined in `EXP_FACTORS`. This ensures that a gene will be retained if it is expressed in all libraries belonging to at least one of the experimental conditions.
 
-```{r numRep}
+```{r numRepFilt}
+# calculate the minimal number of samples that must have cpm or counts > 0
+MIN_REPL <- min(table(EXP_FACTORS))
+
 # non stringent filtering
-keep.exprs <- filterByExpr(x)
-filt_tmp <- table(keep.exprs) # see in TRUE how many genes pass the filter
+MIN_COUNTS <- 10                          # default value in filterByExpr
+keep.exprs <- filterByExpr(x, min.count = MIN_COUNTS, 
+                           min.total.count = 1.5*MIN_COUNTS,  # due that it is 15 when MIN_COUNTS is 10
+                           large.n = MIN_REPL)
+filt_tmp <- table(keep.exprs)             # see in TRUE how many genes pass the filter
+filt_tmp <- Avoid_0_counts(filt_tmp)      # To have TRUE and FALSE values
 x.filt_tmp <- x[keep.exprs, , keep.lib.sizes = FALSE]
 
 # CMP for the filtered object containing raw data
 x.cpm <- cpm(x.filt_tmp)
 
-# calculate the minimal number of samples for cpm > MIN_CPM
-MIN_REPL <- min(table(EXP_FACTORS))
-
 # filtering by CPM
 keep.exprs <- rowSums(x.cpm > MIN_CPM) >= MIN_REPL
 filteredOK <- table(keep.exprs) # see in TRUE how many genes pass the filter
-x.filt <- x.filt_tmp[keep.exprs, , keep.lib.sizes = FALSE]
+filteredOK <- Avoid_0_counts(filteredOK)
+
+x.filt <- x.filt_tmp[keep.exprs, , keep.lib.sizes = FALSE]  # keep.lib.sizes=FALSE causes the library sizes to be recomputed after the filtering
 ```
 
 The final balance is the following:
@@ -50,8 +65,8 @@ Total                                   | `r total_genes`         | 100
 Expressed in all samples                | `r none_is0[["TRUE"]]`  | `r round(100 * none_is0[["TRUE"]]/total_genes)`
 Not expressed in at least 1 sample      | `r at_least_1`          | `r round(100 * at_least_1/total_genes)`
 Never expressed                         | `r all_are0[["TRUE"]]`  | `r round(100 * all_are0[["TRUE"]]/total_genes)`
+Tentatively useful                      | `r all_are0[["FALSE"]]` | `r round(100 * all_are0[["FALSE"]]/total_genes)`
 Useful after `filterByExpr()`           | `r filt_tmp[["TRUE"]]`  | `r round(100 * filt_tmp[["TRUE"]]/total_genes)`
-Tentetively useful                      | `r all_are0[["FALSE"]]` | `r round(100 * all_are0[["FALSE"]]/total_genes)`
 Really useful after `CMP >` `r MIN_CPM` | `r filteredOK[["TRUE"]]`| `r round(100 * filteredOK[["TRUE"]]/total_genes)`
 
 
@@ -73,12 +88,13 @@ These reference lines are calculated as follows:
 
 ```{r cutoffs}
 # To define the same range of density for all data
-L <- mean(x$samples$lib.size) * 1e-6
-M <- median(x$samples$lib.size) * 1e-6
+Y_REDUCTION <- 1e-6
+L <- mean(x$samples$lib.size) * Y_REDUCTION
+M <- median(x$samples$lib.size) * Y_REDUCTION
 # a cutoff line to sepparate useful from useless genes
 genes.cutoff <- log2(10/M + 2/L)
 # remove needless variables
-rm(L, M)
+rm(L, M, Y_REDUCTION)
 ```
 
 </details> 
@@ -154,7 +170,6 @@ pca_sum <- PlotMyPCA(x.filt$counts, "PCA of filtered data")
 
 
 
-***
 
 
 ## Save filtered counts 

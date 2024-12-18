@@ -1,4 +1,6 @@
-## Dispersion background
+## Background
+
+The measure of correlation is highly affected by the dispersion of data.
 
 [START EXPANDIBLE]: #
 `r EXPAND_bx` Expand to read about <b>correlations</b></summary>
@@ -15,8 +17,15 @@ Misinterpretations are due to
 * **Coincidence**, that is, both things occurr at the same time by chance.
 * **Sample biass**, that is, the samples do not reflect the complete population or do not produce an accurate error estimation.
 
+</details> 
+[END EXPANDIBLE]: #
+
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>variability</b></summary>
+
 Correlation only has sense for genes with variable expression between samples.
-There are serveral ways to assess this variability:
+There are serveral ways to assess variability and select the most variable genes:
 
 * **D** (_dispersion_), also called index of dispersion, dispersion index, coefficient of dispersion, relative variance, or variance-to-mean ratio (VMR): it is defined as the ratio of the variance to the mean ($D = \sigma^{2}/\mu$). The result depends on the values, so _it is not useful for between-sample comparisons_.
 * **CV** (_coefficient of variation_) also known as relative standard deviation (RSD): it is defined as the ratio of the standard deviation to the mean or its absolute value ($CV = \sigma / \mu$). 
@@ -25,11 +34,11 @@ _CV allows relative comparison of two measurements_ due to its
   - precision and repeatability, 
   - independence from units in which the measurement has been taken, 
   - invariance from the number of replicates, and
-  - log-normally distributed measurements exhibit stationary CV. 
+  - log-normally distributed measurements exhibit stationary [CV]. 
 * **COD** (_coefficient of dispersion_): it a measure of dispersion around a median calculated as the MAD (_median absolute deviation_) divided by the median (`COD = MAD/median`). MAD is more resilient to outliers than $\sigma$ as well as median respect to mean. It can be expressed as a percent (`%COD = COD · 100`).
 
 `r NOTE_bx` 
-  Althoug COD is also more resilient to outliers than CV and `COD < CV`, science literature usually prefers CV.
+  Althoug COD is also more resilient to outliers than [CV] and `COD < CV`, science literature usually prefers [CV].
 </div>
 
 This script has defined function `calculaVars()` (based on `cofVar()` from `coexnet` library) to add to counts data in `x.filt` the following columns:

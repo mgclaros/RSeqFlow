@@ -1,16 +1,13 @@
 # configure_wf -> RSeqFlow
 # Gonzalo Claros
-# 2023-11-03
+# 2024-11-01
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # DON'T TOUCH: CLEAN START ####
 #
-# clear the work space
-rm(list=ls())
-# garbage collection after removal RAM
-gc()
-# shut down all open graphic devices
-graphics.off()
+rm(list=ls())    # clear variables in the work space
+gc()             # garbage collection; returns free RAM to the operating system
+graphics.off()   # shut down all open graphic devices
 # ////////////////////////////////
 
 
@@ -91,22 +88,22 @@ DATA_DIR = "~/Documents/RNASeqData/olivo/Pollen_TR/"
 # WHEN YOU HAVE MAPPING RESULTS IN SEPARATE FILES
 # %%%%
 # define every expression count file
-# DATA_FILES <- c("GSM1545538_purep53.txt",
+# DATA_FILES = c("GSM1545538_purep53.txt",
                # "GSM1545539_JMS8-2.txt",
                # "GSM1545542_JMS8-5.txt",
                # "GSM1545535_10_6_5_11.txt", 
                # "GSM1545541_JMS8-4.txt",
                # "GSM1545545_JMS9-P8c.txt",
                # "GSM1545536_9_6_5_11.txt", 
-			   # "GSM1545540_JMS8-3.txt", 
-			   # "GSM1545544_JMS9-P7c.txt")
+			         # "GSM1545540_JMS8-3.txt", 
+			         # "GSM1545544_JMS9-P7c.txt")
 #
 # define columns to read from each file
 # The column with the gene IDs, usually is the FIRST COLUMN of every file
-# FIRST_COLUMN <- 1
+# FIRST_COLUMN = 1
 #
 # Colum with COUNTS, usually the THIRD COLUMN of the every file
-# OTHER_COLUMN <- 3
+# OTHER_COLUMN = 3
 
 # define the removable initial part of each file 'name'
 CHARS_TO_REMOVE = 0 # the 11 first chars of all file names will be removed.
@@ -115,13 +112,13 @@ CHARS_TO_REMOVE = 0 # the 11 first chars of all file names will be removed.
 
 # define the expression table filename
 # REQUIRED: the first column must cotain the gene IDs
-DATA_FILES <- "pollen_picual_reord_TR3333.tsv"
+DATA_FILES = "pollen_picual_reord_TR3333.tsv"
 
 # The FIRST COLUMN after the gene IDs colum that will be read; 1 is the one after gene IDs column
-FIRST_COLUMN <- 1
+FIRST_COLUMN = 1
 #
 # The LAST COLUMN containing data
-OTHER_COLUMN <- 12
+OTHER_COLUMN = 12
 # ///////////////////////////////////////
 
 
@@ -130,12 +127,12 @@ OTHER_COLUMN <- 12
 # DEFINE YOUR FACTORS (EXPERIMENTAL CONDITIONS) ####
 #
 # define EVERY experimental condition to analyse. CTRL and TREAT are necessary
-CTRL <- "MP"
-TREAT <- "GP1h"
+CTRL = "MP"
+TREAT = "GP1h"
 
 # Additional treatments or conditions
-TREAT2 <- "GP3h"
-TREAT3 <- "GP6h"
+TREAT2 = "GP3h"
+TREAT3 = "GP6h"
 # ///////////////////////////////////////
 
 
@@ -147,9 +144,9 @@ TREAT3 <- "GP6h"
 # It must be within the c() function
 #
 # Example: 
-# EXP_CONDITIONS <- c(CTRL, CTRL, CTRL, TREAT, TREAT, TREAT, TREAT2, TREAT2, TREAT2)
+# EXP_CONDITIONS = c(CTRL, CTRL, CTRL, TREAT, TREAT, TREAT, TREAT2, TREAT2, TREAT2)
 
-EXP_CONDITIONS <-  c(rep(CTRL, 3), rep(TREAT, 3), rep(TREAT2, 3), rep(TREAT3, 3))
+EXP_CONDITIONS = c(rep(CTRL, 3), rep(TREAT, 3), rep(TREAT2, 3), rep(TREAT3, 3))
 # ///////////////////////////////////////
 
 
@@ -161,14 +158,15 @@ EXP_CONDITIONS <-  c(rep(CTRL, 3), rep(TREAT, 3), rep(TREAT2, 3), rep(TREAT3, 3)
 # One contrast per "number"; the second should be a kind of control
 #
 # Example:
-# C1 <- c(TREAT, CTRL)
-C1 <- c(TREAT, CTRL)
-C2 <- c(TREAT2, TREAT)
-C3 <- c(TREAT3, TREAT2)
-C4 <- c(TREAT3, TREAT)
+# C1 = c(TREAT, CTRL)
+
+C1 = c(TREAT, CTRL)
+C2 = c(TREAT2, TREAT)
+C3 = c(TREAT3, TREAT2)
+C4 = c(TREAT3, TREAT)
 
 # Now, convert these contrasts in list with list(). Do not forget any one!
-CONTRASTS <- list(C1, C2, C3, C4)
+CONTRASTS = list(C1, C2, C3, C4)
 # ///////////////////////////////////////
 
 
@@ -177,12 +175,12 @@ CONTRASTS <- list(C1, C2, C3, C4)
 # THRESHOLD FOR MINIMUM CPM PER GENE ####
 #
 # You must specify the CPM (counts per million) threshold for a 
-# minimal count value for a gene in each treatment. Margin: 0.5-10
+# minimal count value for a gene in each treatment. Margin: 0.5-5
 #
 # Example:
-# MIN_CPM <- 0.5
+# MIN_CPM = 0.5
 
-MIN_CPM <- 1
+MIN_CPM = 1
 # ///////////////////////////////////////
 
 
@@ -194,9 +192,9 @@ MIN_CPM <- 1
 # Unless your genes are not highly variable, set it to TRUE
 #
 # Example:
-# LOG_EXPR <- FALSE
+# LOG_EXPR = FALSE
 
-LOG_EXPR <- TRUE
+LOG_EXPR = TRUE
 # ///////////////////////////////////////
 
 
@@ -208,9 +206,9 @@ LOG_EXPR <- TRUE
 # highly variable among treatments. Margin: 0.1 or higher
 #
 # Example:
-# CV_MIN <- 0.10
+# CV_MIN = 0.10
 
-CV_MIN <- 0.20
+CV_MIN = 0.20
 # ///////////////////////////////////////
 
 
@@ -223,9 +221,9 @@ CV_MIN <- 0.20
 # Using treat(), the FC should be low (2 is high)
 #
 # Example:
-#   FC <- 2
+#   FC = 2
 
-FC <- 1.2
+FC = 1.2
 # /////////////////////////////
 
 
@@ -237,9 +235,9 @@ FC <- 1.2
 # significative. When FDR is used, P < 0.1 (FDR < 10%) can be appropriate
 #
 # Example:
-#   P <- 0.05
+#   P = 0.05
 
-P <- 0.1
+P = 0.1
 # //////////////////////////
 
 
@@ -252,10 +250,11 @@ P <- 0.1
 # Beyond 700 genes, it may take hours
 #
 # Example:
-#   NODE_MAX <- 250
+#   NODE_MAX = 250
 
 # Maximal number of nodes to peform network analysis
-NODE_MAX <- 350
+NODE_MAX = 350
+# ////////////////////////////////////////////////////////
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -265,10 +264,10 @@ NODE_MAX <- 350
 # If you want that value to be automatically calculated, set it to 0
 #
 # Example:
-#   OPT_CLUST <- 4
+#   OPT_CLUST = 4
 
-OPT_CLUST <- 0
-# //////////////////////////
+OPT_CLUST = 0
+# ////////////////////////////////////
 
 
 
@@ -279,10 +278,10 @@ OPT_CLUST <- 0
 # by default in the corresponding function
 #
 # Example:
-#   MIN_GENES_PER_CLUSTER <- 20
+#   MIN_GENES_PER_CLUSTER = 20
 
-MIN_GENES_PER_CLUSTER <- 10
-# //////////////////////////
+MIN_GENES_PER_CLUSTER = 10
+# ///////////////////////////////////
 
 
 
@@ -293,10 +292,10 @@ MIN_GENES_PER_CLUSTER <- 10
 # when analysing networks. This score ranges from 0 (bad) to 1 (maximum)
 #
 # Example:
-#   MIN_KLEINBERG <- 0.95
+#   MIN_KLEINBERG = 0.95
 
-MIN_KLEINBERG <- 0.90
-# //////////////////////////
+MIN_KLEINBERG = 0.90
+# ////////////////////////////
 
 
 
@@ -307,7 +306,7 @@ MIN_KLEINBERG <- 0.90
 # the MY_IDs line and add all IDs you are interested in.
 #
 
-# MY_IDs <- c("Ciclev10013356m.g", "Ciclev10013262m.g", "Ciclev10022710m.g", "Ciclev10011381m.g", "Ciclev10012375m.g", "Ciclev10012384m.g", "Ciclev10013485m.g", "Ciclev10013337m.g", "Ciclev10013821m.g")
+# MY_IDs = c("Ciclev10013356m.g", "Ciclev10013262m.g", "Ciclev10022710m.g", "Ciclev10011381m.g", "Ciclev10012375m.g", "Ciclev10012384m.g", "Ciclev10013485m.g", "Ciclev10013337m.g", "Ciclev10013821m.g")
 # //////////////////////////
 
 

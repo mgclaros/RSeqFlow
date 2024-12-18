@@ -1,6 +1,6 @@
 ---
 title: "`r PROJECT_NAME`"
-subtitle: "Using `r SOFT_NAME` pipeline; updated on 231103"
+subtitle: "Using the `r SOFT_NAME` pipeline; updated on 240605"
 author: "M. Gonzalo Claros & Amanda Bullones"
 date: "`r format(Sys.time(), '%A %d, %B %Y. %H.%M.%S')`"
 bibliography: Refs_RSeqFlow.bib
@@ -68,6 +68,8 @@ EXPAND_bx <- '<details  style="background-color: SeaShell;
 
 [edgeR]: http://www.bioconductor.org/packages/release/bioc/html/edgeR.html
 
+[DESeq2]: https://www.bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html
+
 [edgeRUsersGuide]: https://www.bioconductor.org/packages/release/bioc/vignettes/edgeR/inst/doc/edgeRUsersGuide.pdf "Complete user's guide for edgeR"
 
 [limma]: http://www.bioconductor.org/packages/release/bioc/html/limma.html
@@ -109,6 +111,8 @@ EXPAND_bx <- '<details  style="background-color: SeaShell;
 [QLF]: "quasi-likelihood F-test"
 
 [MD plot]: "mean-difference plot"
+
+[FDR]: "False discovery rate (rate of type I errors)"
 
 **`r SOFT_NAME`** is a comprehensive R pipeline for processing RNA-Seq datasets from count files or tables in non-model organisms. It carries out the following steps:
 
@@ -185,7 +189,7 @@ Load data file(s) and convert it(them) in a `DGEList` object.
 
 # Gene filtering
 
-A living being with about 20~000 genes usually have only **9~000-20~000 genes** whose expressions worth analysing.
+A living being with about 20 000 genes usually have only **9 000-20 000 genes** whose expressions worth analysing.
 
 ```{r gene_filtering, child='Rmds/20_Filtering.Rmd'}
 ```
@@ -215,16 +219,19 @@ This is to show if original data already can group replicates in separate groups
 
 ***
 
+
 # Differential expression
 
-Differential expression (DE) of genes means that a gene is expressed differently in a series of biological conditions due to the process where different genes are activated in a cell, giving that cell a specific purpose that defines its function.
+## Background
+
+RNA-Seq is a powerful tool for studying gene expression. **Differential expression** ([DE]) of genes means that a gene is expressed differently in a series of biological conditions due to the process where different genes are activated in a cell, giving that cell a specific purpose that defines its function.
 
 [START EXPANDIBLE]: #
 `r EXPAND_bx` Expand to read about <b>differential expression methods</b></summary>
 
-Detecting [DE] is extremely important because it allows living organisms, including human beings, to grow and develop into complex, multicellular beings with different tissues, cells, and organs. Genes exhibiting DE are called **DEGs** (_differentially expressed genes_). [DEG]s can be selected using many algorithms based on the gene-expression _fold change_ (**FC**) and other statistical parameters. 
+Detecting [DE] is extremely important because it allows living organisms, including human beings, to grow and develop into complex, multicellular beings with different tissues, cells, and organs. Genes exhibiting DE are called **DEGs** (_differentially expressed genes_). [DEG]s can be selected using many algorithms, most of them based on the gene-expression _fold change_ (**FC**) and other statistical parameters. 
 
-There is no reliable method for differential expression in RNA-seq [@Rapaport2013]. However, the most reliable and widely used [DE] methods when a few replicates are available are those based in [DESeq2](https://www.bioconductor.org/packages/devel/bioc/vignettes/DESeq2/inst/doc/DESeq2.html) and [edgeR] libraries. 
+To unlock the underlying biological insights, the selection of appropriate data analysis software is essential. There is no reliable method for differential expression in RNA-seq [@Rapaport2013]. However, the most reliable and widely used [DE] methods when a few replicates are available are those based in [DESeq2] and [edgeR] libraries. It was recently demonstrated that different algorithms produce significant variations in the differentially expressed genes proposing [DESeq2] as the algorithm of choice [@Thawng2022aa; @Thawng2023aa]. However, when considering the false discovery rate, the classic Wicoxon rank-sum test (when more than 10 replicates are available) and the [limma]-voom` approach (when only a few replicates are available) perform clearly better than any other one [@Li2022cf].
 
 Since [**linear regression**](https://mlu-explain.github.io/linear-regression/) is a simple and powerful model for predicting a numeric response from a set of one or more independent variables, it is a suitable approach to detect [DEG]s. Additionally, it is effective and easy to interpret. Typically, any linear model imply the [following assumptions](https://www.r-bloggers.com/2021/10/simple-linear-regression-in-r/):
 
@@ -355,8 +362,6 @@ To see the behaviour of clusters with respect to samples using the `aggregate()`
 # References
 
 <div id="refs"></div>
-
-> You can change the [csl style](https://github.com/citation-style-language/styles) for references
 
 
 ***
