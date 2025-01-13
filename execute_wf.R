@@ -2,7 +2,7 @@
 #
 # execute_wf -> RSeqFlow
 # Gonzalo Claros
-# 2023-11-03
+# 2025-01-13
 #
 # Main file, invoked after source(configure_wf.R)
 # Alternative usage from terminal: Rscript execute_wf.R aConfigFile.R 
@@ -16,7 +16,7 @@ T00 <- proc.time() # Initial time for elaspsed time
 ## user ID in the computer ####
 YO <- system ("whoami", intern = TRUE)
 
-errMsg <- "R-SEQ must be launched as 'Rscript execute_wf.R aConfigFile.R'\n       or as 'source(configure_wf.R)'\n"
+errMsg <- "ERROR:\nR-SEQ must be launched as 'Rscript execute_wf.R aConfigFile.R'\n       or as 'source(configure_wf.R)'\n"
 
 ## by default, okMsg refers to sourcing the configuration file ####
 okMsg <- "R-SEQ sourced as interactive from 'configure_wf.R'"
@@ -32,9 +32,9 @@ if (length(ARGS) >= 1) {
   source(ARGS[1])
 } else if (!(interactive())) {
   warning("No argument (configuration file) supplied\n")
-  stop(errMsg, call.=FALSE)
+  stop(errMsg, call. = FALSE)
 } else if (!("MIN_CPM" %in% ls())) {
-  stop(errMsg, call.=FALSE)
+  stop(errMsg, call. = FALSE)
 } else {
   message("The script may be reading VARIABLES from RAM instead of configuration file")
 }
@@ -50,28 +50,33 @@ if (interactive()) {
 # SOME PARAMETER VERIFICATION ####
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## verificación del directorio definido en DATA_DIR ####
+## Exception errors ####
 if (!file.exists(DATA_DIR)) {
-  msg <- paste0(" ** No existe el directorio ", DATA_DIR, 
-                " indicado en la variable DATA_DIR para el usuario ", YO, " **\n")
+  errMsg <- paste0("ERROR:\n", "** Folder ", DATA_DIR, 
+                " defined in configuration variable DATA_DIR does not exist for user ", YO, " **\n")
   # salir del programa para arreglar el error
-  stop(msg, call. = FALSE)
+  stop(errMsg, call. = FALSE)
 }
+
+if (!(exists("COUNTS_COLUMN") | exists("LAST_COLUMN"))) stop("ERROR:\nThe configuration file is old and does not contain COUNTS_COLUMN o LAST_COLUMN variables", call. = FALSE)
+
+if (!exists("NODE_MAX")) stop("ERROR:\nThe configuration file is old and does not contain NODE_MAX variable", call. = FALSE)
+if (NODE_MAX > 700) stop("ERROR:\nNODE_MAX value (", NODE_MAX, ") is too high and execution time will take hours unnecessarily", call. = FALSE)
 
 ## checking other configuration values ####
 theVar <- vector()
-msg <- "\nChange it in configure_wf.R"
 if (MIN_CPM < 0) theVar <- c(theVar, "MIN_CPM")
 if (CV_MIN < 0) theVar <- c(theVar, "CV_MIN")
 if (FC < 0) theVar <- c(theVar, "FC")
-if (P < 0) theVar <- c(theVar, "P")
-if (length(theVar) > 0) stop("\n   ", toString(theVar), " must be >0 ", msg)
+if (P < 0 | P > 0.5) theVar <- c(theVar, "P")       # P is negative or too high
+if (OPT_CLUST < 0) theVar <- c(theVar, "OPT_CLUST")
+if (MIN_GENES_PER_CLUSTER < 0) theVar <- c(theVar, "MIN_GENES_PER_CLUSTER")
 
-if (P > 0.5) stop("\n   P-value ", P, " is too high.", msg)
-if (NODE_MAX > 700) stop("\n   NODE_MAX ", NODE_MAX, " is too high. The execution will take hours unnecessarily", msg)
+if (length(theVar) > 0) stop("ERROR:\n   In 'configure' file: \n", toString(theVar), " must be >0 ", call. = FALSE)
+
 
 # remove needless variable
-rm(theVar, msg)
+rm(theVar, errMsg)
 
 
 
@@ -100,7 +105,7 @@ rm(fileToSource)
 
 ## this should be changed every time you produce a main change ####
 SOFT_NAME <- "RSeqFlow"
-VERSION_CODE <- 1.03
+VERSION_CODE <- 1.04
 
 ## get computer type ####
 COMPUTER <- GetComputer()
@@ -114,9 +119,11 @@ WD <- CreateDir(DATA_DIR, SOFT_NAME, VERSION_CODE)
 ## construct the list with columns to read the input file ####
 # It will depend on the DATA_FILES definition
 if (length(DATA_FILES) == 1) {
-	COLUMNS_TO_READ <- FIRST_COLUMN:OTHER_COLUMN # the range of columns
+	COLUMNS_TO_READ <- FIRST_COLUMN:LAST_COLUMN # the range of columns
+	rm(FIRST_COLUMN, LAST_COLUMN)
 } else {
-	COLUMNS_TO_READ <- c(FIRST_COLUMN, OTHER_COLUMN) # individual columns
+	COLUMNS_TO_READ <- c(1, COUNTS_COLUMN) # individual files with counts
+	rm(COUNTS_COLUMN)
 }
 
 ## set number of decimals for rounding ####
@@ -127,6 +134,9 @@ EXP_FACTORS <-  factor(EXP_CONDITIONS)
 
 ## frequency of every condition ####
 COND_FREQ <- table(EXP_CONDITIONS)
+
+# remove needless variables
+rm(EXP_CONDITIONS)
 
 ## convert CONTRASTS list into the required vector of contrasts ####
 i <- 1
@@ -144,15 +154,12 @@ logFC <- log2(FC)
 
 ## set correlation parameters ####
 # Set correlation method pearson or spearman
-CORR_METHOD = "pearson"
+CORR_METHOD = "spearman"
 # Set correlation threshold considering that r^2 = (0,75)^2 = 0,5625
 R_MIN <- 0.75
 
 ## Set code-folding for Rmd
 # my_codefolding <- ifelse(VERBOSE_MODE, "show", "hide")
-
-# remove needless variables
-rm(FIRST_COLUMN, OTHER_COLUMN, EXP_CONDITIONS)
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # MAIN EXECUTION USING MARKDOWN ####

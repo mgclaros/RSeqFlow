@@ -57,6 +57,9 @@ Raw               | `r x.disp$common.dispersion`           | `r bcv.x`
 TMM normalisation | `r x.filt.norm.disp$common.dispersion` | `r bcv.norm`
 CTF normalisation | `r x.filt.ctf.disp$common.dispersion`  | `r bcv.ctf`
 
+`r WARN_bx`
+Normalised data must be less dispersed than original, otherwise the statistical treatments are worsening the biological information.
+</div>
 
 ### Outcome
 
@@ -73,6 +76,3 @@ if (bcv.norm > 0.4) {
   message("**Consistent** data (mainly if BCV < 0.2), probably due to technical replications or _good handling_\n")
 }
 ```
-
-
-> **IMPORTANT:** normalised data must be less dispersed than original, otherwise the statistical treatments are worsening the biological information.

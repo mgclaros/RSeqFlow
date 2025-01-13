@@ -63,7 +63,7 @@ Show the cluster correspondence to colours in the left heatmap
 
 We will convert the expression of sample replicates in a single value by applying the `mean()` since it is more representative than me median when few replicates are available. The columns to be considered replicates of the same experimental condition was declared on `EXP_CONDITIONS` in `configure_wf-R`, and this was then converted into the new variable `EXP_FACTORS`.
 
-Aggregation will be performed both with scaled values and with [CPM] values. The new expression matrix aggregated by sample will then be used to plot cluster profiles, both from [AHC], _k_-means and [MBC].
+Aggregation will be performed both with scaled expression and with [CPM] values. The new expression matrix aggregated by sample will then be used to plot cluster profiles, both from [AHC], _k_-means and [MBC].
 
 1. Aggregate the **scaled matrix** `m.ctf.std` by sample using the mean. Transposition is required since the function will apply to columns.
 
@@ -92,38 +92,48 @@ Aggregation will be performed both with scaled values and with [CPM] values. The
     rownames(m_ctf_cpm_bysample) <- rownames(tmp)  # recuperate row names
     ```
 
-> **IMPORTANT**: The resulting aggregated expression matrix are 
->
-> * `m_ctf_std_bysample` for scaled data
-> * `m_ctf_cpm_bysample` for CPM data
+`r NOTE_bx` 
+The resulting aggregated expression matrix are 
 
+* `m_ctf_std_bysample` for scaled data
+* `m_ctf_cpm_bysample` for CPM data
+</div>
 
 ## Aggregate genes by cluster
 
-Using the sample-aggregated matrices, genes will be aggregated by cluster by means of the `median()`, that is less sensitive to outliers than the mean when there are many data to gather. To plot error bars, the standard deviation will be also calculated using `sd()`.
+Using the sample-aggregated matrices, genes will be aggregated by cluster using again the `mean()`. Error bars are based on the 95% confidence interval (`CI95`) using the standard deviation calculated by `sd()`, the number of genes in the cluster (stored in variable `NUM_genes_by_cluster`) and the critical _z_-value for the 95% (`z_CI`).
 
-> **IMPORTANT**: the list `agg_list` will contain the aggregated genes by all [AHC] and _k_-means clusters for each aggregated set of replicates
+```{r z-for-CI95}
+z_CI <- qnorm(p = 0.05/2, lower.tail = FALSE)  # z critical value for 95% confidence intervals
+
+agg_list <- list()                             # create the list to gather aggregated data
+```
+
+`r NOTE_bx` 
+The list `agg_list` will contain the aggregated genes by all [AHC] and _k_-means clusters for each aggregated set of replicates
+</div>
 
 ### AHC-clusters
+
 
 1. Aggregate [AHC] clusters using scaled data:
 
     ```{r aggregateBy-AHCclusters-scaled}
-    # create the list to gather aggregated data
-    agg_list <- list()
     thisID <- "AHC_scaled"
+    NUM_genes_by_cluster <- as.data.frame(table(groups_k))$Freq
 
-    # aggregate the m_ctf_std_bysample matrix by clusters, using the median and sd
-    aggr_med <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_k), median)
-    aggr_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_k), sd)
-    aggr_sd[is.na(aggr_sd)] <- 0 # avoid crashing when NAs are present due to 1-member clusters
+    # aggregate the m_ctf_std_bysample matrix by clusters, using the mean, sd and CI95
+    aggr_med <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_k), mean)
+    tmp_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_k), sd)
+    aggr_CI95 <- cbind(tmp_sd[1], tmp_sd[, 2:ncol(tmp_sd)]*z_CI/sqrt(NUM_genes_by_cluster))
+    aggr_CI95[is.na(aggr_CI95)] <- 0 # avoid crashing when NAs are present due to 1-member clusters
     
     # save aggregates in a list for further graphs
-    agg_list[[thisID]]$median <- aggr_med
-    agg_list[[thisID]]$sd <- aggr_sd
+    agg_list[[thisID]]$med <- aggr_med
+    agg_list[[thisID]]$CI95 <- aggr_CI95
     agg_list[[thisID]]$k <- final_k
     
-    kable(cbind(No_genes = as.data.frame(table(groups_k))$Freq, aggr_med), 
+    kable(cbind(Num_genes = NUM_genes_by_cluster, aggr_med), 
           align = "r", 
           digits = ROUND_dig, 
           caption = "Scaled, aggregated expression of clusters per experimental condition")
@@ -133,26 +143,21 @@ Using the sample-aggregated matrices, genes will be aggregated by cluster by mea
 2. Aggregation of the same clusters using [CPM]s.
 
     ```{r aggregateBy-AHCclusters-CPM}
-    # # recover only genes in clusters
-    # final_df <- transform(merge(m.ctf.cpm,
-    #                             groups_k,
-    #                             by = 'row.names'),
-    #                       row.names = Row.names,
-    #                       Row.names = NULL)
-    
     thisID <- "AHC_cpm"
-    # aggregate clusters by meduab
-    aggr_median <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_k), median)
-    # standard deviation of calculations
-    aggr_sd <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_k), sd)
-    aggr_sd[is.na(aggr_sd)] <- 0 # avoid crashing when NAs are present due to 1-member clusters
+
+    # aggregate clusters by mean
+    aggr_med <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_k), mean)
+    # standard deviation and 95% confidence interval
+    tmp_sd <- aggregate(m_ctf_cpm_bysample, by = list(Cluster = groups_k), sd)
+    aggr_CI95 <- cbind(tmp_sd[1], tmp_sd[, 2:ncol(tmp_sd)]*z_CI/sqrt(NUM_genes_by_cluster))
+    aggr_CI95[is.na(aggr_CI95)] <- 0 # avoid crashing when NAs are present due to 1-member clusters
     
     # save aggregates in a list for further graphs
-    agg_list[[thisID]]$median <- aggr_median
-    agg_list[[thisID]]$sd <- aggr_sd
+    agg_list[[thisID]]$med <- aggr_med
+    agg_list[[thisID]]$CI95 <- aggr_CI95
     agg_list[[thisID]]$k <- final_k
     
-    kable(cbind(No_genes = as.data.frame(table(groups_k))$Freq, aggr_sd), 
+    kable(cbind(Num_genes = NUM_genes_by_cluster, aggr_med), 
           align = "r", 
           digits = ROUND_dig, 
           caption = "Aggregated expression of clusters in CPMs per experimental condition")
@@ -165,39 +170,44 @@ Using the sample-aggregated matrices, genes will be aggregated by cluster by mea
 
     ```{r aggregateBy-kmeans-scaled}
     thisID <- "kMeans_scaled"
-    # aggregate the new matrix by clusters, using the median
-    aggr_median <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_kmeans), mean)
-    # standard deviation of calculations
-    aggr_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_kmeans), sd)
-    aggr_sd[is.na(aggr_sd)] <- 0 # avoid crashing when NAs are present due to one-member clusters
+    NUM_genes_by_cluster <- as.data.frame(table(groups_kmeans))$Freq
+
+    # aggregate the new matrix by clusters, using the mean
+    aggr_med <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_kmeans), mean)
+    # standard deviation and 95% confidence interval
+    tmp_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_kmeans), sd)
+    aggr_CI95 <- cbind(tmp_sd[1], tmp_sd[, 2:ncol(tmp_sd)]*z_CI/sqrt(NUM_genes_by_cluster))
+    aggr_CI95[is.na(aggr_CI95)] <- 0 # avoid crashing when NAs are present due to one-member clusters
     
     # save aggregates in a list for further graphs
-    agg_list[[thisID]]$median <- aggr_median
-    agg_list[[thisID]]$sd <- aggr_sd
+    agg_list[[thisID]]$med <- aggr_med
+    agg_list[[thisID]]$CI95 <- aggr_CI95
     agg_list[[thisID]]$k <- kmeans_k
     
-    kable(cbind(No_genes = as.data.frame(n_genes_group_kmeans)$Freq, aggr_median), 
+    kable(cbind(Num_genes = NUM_genes_by_cluster, aggr_med), 
           align = "r", 
           digits = ROUND_dig, 
-          caption = "Scaled, aggregate expression of k-means clusters per experimental condition")
+          caption = "Scaled, aggregated expression of k-means clusters per experimental condition")
     ```
 
 2. Aggregation of the same clusters using [CPM]s.
 
     ```{r aggregateBy-kmeans-CPM}
     thisID <- "kMeans_cpm"
-    # aggregate clusters by meduab
-    aggr_median <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_kmeans), median)
-    # standard deviation of calculations
-    aggr_sd <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_kmeans), sd)
-    aggr_sd[is.na(aggr_sd)] <- 0 # avoid crashing when NAs are present due to one-member clusters
+    
+    # aggregate clusters by mean
+    aggr_med <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_kmeans), mean)
+    # standard deviation and 95% confidence interval
+    tmp_sd <- aggregate(m_ctf_cpm_bysample, by = list(Cluster = groups_kmeans), sd)
+    aggr_CI95 <- cbind(tmp_sd[1], tmp_sd[, 2:ncol(tmp_sd)]*z_CI/sqrt(NUM_genes_by_cluster))
+    aggr_CI95[is.na(aggr_CI95)] <- 0 # avoid crashing when NAs are present due to one-member clusters
     
     # save aggregates in a list for further graphs
-    agg_list[[thisID]]$median <- aggr_median
-    agg_list[[thisID]]$sd <- aggr_sd
+    agg_list[[thisID]]$med <- aggr_med
+    agg_list[[thisID]]$CI95 <- aggr_CI95
     agg_list[[thisID]]$k <- kmeans_k
     
-    kable(cbind(No_genes = as.data.frame(table(groups_kmeans))$Freq, aggr_sd), 
+    kable(cbind(Num_genes = NUM_genes_by_cluster, aggr_med), 
           align = "r", 
           digits = ROUND_dig, 
           caption = "Aggregated expression of clusters in CPMs per experimental condition")
@@ -206,43 +216,62 @@ Using the sample-aggregated matrices, genes will be aggregated by cluster by mea
 
 ### MBC clusters
 
-Aggregation of [MBC] clusters using scaled data and using [CPM]s.
+1. Aggregation of [MBC] clusters using scaled data 
 
-```{r aggregate-ByMclust}
-thisID <- "MBC_scaled"
-n_genes_model_based <- table(groups_mclust)
+    ```{r aggregate-ByMclust-scale}
+    thisID <- "MBC_scaled"
+    n_genes_model_based <- table(groups_mclust)
+    NUM_genes_by_cluster <- as.data.frame(n_genes_model_based)$Freq
+    
+    # aggregate clusters by mean
+    aggr_med <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_mclust), mean)
+    # standard deviation and 95% confidence interval
+    tmp_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_mclust), sd)
+    aggr_CI95 <- cbind(tmp_sd[1], tmp_sd[, 2:ncol(tmp_sd)]*z_CI/sqrt(NUM_genes_by_cluster))
+    aggr_CI95[is.na(aggr_CI95)] <- 0 # avoid crashing when NAs are present due to one-member clusters
+    
+    agg_list[[thisID]]$med <- aggr_med
+    agg_list[[thisID]]$CI95 <- aggr_CI95
+    agg_list[[thisID]]$k <- mclust_k
+    
+    kable(cbind(Num_genes = NUM_genes_by_cluster, aggr_med), 
+          align = "r", 
+          digits = ROUND_dig, 
+          caption = "Scaled, aggregated expression of MBC clusters per experimental condition")
+    
+    thisID <- "MBC_cpm"
+    ```
 
-aggr_median <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_mclust), mean)
-aggr_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_mclust), sd)
-aggr_sd[is.na(aggr_sd)] <- 0 # avoid crashing when NAs are present due to one-member clusters
 
-agg_list[[thisID]]$median <- aggr_median
-agg_list[[thisID]]$sd <- aggr_sd
-agg_list[[thisID]]$k <- mclust_k
+2. Aggregate [MBC] clusters using [CPM]s.
 
-kable(cbind(No_genes = as.data.frame(n_genes_model_based)$Freq, aggr_median), 
-      align = "r", 
-      digits = ROUND_dig, 
-      caption = "Scaled, aggregate expression of MBC clusters per experimental condition")
-
-thisID <- "MBC_cpm"
-aggr_median <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_mclust), median)
-aggr_sd <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_mclust), sd)
-
-agg_list[[thisID]]$median <- aggr_median
-agg_list[[thisID]]$sd <- aggr_sd
-agg_list[[thisID]]$k <- mclust_k
-
-kable(cbind(No_genes = as.data.frame(n_genes_model_based)$Freq, aggr_sd), 
-      align = "r", 
-      digits = ROUND_dig, 
-      caption = "Aggregated expression of clusters in CPMs per experimental condition")
-```
+    ```{r aggregate-ByMclust-cpm}
+    # aggregate clusters by mean
+    aggr_med <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_mclust), mean)
+    # standard deviation and 95% confidence interval
+    tmp_sd <- aggregate(m_ctf_cpm_bysample, by = list(Cluster = groups_mclust), sd)
+    aggr_CI95 <- cbind(tmp_sd[1], tmp_sd[, 2:ncol(tmp_sd)]*z_CI/sqrt(NUM_genes_by_cluster))
+    
+    agg_list[[thisID]]$med <- aggr_med
+    agg_list[[thisID]]$CI95 <- aggr_CI95
+    agg_list[[thisID]]$k <- mclust_k
+    
+    rm(tmp_sd, z_CI)        # finally, remove temporal objects from RAM
+    
+    kable(cbind(Num_genes = NUM_genes_by_cluster, aggr_med), 
+          align = "r", 
+          digits = ROUND_dig, 
+          caption = "Aggregated expression of clusters in CPMs per experimental condition")
+    ```
 
 
 ## Cluster profiles
 
-Let's see the expression profile of every cluster using the scaled expression and the expression in [CPM]. For statistical considerations, the plot with error bars (as `±SD`) is also presented in the second column of plots.
+Let's see the expression profile of every cluster using the scaled expression and the expression in [CPM]. For statistical considerations, the plot with error bars based on the 95% confidence interval (`±CI95`) is also presented in the second plot column.
+
+`r NOTE_bx` 
+Errors bars (interval of the mean at 95% confidence) are expected to be small, indicating that the mean is reliable. However, you can see the profile of each gene in the cluster in [section ***Gene profiles***](#gene-profiles) below.
+</div>
 
 ```{r clustplotlog, fig.width=6, fig.height=4.5, out.width=c('50%', '50%')}
 i <- 1
@@ -253,49 +282,48 @@ niceCols <- brewer.pal(max(final_k, kmeans_k, mclust_k), "Dark2") # colours for 
 for (i in 1:n_l) {
   case_name <- names(agg_list)[i]
   # tmp matrix without first row that contains cluster number after transposition
-  plot_tmp <- t(agg_list[[i]]$median)[-1, ]
+  plot_tmp <- t(agg_list[[i]]$med)[-1, ]
   thisTitle <- paste0("Expression course of ", case_name)
   MatPlot4Clusters(plot_tmp,
-            mainTitle = thisTitle,
-            myCols = niceCols)
-
+                   mainTitle = thisTitle,
+                   myCols = niceCols)
+  
   # print the same with error bars
   # based in https://stackoverflow.com/questions/40384055/add-error-bars-to-multiple-lines-to-show-standard-deviation-on-a-plot-in-r
-  plot_tmp_sd <- t(agg_list[[i]]$sd)[-1,]
+  plot_tmp_sd <- t(agg_list[[i]]$CI95)[-1,]
   # margins of error per point
   low <- plot_tmp - plot_tmp_sd
   up <- plot_tmp + plot_tmp_sd
-  # x positions of each value
-  x_pos <- 1:nrow(plot_tmp)
-  # define default figure size
-  par(mar = c(5, 4, 4, 2), xpd = TRUE) 
+
+  x_pos <- 1:nrow(plot_tmp)            # x positions of each value
+  par(mar = c(5, 4, 4, 2), xpd = TRUE) # define default figure size
   matplot(x_pos, plot_tmp, 
-          main = paste0(thisTitle, " (±SD)"),
+          main = paste0(thisTitle, " (±CI95)"),
           type = "b", 
-          las = 2, # all labels perpendicular to axes
-          pch = 1, 
-          col = niceCols,
-          lty = 1:agg_list[[i]]$k,
+          las = 2,                     # all labels perpendicular to axes
+          pch = 0:25,                  # point symbols (up to 25 different types)
+          col = niceCols,              # colours
+          lty = 1:agg_list[[i]]$k,     # line type
           ylim = c(min(low), max(up)), # room for error bars within plot
-          xaxt = "n", # remove default labels at x
+          xaxt = "n",                  # remove default labels at x
           xlab = "Experimental condition",
           ylab = paste0("Expression median (", case_name, ")"))
-  xx <- rep.int(x_pos, ncol(plot_tmp))  ## recycle `x` for each column of plot_tmp
-  repcols <- rep(niceCols, each = nrow(plot_tmp))  ## recycle colours `col` for each row of `plot_tmp`
-  ## adding error bars using vectorization power of `arrow`
+  xx <- rep.int(x_pos, ncol(plot_tmp)) # recycle `x` for each column of plot_tmp
+  repcols <- rep(niceCols, each = nrow(plot_tmp))  # recycle colours `col` for each row of `plot_tmp`
+  # adding error bars using vectorization power of `arrow`
   arrows(xx, low, xx, up, col = repcols, angle = 90, length = 0.03, code = 3)
-  axis(1,  # below
-             at = 1:nrow(plot_tmp),
-             labels = rownames(plot_tmp),
-             las = 2,
-             cex.axis = 1)
+  axis(1,                           # below
+       at = 1:nrow(plot_tmp),
+       labels = rownames(plot_tmp),
+       las = 2,
+       cex.axis = 1)
 }
 ```
 
 
 ## Gene profiles {.tabset .tabset-fade .tabset-pills}
 
-While this may be aesthetically somewhat satisfactory, it is clear that the clusters are not homogenous as we might need them for biological interpretation. This is a general problem with clustering methods that fix the number of cluster centres either directly as in Kmeans or indirectly by cutting trees at a fixed level. It is also a problem with the data, where differences in absolute values might override separation into clusters that might better be defined in terms of relative values.
+While this may be aesthetically somewhat satisfactory, it is clear that the clusters are not homogenous as we might need them for biological interpretation. This is a general problem with clustering methods that fix the number of cluster centres either directly as in _k_-means or indirectly by cutting trees at a fixed level. It is also a problem with the data, where differences in absolute values might override separation into clusters that might better be defined in terms of relative values.
 
 ### AHC groups
 
@@ -355,7 +383,7 @@ While this may be aesthetically somewhat satisfactory, it is clear that the clus
 
 ### MBC groups
 
-1. Gene profiles as **scaled** values **scaled** values
+1. Gene profiles as **scaled** values.
 
     ```{r matplots-MBC-Scaled, fig.width=4, fig.height=6, out.width=c('25%', '25%', '25%', '25%'), fig.show='hold'}
     i <- 1
@@ -366,7 +394,7 @@ While this may be aesthetically somewhat satisfactory, it is clear that the clus
     }    
     ```
 
-2. Gene profiles of **MBC groups** as **CPM** values
+2. Gene profiles as **CPM** values
 
     ```{r maplots-MBC-cpm, fig.width=4, fig.height=6, out.width=c('25%', '25%', '25%', '25%'), fig.show='hold'}
         # ORIGINAL COUNTS
@@ -377,69 +405,3 @@ While this may be aesthetically somewhat satisfactory, it is clear that the clus
       print(PlotGeneProfiles(m2Plot, theTitle, ylab_cpm))
     }
     ```
-
-
-
-
-## Using voom-transformed expression
-
-Filter the `v.tmm` variable for putative genes:
-
-```{r putative-from-v}
-keep.putative <- rowSums(status.treat != 0) >= 1
-v.tmm.putat <- v.tmm$E[keep.putative, ]
-cat("Number of putative genes voom-corrected: ", nrow(v.tmm.putat), "\n")
-
-m_v_tmm_cv <- calculaVars(v.tmm.putat)
-m_v_tmm_cv_filt <- m_v_tmm_cv[m_v_tmm_cv$cv >= CV_MIN, ]
-m_v_tmm_CV <- as.matrix(m_v_tmm_cv_filt[ , 1:ncol(v.tmm.putat)])
-ngenes_v <- nrow(m_v_tmm_CV)
-if (ngenes_v  > 400) {
-  SMALL_v <- FALSE
-  warning("Clustering and networking will not be calculated for **so many genes (", ngenes_v, ")**")
-} else { 
-  SMALL_v <- TRUE
-}
-```
-
-
-```{r clustering-v, eval=SMALL_v, echo=SMALL_v}
-# no es necesario logaritmizarlos porque ya eran log2
-m_v_tmm.std <- scale(m_v_tmm_CV)
-# sample dendrogram
-r_v_tmm_samp <- cor(m_v_tmm.std, method = CORR_METHOD)
-d_v_tmm_samp <- as.dist(1 - r_v_tmm_samp)
-HC_samples_v_tmm <- hclust(d_v_tmm_samp, method = "ward.D2")
-plot(HC_samples_v_tmm, main = paste0("v.TMM.std - d:", CORR_METHOD, " — HCA: ", best_meth_tmm))
-corPlot(r_v_tmm_samp, 
-    diag = FALSE,
-    las = 2, 
-    scale = TRUE,
-    main = "Standardised v.TMMs")
-
-# gene groups
-d_v_tmm_genes <- dist(m_v_tmm.std, method = "euclidean")
-HC_v_tmm_genes <- hclust(d_v_tmm_genes, method = "ward.D2")
-gap_stat <- clusGap(m_v_tmm.std, 
-                    FUN = kmeans,    # change for kmeans when k-means are analysed
-                    nstart = 25, 
-                    K.max = 10,   # the number of clusters evaluated
-                    B = 50)
-v_k <- ExtractFirstMax(gap_stat$Tab[,3])
-cat("Number of clusters: ", v_k)
-fviz_gap_stat(gap_stat) + labs(subtitle = "Gap statistic")
-kmeans_v_tmm <- kmeans(m_v_tmm.std, 
-                   centers = v_k, 
-                   nstart = 25)
-groups_kmeans_v <- kmeans_v_tmm$cluster
-niceCols <- brewer.pal(v_k, "Paired")
-pie(table(groups_kmeans_v), 
-    col = niceCols,
-    labels = paste("Cluster", names(table(groups_kmeans_v))), 
-    main = "k-means for v_TMM")
-fviz_cluster(kmeans_v_tmm, 
-             data = m_v_tmm.std, 
-             main = "kmeans for v.TMM",
-             geom = "point")  # no gene label
-
-```

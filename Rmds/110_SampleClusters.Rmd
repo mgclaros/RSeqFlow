@@ -15,11 +15,11 @@ The usual way to connect/link/associate samples is to analyse distances in scale
 * with `dist()` to compute the distances between the rows (genes);
 * after the correlations between the columns (factors, conditions, samples) using `cor()` that is the fastest function doing that; correlations can be converted to distances with `as.dist()` function.
 
-> **IMPORTANT**:
->
-> * **Distance** variables will start by `d`
-> * **Correlation** variables will start by `r`.
+`r NOTE_bx`
 
+* **Distance** variables will start by `d`
+* **Correlation** variables will start by `r`.
+</div>
 
 Among the different correlation methods, `pearson` will be used since all variables are numeric.
 
@@ -83,10 +83,11 @@ plot(silhouette(cutree(HC_samples_tmm, k_samples), d_tmm_samp), main = "TMM")
 # plot(silhouette(cutree(HC_samples_allDEG, k_samples), d_allDEG_samp), main = "All DEGs")
 ```
 
-> **IMPORTANT:** If there is a sample with negative contribution, you may consider to remove it and reanalyse the complete dataset.
-> 
-> Additionally, both sets of TMM and CTF normalisations should produce similar dendrograms and silhouettes.
-
+`r NOTE_bx` 
+If there is a sample with negative contribution, you may consider to remove it and reanalyse the complete dataset.
+ 
+ Additionally, both sets of TMM and CTF normalisations should produce similar dendrograms and silhouettes.
+</div>
 
 
 ### Correlation plot of samples
@@ -114,4 +115,6 @@ corPlot(r_tmm_s,
     main = "Sample correlations for TMM-scaled data")
 ```
 
-> **IMPORTANT:** Usually, correlations based on highly variant genes do not cluster samples appropriately
+`r NOTE_bx` 
+Usually, correlations based on highly variant genes do not cluster samples appropriately
+</div>

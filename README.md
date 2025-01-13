@@ -98,7 +98,8 @@ Parameters customisable in the `configure_wf.R`:
 * `DATA_DIR`: the path to the directory containing your mapped count data. **Compulsory**
 * Variables to read your files correctly:
   + `DATA_FILES`: expression count table or file names. **Compulsory**
-  + `FIRST_COLUMN` and `OTHER_COLUMN`: define the columns in the table or the files that contain the counts. **Compulsory**
+      + `COUNTS_COLUM`: the column containing mapping counts when each library is in a single file. **Compulsory**
+      + `FIRST_COLUMN` and `LAST_COLUMN`: define the columns in the single count table to be read. **Compulsory**
   + `CHARS_TO_REMOVE`: define the removable initial part of each file 'name', usually when data come from GEO database. *Optional*
 * Experimental factors that you want to analyse:
   + `CTRL` and `TREAT`: the minimum $2$ factors (control and treatment, respectively) required for the analysis. **Compulsory**
@@ -108,7 +109,6 @@ Parameters customisable in the `configure_wf.R`:
 * `CONTRASTS`: the list of contrasts (`C1, C2, C3...`) previously defined that will be analysed. **Compulsory**
 * Threshold values for several parameters (all *optional*)
   + `MIN_CPM`: minimal amount of counts per million to conserve a gene for the analysis.
-  + `LOG_EXPR`: to scale counts or log-counts to measure gene variability. 
   + `CV_MIN`: minimal coefficient of variance to filter by variability.
   + `FC`: minimal fold-change for differential expression analysis.
   + `P`: minimal _P_-value for significance in any statistical analysis.
@@ -358,10 +358,20 @@ Version | Date      | Comments
 1.01    | 7-Jul-23  | Small improvements avoiding unexpected crashes
 1.02    | 3-Nov-23  | Minor display improvements, code debugging, more references and explanations
 1.02b   | 6-Nov-23  | Two minor bugs in library load and removal of unused variables
-1.03    | 18-Dec-34 | Gene filtering improved, minor bugs resolved
+1.03    | 18-Dec-24 | Gene filtering improved, minor bugs resolved
+1.04    | 13-Jan-25 | Minor modifications in the report, changes in correlations and gene profiles
 
 
-### v 1.03 main changes
+### v 1.04
+
+- Minor modifications in the HTML report layout and the diplayed messages.
+- Configuration parameter `OTHER_COLUMN` was renamed to `COUNTS_COLUM` when each library mapping is saved in individual files, or `LAST_COLUMN` when counts are as TSV file.
+- Configuration parameter `LOG_EXPR` was removed to always use logarithms for correlations and CTF normalisation.
+- Correlations are now based on the Spearman coefficient.
+- Error bars in cluster profiles are based on the 95% confidence interval (CI95)
+
+
+### v 1.03
 
 - The stringency of `filterByExpr()` function can now be configured according to Thawng and Smith 2022 in the chunk `numRepFilt`.
 - Maximum _y_ for density plots is established.
@@ -370,7 +380,7 @@ Version | Date      | Comments
 - Minor bugs making RSeqFlow to crash when some variables were empty.
 
 
-### v 1.02 main changes
+### v 1.02
 
 * A mew parameter `NODE_MAX` is required in the configuration file to avoid excessive calculations related to correlations and clustering with crowded networks.
 * More theoretical details about the _P_-value misuse are given

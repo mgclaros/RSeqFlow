@@ -140,7 +140,7 @@ rm(tmp)
 
 In constrast to the clustering with raw data, different clustering methods will be checked to obtain only the best clustering result. Both `x.filt.norm` and `x.filt.ctf` data will be compared.
 
-1. Convert expression to logarithm values, irrespective of `LOG_EXPR` configuration. Then, they are standardised with `scale()`. The results is a matrix `m.??`.
+1. Convert expression to logarithm values and the standardise them with `scale()`. The results is a matrix `m.??`.
     ```{r log-scale}
     m.tmm <- log2(x.filt.norm$counts + 1)
     m.ctf <- log2(x.filt.ctf + 1)

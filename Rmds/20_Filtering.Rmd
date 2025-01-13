@@ -1,9 +1,13 @@
 ## Removing noisy genes
 
+[START EXPANDIBLE]: #
+`r EXPAND_bx` 
+Expand to know <b>why noisy genes must be removed</b></summary>
+
 **Noisy genes**  (those having very low counts across all the libraries) should be removed prior to downstream analysis due to biological and statistical reasons [@Chen2016aa]. From **biological point of view**, a gene must be expressed at some minimal level before it is likely to be translated into a protein or to be considered biologically important. **Statistically**, genes with consistently low counts are very unlikely be assessed as significantly differentially expressed because low counts do not provide enough statistical evidence for a reliable judgement to be made.
 The minimum requirement is the removal of unexpressed genes (those with `counts == 0` in all samples or conditions, that is all columns).
 
-Let's see how many genes are not expressed in your samples, expressed in all samples and expressed in some samples:
+The amount of genes that are not expressed in your samples, expressed in all samples and expressed in some samples is then calculated.
 
 ```{r filter1, results='hold'}
 # Looking for genes expressed in ALL samples (TRUE)
@@ -25,9 +29,13 @@ at_least_1 <- total_genes - none_is0[["TRUE"]] - all_are0[["TRUE"]]
 But as a rule of thumb, only genes having a count of at least 10–15 in at least one set of replicates (variable `MIN_REPL` calculated below from `EXP_FACTORS`) should be retained [@Chen2016aa].
 Since it was recently demonstrated that the removal of genes mapping less than 30-reads make sure that further fold changes were not skewed by small read counts, with a dramatic decrease of the maximum FC detected [@Thawng2022aa], the minimal number of counts `MIN_COUNTS` was parametrised. We will take advantage of the `filterByExpr()` function that keeps genes that have at least `min.count` reads in a worthwhile number samples (calculated from the dessing matrix if provided or set in the `large.n` parameter).
 
+</details> 
+[END EXPANDIBLE]: #
 
-> **IMPORTANT:** The filtering cannot rely on `counts` when library sizes are very different. Hence, [CPM] (_counts per million_) should be used instead of counts. This is why the value of the `min.count` argument in `filterByExpr()` is  converted into cpm before using it as a threshold.
 
+`r NOTE_bx` 
+The filtering cannot rely on `counts` when library sizes are very different. Hence, [CPM] (_counts per million_) should be used instead of counts. This is why the value of the `min.count` argument in `filterByExpr()` is  converted into cpm before using it as a threshold.
+</div>
 
 To avoid favouring genes that are expressed in larger libraries over those expressed in smaller libraries, an additional removal of genes based on [CPM] was incorporated [@Law2016yj,@Chen2016aa] based on the threshold `MIN_CPM` defined by the user in `configure_wf.R`. Hence, only genes with `cpm > MIN_CPM` in at least one set of replicates (`MIN_REPL`) will be retained.
 
@@ -57,7 +65,7 @@ filteredOK <- Avoid_0_counts(filteredOK)
 x.filt <- x.filt_tmp[keep.exprs, , keep.lib.sizes = FALSE]  # keep.lib.sizes=FALSE causes the library sizes to be recomputed after the filtering
 ```
 
-The final balance is the following:
+The **final balance** is the following:
 
 Genes | Amount  | Percent (%)
 :---- | ----:   | ---:
@@ -120,8 +128,9 @@ rm(none_is0, all_are0, filteredOK, keep.exprs, filt_tmp) # from previous chunk
 rm(genes.cutoff, x.lcpm, x.filt.lcpm, x.filt_tmp)
 ```
 
-> **IMPORTANT:** After filtering, density lines should be nearly identical following a gauss-shaped profile. Peak at very low logCPM should disappear.
-
+`r NOTE_bx`
+After filtering, density lines should be nearly identical following a gauss-shaped profile. Peak at very low logCPM should disappear.
+</div>
 
 ***
 

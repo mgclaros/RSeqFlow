@@ -63,25 +63,20 @@ We can consieder **stable** (invariable) genes those with `CV < 0.1`.
 In noisy contexts, the threshold can be scaled up to `CV < 0.2` or even to `CV < 0.5` (the standard deviation is half as large as the mean!).
 
 Another way to increase gene expression stability is to log-transform expression values, therefore detecting correlations only for highly variable genes.
-This behaviour is controlled by the `LOG_EXPR` variable customisable in `configure_wf.R`.
 
 </details> 
 [END EXPANDIBLE]: #
 
 
-1. Log-transformation of expression vallues depending on `LOG_EXPR =` `r LOG_EXPR`.
+1. Log-transformation of expression values.
+
     ```{r calcLog}
-    if (LOG_EXPR) {
-      matriz <- log2(x.filt$counts + 1) # add 1 to avoid log(0)
-      cat("Correlations will be calculated with logarithmic expression values\n")
-    } else {
-      matriz <- x.filt$counts
-      cat("Correlations will be calculated with decimal expression values\n")
-    }
+    matriz <- log2(x.filt$counts + 1) # add 1 to avoid log(0)
     ```
 
 
 2.  Removing files (genes) whose `CV <` **`r CV_MIN`**.
+
     ```{r filtrado, results='hold', fig.show='hold'}
     # calculating CVs
     matriz_cv <- calculaVars(matriz)
@@ -103,6 +98,7 @@ This behaviour is controlled by the `LOG_EXPR` variable customisable in `configu
 
 
 3. Remove additional colums appended by `calculaVars()` used to filter genes. The resulting variable is `matriz_filt`.
+
     ```{r matriz_filt}
     # nos quedamos con las mismas columnas que tenía la 'matriz' original
     matriz_filt <- as.matrix(matriz_cv_filt[,1:ncol(matriz)])
@@ -139,10 +135,13 @@ The most used method to calculate association between paired samples is Pearson,
 * **Kendall**'s $\tau$ is thougth less powerful, but useful when all values are qualitative. However, a 2002 paper [@Newson2002] argued for the superiority of Kendall's $\tau$ over Spearman's $\rho$ correlation since confidence intervals for $\rho$ are less reliable and less interpretable than confidence intervals for $\tau$. Another article indicates that $\tau$ is more robust and slightly more efficient than $\rho$ [@Croux2010]. Unfortunately, Kendall's $\tau$ still runs a lot slower in R than Spearman's $\rho$, which is important in genomics, where datasets are large.
 * **Mutual Information** (MI) attempts to measure sthe tatistical dependence between two variables.
 
+`r NOTE_bx` 
+Even though all variables are quantitative, it is preferable to use `method = 'spearman'` to [correlate tendencies (instead of linearity)](https://medium.com/analytics-vidhya/covariance-vs-pearson-correlation-coefficient-vs-spearmans-rank-correlation-coefficient-1d2d8789a728). 
+</div>
+
 </details> 
 [END EXPANDIBLE]: #
 
-> **IMPORTANT:** Since all variables are quantitative, `pearson` method can be used, or you may prefer `spearman` to [correlate tendencies (instead of linearity)](https://medium.com/analytics-vidhya/covariance-vs-pearson-correlation-coefficient-vs-spearmans-rank-correlation-coefficient-1d2d8789a728). 
 
 `r NOTE_bx` 
   Since this step is only exploratory, no _P_ value will be calcuate to speed up the analysis.
@@ -150,6 +149,7 @@ The most used method to calculate association between paired samples is Pearson,
 
 
 1. Calculating sample correlations 
+
     ```{r CorrSamples_r}
     # default method is Pearson; it includes scaling
     # rounding r to 3 decimals
@@ -157,6 +157,7 @@ The most used method to calculate association between paired samples is Pearson,
     ```
 
 2. Plotting correlations with _r_ values
+
     ```{r corPlotting}
     corPlot(corr_samples_r, 
         diag = FALSE,
@@ -167,13 +168,15 @@ The most used method to calculate association between paired samples is Pearson,
     
 
 3. Another correlation plot, where the circle size relates to _r_ and the color to the sign:
+
     ```{r corrPlotBasic}
     # other possible plots: https://r-coder.com/correlation-plot-r/
     corrplot(corr_samples_r)
     ```
 
-> **IMPORTANT:** If samples are correctly grouped, data are very coherent. However, even if samples apparently produce odd groups, this might be corrected after normalisation and differential expression (see next sections)
-
+`r NOTE_bx` 
+If samples are correctly grouped, data are very coherent. However, even if samples apparently produce odd groups, this might be corrected after normalisation and differential expression (see next sections)
+</div>
 
 ## Grouping raw samples
 
@@ -181,6 +184,7 @@ A good way to see if raw samples behave as expected respect to replicates and ex
 
 
 1. The first representation is a dendrogram to inspect whether all samples are grouped by replicates in separate branches. 
+
     ```{r dendrogram}
     # clustering by sample as eculidean distances
     hcols <- hclust(as.dist(1 - corr_samples_r), method = "complete") 
@@ -188,6 +192,7 @@ A good way to see if raw samples behave as expected respect to replicates and ex
     ```
 
 2. Let's group genes (rows) now by expression and mark groups by colours
+
     ```{r geneclusters}
     # clustering by gene
     hrow <- hclust(as.dist(1-cor(t(matriz_filt), method=CORR_METHOD)), method="complete")
@@ -200,6 +205,7 @@ A good way to see if raw samples behave as expected respect to replicates and ex
 
 
 3. Use both hierarchical clusters to construct a heatmap, but showing only the dendrogram of samples (the one of genes is very crowded).
+
     ```{r heatmap}
     heatmap.2(matriz_filt, 
               dendrogram = "column", # no dengrogran for row/genes
@@ -215,6 +221,8 @@ A good way to see if raw samples behave as expected respect to replicates and ex
               RowSideColors = mycolhc)
     ```
 
-> **IMPORTANT:** Samples should be grouped by replicates. 
+`r NOTE_bx` 
+Samples should be grouped by replicates. 
+</div>
 
 > **IMPORTANT:** If there are clusters of genes that clearly change their expression level between samples, a successful study can be expected.

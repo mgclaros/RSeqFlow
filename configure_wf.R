@@ -1,6 +1,6 @@
 # configure_wf -> RSeqFlow
 # Gonzalo Claros
-# 2024-11-01
+# 2025-01-13
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # DON'T TOUCH: CLEAN START ####
@@ -18,9 +18,9 @@ graphics.off()   # shut down all open graphic devices
 # You should define a name to appear in the final report
 #
 # Example:
-#   PROJECT_NAME = "My analysis on mouse"
+#   PROJECT_NAME = "Default template for RSeqFlow analyses"
 
-PROJECT_NAME = "This is a template for RSeqFlow analyses"
+PROJECT_NAME = "Olive pollen tube growth 0-1-3-6 h | TRANSCRIPTOME"
 # //////////////////////////////////////
 
 
@@ -49,13 +49,14 @@ PKG_UPDATE = FALSE
 # /////////////////////////////////////////
 
 
+
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # WILL BE THE COMPLETE (VERBOSE) REPORT SAVED? ####
 #
 # TRUE: Necessary and complementary chunks will be obtained; code is shown
 # FALSE: only necessary (relevant) chunks will be executed; code is hidden
 
-VERBOSE_MODE = TRUE
+VERBOSE_MODE = FALSE
 # //////////////////////////////////////////
 
 
@@ -79,15 +80,13 @@ DATA_DIR = "~/Documents/RNASeqData/olivo/Pollen_TR/"
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # LOAD YOUR EXPRESSION DATA ####
 #
-# Files containing expression data must be in csv or tsv format
-# If you define 1 file, it is a table containing all experimental counts
-# If you define several files to read, they must be used to mount
-#    the experimental data table
-#
+# Files containing expression data must be in TSV format
+# COMPULSORY: the first column in files must contain the gene IDs
+
 # %%%%
-# WHEN YOU HAVE MAPPING RESULTS IN SEPARATE FILES
+# MAPPING COUNTS ARE IN SEPARATE FILES
 # %%%%
-# define every expression count file
+# define every expression count file as a vector
 # DATA_FILES = c("GSM1545538_purep53.txt",
                # "GSM1545539_JMS8-2.txt",
                # "GSM1545542_JMS8-5.txt",
@@ -97,28 +96,25 @@ DATA_DIR = "~/Documents/RNASeqData/olivo/Pollen_TR/"
                # "GSM1545536_9_6_5_11.txt", 
 			         # "GSM1545540_JMS8-3.txt", 
 			         # "GSM1545544_JMS9-P7c.txt")
-#
-# define columns to read from each file
-# The column with the gene IDs, usually is the FIRST COLUMN of every file
-# FIRST_COLUMN = 1
-#
-# Colum with COUNTS, usually the THIRD COLUMN of the every file
-# OTHER_COLUMN = 3
+
+# Column with COUNTS, depending on the mapper used
+# COUNTS_COLUMN = 3
 
 # define the removable initial part of each file 'name'
 CHARS_TO_REMOVE = 0 # the 11 first chars of all file names will be removed.
 
-# WHEN YOU HAVE ONE TABLE WITH ALL EXPRESSION DATA
 
+# %%%%
+# MAPPING COUNTS ARE A SINGLE TABLE
+# %%%%
 # define the expression table filename
-# REQUIRED: the first column must cotain the gene IDs
 DATA_FILES = "pollen_picual_reord_TR3333.tsv"
 
 # The FIRST COLUMN after the gene IDs colum that will be read; 1 is the one after gene IDs column
 FIRST_COLUMN = 1
-#
+
 # The LAST COLUMN containing data
-OTHER_COLUMN = 12
+LAST_COLUMN = 12
 # ///////////////////////////////////////
 
 
@@ -127,12 +123,12 @@ OTHER_COLUMN = 12
 # DEFINE YOUR FACTORS (EXPERIMENTAL CONDITIONS) ####
 #
 # define EVERY experimental condition to analyse. CTRL and TREAT are necessary
-CTRL = "MP"
-TREAT = "GP1h"
+CTRL = "t0_MP"
+TREAT = "t1_GP"
 
 # Additional treatments or conditions
-TREAT2 = "GP3h"
-TREAT3 = "GP6h"
+TREAT2 = "t3_GP"
+TREAT3 = "t6_GP"
 # ///////////////////////////////////////
 
 
@@ -181,20 +177,6 @@ CONTRASTS = list(C1, C2, C3, C4)
 # MIN_CPM = 0.5
 
 MIN_CPM = 1
-# ///////////////////////////////////////
-
-
-
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# USE LOG FOR VARIABILITY CALCULATIONS? ####
-# 
-# Logarithm of expression will enrich on highly variable genes
-# Unless your genes are not highly variable, set it to TRUE
-#
-# Example:
-# LOG_EXPR = FALSE
-
-LOG_EXPR = TRUE
 # ///////////////////////////////////////
 
 
@@ -252,7 +234,6 @@ P = 0.1
 # Example:
 #   NODE_MAX = 250
 
-# Maximal number of nodes to peform network analysis
 NODE_MAX = 350
 # ////////////////////////////////////////////////////////
 

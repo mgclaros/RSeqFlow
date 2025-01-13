@@ -25,13 +25,15 @@ max_outs <- names(outstand_sorted[outstand_sorted == outst_max])
 outst_median <- median(outstand_sorted)
 most_outs <- names(outstand_sorted[outstand_sorted > outst_median])
 is_OUTS_EMPTY <- length(most_outs) < 1
-OUTS_WARNING_MSG <- "**No outstanding** transcript detected. Be careful!!!"
 if (is_OUTS_EMPTY) {
   most_outs <- max_outs
-  warning("OUTS_WARNING_MSG")
+  OUTS_WARNING_MSG <- paste0(NOTE_bx, " **No outstanding** transcript detected. Be careful!!!", " </div>")
+} else {
+  OUTS_WARNING_MSG <- ""
 }
 ```
 
+`r OUTS_WARNING_MSG`
 
 Summary: 
 
@@ -47,16 +49,17 @@ Preparing data for representations:
 
 ```{r prepSelectedGenes, fig.width=9, fig.height=5, fig.align='center', out.width='85%'}
 if (is_OUTS_EMPTY) {
-  warning("OUTS_WARNING_MSG", "\nHence, tThere is not **any outstanding** transcript to plot")
+  OUTS_WARNING_MSG <- paste0(WARN_bx, " There is **not any outstanding** transcript to plot", "</div>")
 } else {
+  OUTS_WARNING_MSG <- ""
   barplot(outstand_sorted, las = 2, main = "Outstanding genes", ylab = "Selection frequency")
 }
 ```
 
+`r OUTS_WARNING_MSG`.
 
-Let's show the gene profiles of outstanding genes in all conditions (left) and the most frequent outstanding IDs (right) provided that you have any outstanding transcript. 
+When outstandng transcripts were obtained, their profiles in all conditions and the profile of the most frequent outstanding IDs are represented below. 
 
-`r if (is_OUTS_EMPTY) warning("OUTS_WARNING_MSG")`
 
 ```{r selgeneprof, fig.width=7, fig.height=5, out.width='90%', eval=!is_OUTS_EMPTY, include=!is_OUTS_EMPTY}
 # Profiles of the outstanding genes in all conditions
@@ -74,11 +77,19 @@ SelectedGeneProfilePlots(myIDs_2Plot,
 
 ## Selected by the user
 
-Some genes may be selected by the user during this analysis, and can be seen here, provided that `MY_IDs` is not empty in `configure_wf.R`.
+```{r}
+# Verify if there is any IDs defined in the configure_wf.R file
+doID_PROFILES <- exists("MY_IDs")
+if (doID_PROFILES) {
+  OUTS_WARNING_MSG <- "There are user IDs to plot their profiles, as follows.**"
+} else {
+  OUTS_WARNING_MSG <- paste0(WARN_bx, " No user IDs were found in the configuration file; hence, nothing will be shown", "</div>")
+}
+```
 
-`r if (!exists("MY_IDs")) warning("No user IDs were found in the configuration file")`
+`r OUTS_WARNING_MSG`.
 
-```{r myIDs, fig.width=7, fig.height=5, out.width='90%', eval=exists("MY_IDs"), include=exists("MY_IDs")}
+```{r myIDs, fig.width=7, fig.height=5, out.width='90%', eval=doID_PROFILES, include=exists("MY_IDs")}
 # Add user selected genes to the OUTSTANDING variable for further saving
 OUTSTANDING_GENE_LIST[["User_defined"]] <- MY_IDs
 
@@ -101,9 +112,16 @@ SelectedGeneProfilePlots(myIDs_2Plot,
 
 ## Save outstanding genes
 
-Saving the analysis that produced outstanding genes as well as the list of gene IDs for each condition, provided that you have any outstanding transcript to save. 
+```{r}
+# Verify if there are outstanding genes in the analysis
+if (is_OUTS_EMPTY) {
+  OUTS_WARNING_MSG <- paste0(WARN_bx, " **No OutstandingGenes-... file will be saved: there is no ID to save**", "</div>")
+} else {
+  OUTS_WARNING_MSG <- ""
+}
+```
 
-`r if (is_OUTS_EMPTY) warning("OUTS_WARNING_MSG", "\nNo OutstandingGenes- file was saved")`
+Saving the analysis that produced outstanding genes as well as the list of gene IDs for each condition, provided that you have any outstanding transcript to save. `r OUTS_WARNING_MSG`.
 
 ```{r saveOutstanding, eval=!is_OUTS_EMPTY, include=!is_OUTS_EMPTY}
 # convert the list into a long matrix

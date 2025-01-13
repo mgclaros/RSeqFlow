@@ -63,9 +63,9 @@ Two initial subsets will be defined only after `treat()`:
     ubis.eB <- nrow(ubi.DEGs)
     ```
 
-Balance of ubiquitous candidates:
+**Balance** of ubiquitous candidates:
 
-Method     | Amount
+Method     | Amount of ubiquitous candidates
 :---       | :---
 `treat()`  | `r ubis.treat`
 `eBayes()` | `r ubis.eB`
@@ -112,21 +112,13 @@ Method     | Amount
 The new log-counts are stored in `m.??` variables.
 
     ```{r calcLogCtf}
-        if (LOG_EXPR) {
-          m.x <- log2(x.filt.ctf + 1) # add 1 to avoid log(0) ; complete x object
-          m.putat.ctf <- log2(x.filt.ctf.putat + 1) # CTF putative
-          m.putat.tmm <- log2(x.filt.tmm.putat + 1) # TMM putative
-          cat("Correlations will be calculated with logarithmic expression values")
-        } else {
-          m.x <- x.filt.ctf # complete x object not filtered
-          m.putat.ctf <- x.filt.ctf.putat  # CTF putative
-          m.putat.tmm <- x.filt.tmm.putat # TMM putative
-          cat("Correlations will be calculated with decimal expression values")
-        }
+    m.x <- log2(x.filt.ctf + 1) # add 1 to avoid log(0) ; complete x object
+    m.putat.ctf <- log2(x.filt.ctf.putat + 1) # CTF putative
+    m.putat.tmm <- log2(x.filt.tmm.putat + 1) # TMM putative
     ```
 
 
-5. Retain the **most variable genes** (rows) by filtering `putative` DEGs by [CV] as configured in `configure_wf.R`. When the `m` variables are in log-counts, CV will be much lower than CV for regular counts. Hence, configure `LOG_EXPR` to FALSE only when your experiment does not contain many variable genes.
+5. Retain the **most variable genes** (rows) by filtering `putative` DEGs by [CV] as configured in `configure_wf.R`. When the `m` variables are in log-counts, CV will be much lower than CV for regular counts. 
 
     ```{r filterByCV}
     # the most variant genes
@@ -209,5 +201,7 @@ rm(m.x, m.putat.ctf, m.putat.tmm,      # LOG2 transformed (or not)
    m.x.CV, m.putat.tmm.CV)  # retain only the expression columns
 ```
 
-> **IMPORTANT**:  The matrices that can be clustered by genes or samples are `m.ctf.std` and `m.tmm.std`.
+`r NOTE_bx`  
+The matrices that can be clustered by genes or samples are `m.ctf.std` and `m.tmm.std`.
+</div>
 

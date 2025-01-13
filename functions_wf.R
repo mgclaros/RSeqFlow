@@ -1,6 +1,6 @@
 # functions_wf -> RSeqFlow
 # Gonzalo Claros
-# 2024-12-17
+# 2025-01-13
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -38,10 +38,10 @@ CreateDir <- function(adir = DATA_DIR,
   } else if (dir.create(name.wd)) {  # ¿he reado el directorio con éxito?
     msg <- paste0("Directory '", name.wd, "' created")
   } else {
-    # no se puede crear el directorio, msg de error y abortar
+    # if the directory cannot be created, give an error message and stop
     msg <- paste0(msg, "   Directory ", name.wd ," cannot be created in")
     msg <- paste0(msg, "   ", adir, "\n")
-    stop(msg, call.=FALSE)
+    stop("ERROR: \n", msg, call = FALSE)
   }
   message(msg)	
   return(name.wd)
@@ -59,31 +59,25 @@ LoadExpressionData <- function (files = DATA_FILES,
                                 chars2rm = CHARS_TO_REMOVE) {
   if (length(files) == 1) {
     # only one file defined, therefore, is a complete counts table
-    countsTable <- read.delim(paste0(dataDir, files), 
-                              row.names = 1, # row names must be the first column
-                              quote = "")[, colsToRead]
+    countsTable <- read.delim(paste0(dataDir, files),    # datafile path
+                              row.names = 1,             # IDs must be at the first column
+                              quote = "")[, colsToRead]  # range of columns to be read
     msg <- "a **single data table**"
-    counts_obj <- DGEList(counts = countsTable, 
+    counts_obj <- DGEList(counts = countsTable,          # convert to DGEList object
                           group = theFactors) 
   } else {
     # several files defined to construct the counts table
-    counts_obj <- readDGE(files, 
+    counts_obj <- readDGE(files,                         # read files and convert to DGEList object
                           path = dataDir, 
-                          columns = colsToRead)
-    # añadir información de los factores para la expresión diferencial
+                          columns = colsToRead)          # columns with IDs and counts
     msg <- "**several data files**"
-    # completion of DGEList object with factors
+    # add factor information to the DGEList object for differential expression
     counts_obj$samples$group <- theFactors
     
-    # recortar los nombres de las muestras de ratón para quitar 
-    # el código de GEO y dejar solo el nombre de la muestra
+    # trim long names to let only the significant part
     sample_names <- colnames(counts_obj)
-    # writeLines("*** Current sample names: ")
-    # print(sample_names)
     new_names <- substring(sample_names, chars2rm + 1, nchar(sample_names))
     colnames(counts_obj) <- new_names
-    # writeLines("have been simplified to: ")
-    # print(new_names)
   }
   
   message("Counts from ", msg, " were read. The corresponding DGEList object was created")
@@ -124,7 +118,7 @@ SaveTSV <- function(theDataTable,
 # input: a contingency table with colums of TRUE and/or FALSE
 
 Avoid_0_counts <- function(aTable) {
-  column_names <- names(aTable)                   # obtain column names
+  column_names <- names(aTable)                   # get column names
   if (length(column_names) == 1) {                # modify when only 1 column is present
     expected_names <- c("TRUE", "FALSE")
     # get the name of the lacking column
@@ -176,7 +170,7 @@ PlotGeneDensity <- function(obj,
                             atext, 
                             thenames = COL_NAMES) {
   nsamples <- ncol(obj)
-  max_y <- round(max(density(obj)$y),      # obtain the maximum of density in the object
+  max_y <- round(max(density(obj)$y),    # obtain the maximum of density in the object
                  digits = ROUND_dig)
   col <- brewer.pal(nsamples, "Paired")
   plot(density(obj[, 1]), 
@@ -202,7 +196,7 @@ PlotGeneDensity <- function(obj,
 # CALCULATE COEFFICIENTS OF GENE VARIABILITY ####
 
 calculaVars <- function(expData){
-  # Convertir el formato compatible a data.frame
+  # Convert expData to a data.frame
   tdata <- as.data.frame(expData)
   ini_samples <- ncol(tdata) # columnas con las que calcular los índices
   
@@ -273,24 +267,24 @@ MatPlot4Clusters <- function(m,
   # create a place at rigth (8) for the legend outside the graph
   # structure of mar = c(bottom, left, top, right)
   par(mar = c(4, 4, 3, 8), xpd = TRUE) 
-  # plot de la matriz
-  matplot(m,  # transpose to put columns as x an gene expression as y
+  # matrix plot
+  matplot(m,               # transpose to put columns as x an gene expression as y
           main = mainTitle,
           type = "b", 
-          las = 2, # all labels perpendicular to axes
-          pch = 0:25, # pch 1?
-          col = myCols,
+          las = 2,         # all labels perpendicular to axes
+          pch = 0:25,      # point characters (symbols, up to 25 different)
+          col = myCols,    # colours
           lty = 1:ncol(m), # line types in the plot
-          lwd = 2,
+          lwd = 2,         # line width
           ylab = "Expression level (median)",
           xlab = "Experimental condition",
-          xaxt = "n") # remove x labels
+          xaxt = "n")      # remove x labels
   # define new x labels
-  axis(1,  # below
+  axis(1,                    # below
        at = 1:nrow(m),
        labels = rownames(m),
        las = 2,
-       cex.axis = 0.8) # = 1?
+       cex.axis = 0.8)       # = 1?
   # legend outside the plot
   legend("topright", 
          inset = c(-0.3, 0), # legend outside the plot

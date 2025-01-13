@@ -1,8 +1,21 @@
 ---
 title: "`r PROJECT_NAME`"
-subtitle: "Using the `r SOFT_NAME` pipeline; updated on 240605"
-author: "M. Gonzalo Claros & Amanda Bullones"
-date: "`r format(Sys.time(), '%A %d, %B %Y. %H.%M.%S')`"
+subtitle: "Using the `r paste(SOFT_NAME, VERSION_CODE)` pipeline"
+author: "M. Gonzalo Claros[^![](https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png)^](https://orcid.org/0000-0002-0112-3550) & Amanda Bullones"
+date: "`r format(Sys.time(), '%A %d, %B %Y. %H.%M.%S')` | RMD version: 250113"
+abstract: |
+  `r paste(SOFT_NAME, VERSION_CODE)` [@Bullones2023aa] is a comprehensive R pipeline for processing RNA-Seq datasets from count files or tables in non-model organisms that perform the most recommended statistical analyses for differential expression and clustering. It carries out the following steps:
+
+   1. Read/construct a count table for RNA-seq mappings [@Wang2009].
+   2. Quality control and gene filtering.
+   3. Normalisation using `TMM` and `CTF` [@Zhao2021wp; @Johnson2022fn].
+   4. Differential expression using `limma/voom` and `treat()` to seek for biological relevance [@Oshlack2010; @Marioni2008; @Li2022cf].
+   5. Correlation analyses for clustering with 3 algorithms [@Usadel2009su; @Serin2016uw].
+   6. Gene networks, including hubs and subgraphs [@Parsana2019jm; @Sia2022].
+   7. Profiling outstanding genes.
+
+   It can be cloned/dowloaded from its [GitHub repository](https://github.com/mgclaros/RSeqFlow). **You can USE AS IS without any warrants**.
+
 bibliography: Refs_RSeqFlow.bib
 biblio-style: default
 link-citations: true
@@ -11,9 +24,6 @@ link-citations: true
 ```{r RmdSetup, include = FALSE}
 opts_chunk$set(echo = VERBOSE_MODE)
 
-# message(), warning() and stop() result in alert markdown text
-# https://www.r-bloggers.com/2017/06/pretty-errors-warnings-and-messages-in-r-markdown/
-# https://yihui.org/knitr/hooks/
 knitr::knit_hooks$set(
    error = function(x, options) {
      paste('\n\n<div class="alert alert-danger">',
@@ -114,22 +124,6 @@ EXPAND_bx <- '<details  style="background-color: SeaShell;
 
 [FDR]: "False discovery rate (rate of type I errors)"
 
-**`r SOFT_NAME`** is a comprehensive R pipeline for processing RNA-Seq datasets from count files or tables in non-model organisms. It carries out the following steps:
-
-1. Read/construct a count table for RNA-seq mappings [@Wang2009]
-2. Quality control and gene filtering
-3. Normalisation using `TMM` and `CTF` [@Zhao2021wp; @Johnson2022fn]
-4. Differential expression using `limma/voom` and `treat()` from [edgeR] to seek for biological relevance [@Oshlack2010; @Marioni2008; @Li2022cf].
-5. Correlation analyses for clustering with 3 algorithms [@Usadel2009su; @Serin2016uw]
-6. Co-expression networks, including hubs and subgraphs [@Parsana2019jm; @Sia2022]
-7. Profiling outstanding genes.
-
-> You can clone/dowload `r SOFT_NAME` from its [GitHub repository](https://github.com/mgclaros/RSeqFlow). 
-> It was described in [@Bullones2023aa].
-
-`r NOTE_bx`
-  `r okMsg`. You can use AS IS without any warrants.
-</div>
 
 | Environment variables        | Value |
 | :---- | :--- |
@@ -161,7 +155,6 @@ All **contrasts** to analyse    | `r toString(allContrasts)`
 **CV** threshold                | `r CV_MIN`
 **Fold-change** threshold       | `r FC` (**logFC = `r logFC`**)
 **P-value** threshold           | `r P`
-**LOG2** for correlations       | `r LOG_EXPR`
 Maximal **genes** for correlation and clustering | `r NODE_MAX`
 **Optimal clusters**            | `r OPT_CLUST`
 **Min no. genes** in cluster    | `r MIN_GENES_PER_CLUSTER`
@@ -251,10 +244,6 @@ The following steps are to reduce data dispersion, homogenise them around the me
 ```{r exp_design, child='Rmds/50_Experiment.Rmd'}
 ```
 
-```{r, include=FALSE}
-# mirar cómo incluir DESEQ2 a partir de RNAseq123 con Glimma
-# https://bioconductor.org/packages/release/bioc/vignettes/Glimma/inst/doc/DESeq2.html
-```
 
 
 ## Data dispersion
@@ -368,13 +357,23 @@ To see the behaviour of clusters with respect to samples using the `aggregate()`
 
 # Information about this session
 
+`r OK_bx`
+<br> Computer details: 
+
+`r paste0("OS: **", .Platform$OS.type, "**\n\n",
+          "GUI: **", .Platform$GUI, "**\n\n",
+          names(Sys.info()[4]), ": **", Sys.info()[4], "**\n\n", 
+          names(Sys.info()[1]), ": **", Sys.info()[1], "**\n\n",
+          names(Sys.info()[5]), ": **", Sys.info()[5], "**\n\n",
+          names(Sys.info()[7]), ": **", Sys.info()[7], "**") `.
+</div>
+
 ```{r tiempo_total, results='hold', echo=FALSE}
-# T00 calculated in execute_wf.R
-Tff <- proc.time() # final time
-T_total <- Tff - T00
+T_total <- proc.time() - T00                        # final - initial (T00, calculated in execute_wf.R)
+total_minutes <- round(T_total[[3]]/60, digits = 2) # convert seconds to mins
 ```
 
-Elapsed time: **`r round(T_total[[3]]/60, digits = 2)` min**.
+Elapsed time: **`r total_minutes` min** (`r T_total[[3]]` s).
 
 ```{r sessionInfo, results='hold', echo=FALSE}
 cat("Variables in memory:\n")

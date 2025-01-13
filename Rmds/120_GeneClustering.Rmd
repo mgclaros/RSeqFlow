@@ -49,8 +49,9 @@ dendr_genes_tmm <- as.dendrogram(HC_tmm_clust)
 plot(dendr_genes_tmm, main = "Dendrogram of TMM", leaflab = "none")
 ```
 
-> **IMPORTANT**: Both dendrograms are nearly identical usually. Therefore, only CTF-transformed data will be used to cluster genes.
-
+`r NOTE_bx` 
+Both dendrograms are nearly identical usually. Therefore, only CTF-transformed data will be used to cluster genes.
+</div>
 
 ### How many gene clusters? {#bestgeneclusterk}
 
