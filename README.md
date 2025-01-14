@@ -360,7 +360,12 @@ Version | Date      | Comments
 1.02b   | 6-Nov-23  | Two minor bugs in library load and removal of unused variables
 1.03    | 18-Dec-24 | Gene filtering improved, minor bugs resolved
 1.04    | 13-Jan-25 | Minor modifications in the report, changes in correlations and gene profiles
+1.05    | 14-Jan-25 | Cosmetic modifications in the report and the code
 
+### v 1.05
+
+- Cosmetic modifications in the HTML report
+- Cosmetic modification in the code
 
 ### v 1.04
 

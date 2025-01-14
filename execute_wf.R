@@ -13,13 +13,10 @@ T00 <- proc.time() # Initial time for elaspsed time
 # RETRIEVE ARGS if ANY ####
 # %%%%%%%%%%%%%%%%%%%%%%%%%
 
-## user ID in the computer ####
-YO <- system ("whoami", intern = TRUE)
-
-errMsg <- "ERROR:\nR-SEQ must be launched as 'Rscript execute_wf.R aConfigFile.R'\n       or as 'source(configure_wf.R)'\n"
+errMsg <- "ERROR:\nThe pipeline must be launched as 'Rscript execute_wf.R aConfigFile.R'\n       or as 'source(configure_wf.R)'\n"
 
 ## by default, okMsg refers to sourcing the configuration file ####
-okMsg <- "R-SEQ sourced as interactive from 'configure_wf.R'"
+okMsg <- "The pipeline was sourced as interactive from 'configure_wf.R'"
 
 ## retrieve inputs to the script when given ####
 ARGS <- commandArgs(trailingOnly = TRUE) # Test if there is one input argument
@@ -27,7 +24,7 @@ if (length(ARGS) >= 1) {
   # non interactive session with one argument that should be a config file
   message("ARGS ≥ 1: the argument will be treated as configuration file\n")
   # redefinition of okMsg for terminal execution
-  okMsg <- paste0("R-SEQ was launched from terminal using ", ARGS[1], " as configuration file")
+  okMsg <- paste0("The pipeline was launched from terminal using ", ARGS[1], " as configuration file")
   # load the corresponding configuration parameters
   source(ARGS[1])
 } else if (!(interactive())) {
@@ -36,13 +33,13 @@ if (length(ARGS) >= 1) {
 } else if (!("MIN_CPM" %in% ls())) {
   stop(errMsg, call. = FALSE)
 } else {
-  message("The script may be reading VARIABLES from RAM instead of configuration file")
+  message("The pipeline may be reading VARIABLES from RAM instead of configuration file")
 }
 
 if (interactive()) {
-	message("This is an INTERACTIVE session")
+	cat("This is an INTERACTIVE session\n")
 } else {
-	message("R-SEQ launched from the COMMAND-LINE terminal")
+	cat("The pipeline was launched from the COMMAND-LINE terminal\n")
 }
 
 
@@ -53,7 +50,7 @@ if (interactive()) {
 ## Exception errors ####
 if (!file.exists(DATA_DIR)) {
   errMsg <- paste0("ERROR:\n", "** Folder ", DATA_DIR, 
-                " defined in configuration variable DATA_DIR does not exist for user ", YO, " **\n")
+                " defined in configuration variable DATA_DIR does not exist for user ", Sys.getenv("LOGNAME"), " **\n")
   # salir del programa para arreglar el error
   stop(errMsg, call. = FALSE)
 }
@@ -114,6 +111,7 @@ COMPUTER <- GetComputer()
 HOY <- format(Sys.time(), "%F_%H.%M.%S")
 
 ## create working directory to save results ####
+cat("\n*** Creating directory for results *** \n")
 WD <- CreateDir(DATA_DIR, SOFT_NAME, VERSION_CODE)
 
 ## construct the list with columns to read the input file ####
@@ -169,7 +167,7 @@ R_MIN <- 0.75
 setwd(WD)
 
 ## launch rmarkdown report ####
-cat("\n", "*** Creating markdown report ***", "\n")
+cat("\n*** Creating markdown report ***\n")
 
 # the Rmd file must be located with code
 loadRmd <- paste0(SOURCE_DIR, "Report_", SOFT_NAME, ".Rmd")
@@ -190,8 +188,8 @@ render(input = loadRmd,
 # END MAIN CODE ####
 # %%%%%%%%%%%%%%%%%%
 
-message(paste(SOFT_NAME, VERSION_CODE, "report successfully fihished."))
-cat("\n", "*** Report and results saved in the new folder ***", "\n")
+message(paste0("\n", SOFT_NAME, " v", VERSION_CODE, " report successfully completed."))
+cat("\n", "*** Report and results saved in the following folder: ***", "\n")
 message(WD)
 
 T_total2 <- proc.time() - T00

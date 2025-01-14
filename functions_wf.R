@@ -33,9 +33,9 @@ CreateDir <- function(adir = DATA_DIR,
                       adate = HOY) {
   name.wd <- paste0(adir, aname, aversion, "_results_", adate, "/")
   
-  if (file.exists(name.wd)){  # ¿existe el directorio ya?
-    msg <- paste0("Directory '", name.wd, "' already existed")
-  } else if (dir.create(name.wd)) {  # ¿he reado el directorio con éxito?
+  if (file.exists(name.wd)){                # ¿existe el directorio ya?
+    msg <- paste0("Directory '", name.wd, "' already exists")
+  } else if (dir.create(name.wd)) {         # ¿ha creado el directorio con éxito?
     msg <- paste0("Directory '", name.wd, "' created")
   } else {
     # if the directory cannot be created, give an error message and stop

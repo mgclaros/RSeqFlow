@@ -138,7 +138,7 @@ EXPAND_bx <- '<details  style="background-color: SeaShell;
 | **`r COMPUTER`**              | `r R.version$platform` |
 | **R** version                 | `r R.version.string` |
 | **BioConductor** version      | `r VERSION_BIOC` |
-| **User**                      | `r YO` |
+| **User**                      | `r Sys.getenv("LOGNAME")` |
 | PATH to **results**           | `r WD` |
 |                               |  |
 | **Customisable environment**: |  |
@@ -149,8 +149,8 @@ EXPAND_bx <- '<details  style="background-color: SeaShell;
 
 Customised parameters           | Value
 :---| :---
-PATH to **data** files          | `r DATA_DIR`
-Data **files**                  | `r toString(DATA_FILES)`
+PATH to **data** file(s)        | `r DATA_DIR`
+Data **file(s)**                | `r toString(DATA_FILES)`
 **Chars to remove** in file names | `r CHARS_TO_REMOVE`
 Columns to read                 | `r toString(COLUMNS_TO_READ)`
 **Exp. factors** by column      | `r  toString(EXP_FACTORS)`
@@ -166,7 +166,7 @@ Maximal **genes** for correlation and clustering | `r NODE_MAX`
 **Min no. genes** in cluster    | `r MIN_GENES_PER_CLUSTER`
 **Kleinberg score** threshold   | `r MIN_KLEINBERG`
  | 
-**Not configurable parameters**: | 
+**Fixed parameters**             | 
 **Decimal digits** for rounding  | `r ROUND_dig`
 **Correlation method**           | `r CORR_METHOD`
 **Correlation threshold**        | `r R_MIN`
