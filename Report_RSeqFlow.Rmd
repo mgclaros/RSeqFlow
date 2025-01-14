@@ -2,19 +2,25 @@
 title: "`r PROJECT_NAME`"
 subtitle: "Using the `r paste(SOFT_NAME, VERSION_CODE)` pipeline"
 author: "M. Gonzalo Claros[^![](https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png)^](https://orcid.org/0000-0002-0112-3550) & Amanda Bullones"
-date: "`r format(Sys.time(), '%A %d, %B %Y. %H.%M.%S')` | RMD version: 250113"
+date: "`r format(Sys.time(), '%A %d, %B %Y. %H.%M.%S')` | RMD version: 250114"
 abstract: |
-  `r paste(SOFT_NAME, VERSION_CODE)` [@Bullones2023aa] is a comprehensive R pipeline for processing RNA-Seq datasets from count files or tables in non-model organisms that perform the most recommended statistical analyses for differential expression and clustering. It carries out the following steps:
+  **Data Science** is an interdisciplinary field that encompases statistics, computer science, and domain-specific knowledge to extract knowledge and insights from structured and unstructured data. **Bioinformatics** is a data sciencie applied to biology and related sciences. Hence, **`r paste(SOFT_NAME, VERSION_CODE)`** [@Bullones2023aa] is a bioinformatics R pipeline for processing RNA-Seq datasets from non-model organisms that performs the most recommended statistical analyses. It carries out the following processes:
 
-   1. Read/construct a count table for RNA-seq mappings [@Wang2009].
-   2. Quality control and gene filtering.
-   3. Normalisation using `TMM` and `CTF` [@Zhao2021wp; @Johnson2022fn].
-   4. Differential expression using `limma/voom` and `treat()` to seek for biological relevance [@Oshlack2010; @Marioni2008; @Li2022cf].
-   5. Correlation analyses for clustering with 3 algorithms [@Usadel2009su; @Serin2016uw].
-   6. Gene networks, including hubs and subgraphs [@Parsana2019jm; @Sia2022].
-   7. Profiling outstanding genes.
+   1. **Data collection**: reading gene counts [@Wang2009]
+      - from a single expression table, ot
+      - from a set of counting files (one per sequencing library).
+   2. **Data cleaning**: removing inconsistencies/errors to ensure data quality based on 
+      - ***filtering by expression***, and 
+      - ***normalisation*** using `TMM` and `CTF` [@Zhao2021wp; @Johnson2022fn].
+   3. **Data analysis**: to identify patterns and trends of biological relevance, the following statistical methods are used:
+      - ***differential expression*** using `limma/voom` and `treat()` [@Oshlack2010; @Marioni2008; @Li2022cf];
+      - gene and sample ***correlation*** analyses;
+      - ***clustering*** with 3 algorithms [@Usadel2009su; @Serin2016uw];
+      - ***gene networking***, including hubs and subgraphs, as a surrogate of co-expression [@Parsana2019jm; @Sia2022].
+   4. **Data Visualization**: an exhaustive presentation of graphs or tables in all steps; it includes a final
+      - ***Profiling*** of outstanding genes.
 
-   It can be cloned/dowloaded from its [GitHub repository](https://github.com/mgclaros/RSeqFlow). **You can USE AS IS without any warrants**.
+   Last version of `r SOFT_NAME` can be cloned/dowloaded from its [GitHub repository](https://github.com/mgclaros/RSeqFlow). **You can USE AS IS without any warrants**.
 
 bibliography: Refs_RSeqFlow.bib
 biblio-style: default
@@ -360,12 +366,18 @@ To see the behaviour of clusters with respect to samples using the `aggregate()`
 `r OK_bx`
 <br> Computer details: 
 
-`r paste0("OS: **", .Platform$OS.type, "**\n\n",
-          "GUI: **", .Platform$GUI, "**\n\n",
-          names(Sys.info()[4]), ": **", Sys.info()[4], "**\n\n", 
-          names(Sys.info()[1]), ": **", Sys.info()[1], "**\n\n",
-          names(Sys.info()[5]), ": **", Sys.info()[5], "**\n\n",
-          names(Sys.info()[7]), ": **", Sys.info()[7], "**") `.
+`r paste0(
+    " | | | ", "\n",
+    "---: | :--- | ---: | :---", "\n",
+    "OS  | **", .Platform$OS.type, "** | ",
+    "GUI | **", .Platform$GUI,     "**\n",
+    names(Sys.info()[1]), "| **", Sys.info()[1], "** | ", 
+    names(Sys.info()[4]), "| **", Sys.info()[4], "**\n",
+    names(Sys.info()[5]), "| **", Sys.info()[5], "** | ",
+    names(Sys.info()[7]), "| **", Sys.info()[7], "**\n",
+    "OS version             | **", osVersion,    "** | ",
+    "                       |  "
+) `.
 </div>
 
 ```{r tiempo_total, results='hold', echo=FALSE}
