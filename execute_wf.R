@@ -2,23 +2,24 @@
 #
 # execute_wf -> RSeqFlow
 # Gonzalo Claros
-# 2025-01-13
+# 2025-02-21
 #
 # Main file, invoked after source(configure_wf.R)
 # Alternative usage from terminal: Rscript execute_wf.R aConfigFile.R 
 
 T00 <- proc.time() # Initial time for elaspsed time
 
-# %%%%%%%%%%%%%%%%%%%%%%%%%
-# RETRIEVE ARGS if ANY ####
-# %%%%%%%%%%%%%%%%%%%%%%%%%
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# RETRIEVE ARGUMENTS if ANY ####
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-errMsg <- "ERROR:\nThe pipeline must be launched as 'Rscript execute_wf.R aConfigFile.R'\n       or as 'source(configure_wf.R)'\n"
+## Error message for wrong launching ####
+errMsg <- "ERROR:\nThe pipeline must be launched as 'Rscript execute_wf.R aConfigFile.R'\n       or as 'source(aConfigFile.R)'\n"
 
-## by default, okMsg refers to sourcing the configuration file ####
-okMsg <- "The pipeline was sourced as interactive from 'configure_wf.R'"
+# By default, okMsg refers to sourcing the configuration file
+okMsg <- "The pipeline was sourced as interactive from 'configure_RSeqFlow.R'"
 
-## retrieve inputs to the script when given ####
+## Retrieve inputs to the script when given ####
 ARGS <- commandArgs(trailingOnly = TRUE) # Test if there is one input argument
 if (length(ARGS) >= 1) { 
   # non interactive session with one argument that should be a config file
@@ -43,9 +44,9 @@ if (interactive()) {
 }
 
 
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# SOME PARAMETER VERIFICATION ####
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# %%%%%%%%%%%%%%%%%%%%%%%%%%
+# ARGUMENT VERIFICATION ####
+# %%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ## Exception errors ####
 if (!file.exists(DATA_DIR)) {
@@ -55,12 +56,14 @@ if (!file.exists(DATA_DIR)) {
   stop(errMsg, call. = FALSE)
 }
 
-if (!(exists("COUNTS_COLUMN") | exists("LAST_COLUMN"))) stop("ERROR:\nThe configuration file is old and does not contain COUNTS_COLUMN o LAST_COLUMN variables", call. = FALSE)
+if (!(exists("COUNTS_COLUMN") | exists("LAST_COLUMN"))) stop("ERROR:\nThe configuration file is old and does not contain COUNTS_COLUMN or LAST_COLUMN or DoCLUSTER_NETWORK variables", call. = FALSE)
+
+if (!exists("DoCLUSTER_NETWORK")) stop("ERROR:\nThe configuration file is old and does not contain DoCLUSTER_NETWORK variable", call. = FALSE)
 
 if (!exists("NODE_MAX")) stop("ERROR:\nThe configuration file is old and does not contain NODE_MAX variable", call. = FALSE)
 if (NODE_MAX > 700) stop("ERROR:\nNODE_MAX value (", NODE_MAX, ") is too high and execution time will take hours unnecessarily", call. = FALSE)
 
-## checking other configuration values ####
+## Checking other configuration values ####
 theVar <- vector()
 if (MIN_CPM < 0) theVar <- c(theVar, "MIN_CPM")
 if (CV_MIN < 0) theVar <- c(theVar, "CV_MIN")
@@ -71,70 +74,63 @@ if (MIN_GENES_PER_CLUSTER < 0) theVar <- c(theVar, "MIN_GENES_PER_CLUSTER")
 
 if (length(theVar) > 0) stop("ERROR:\n   In 'configure' file: \n", toString(theVar), " must be >0 ", call. = FALSE)
 
-
-# remove needless variable
-rm(theVar, errMsg)
+rm(theVar, errMsg)   # remove needless variable
 
 
 
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# LOAD LIBRARIES/PACKAGES ####
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# %%%%%%%%%%%%%%%%%%%
+# LOAD R MODULES ####
+# %%%%%%%%%%%%%%%%%%%
 
+## Load libraries ####
 fileToSource <- paste0(SOURCE_DIR, "libraries_wf.R")
 source(fileToSource)
 
-
-# %%%%%%%%%%%%%%%%%%%
-# LOAD FUNCTIONS ####
-# %%%%%%%%%%%%%%%%%%%
-
+## Load functions ####
 fileToSource <- paste0(SOURCE_DIR, "functions_wf.R")
 source(fileToSource)
 
-# remove needless variables
-rm(fileToSource)
+rm(fileToSource)   # remove useless variable
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # DECLARE USER-INDEPENDENT VARIABLES AND CONSTANTS ####
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## this should be changed every time you produce a main change ####
+## Pipeline name and version ####
+# this should be changed every time you produce a main change
 SOFT_NAME <- "RSeqFlow"
-VERSION_CODE <- 1.04
+VERSION_CODE <- 1.1
 
-## get computer type ####
+## Computer type ####
 COMPUTER <- GetComputer()
 
-## variable to customise each working directory created ####
+## Datetime to customise working directory ####
+# this avoids overwriting previous results
 HOY <- format(Sys.time(), "%F_%H.%M.%S")
 
-## create working directory to save results ####
+## Create working directory ####
+# this is the folder where the results will be saved, next to the data files
 cat("\n*** Creating directory for results *** \n")
 WD <- CreateDir(DATA_DIR, SOFT_NAME, VERSION_CODE)
 
-## construct the list with columns to read the input file ####
+## Construct the list with columns to read the input file ####
 # It will depend on the DATA_FILES definition
 if (length(DATA_FILES) == 1) {
 	COLUMNS_TO_READ <- FIRST_COLUMN:LAST_COLUMN # the range of columns
-	rm(FIRST_COLUMN, LAST_COLUMN)
+	rm(FIRST_COLUMN, LAST_COLUMN)               # remove needless variables
 } else {
-	COLUMNS_TO_READ <- c(1, COUNTS_COLUMN) # individual files with counts
-	rm(COUNTS_COLUMN)
+	COLUMNS_TO_READ <- c(1, COUNTS_COLUMN)      # individual files with counts
+	rm(COUNTS_COLUMN)                           # remove needless variable
 }
 
-## set number of decimals for rounding ####
-ROUND_dig <- 3 
+## Set number of decimals for rounding ####
+options(digits = 3)      # set the number of digits to display
+ROUND_dig <- 3           # set the number of digits to round
 
-## convert experimental conditions into factors ####
+## Convert experimental conditions into factors ####
 EXP_FACTORS <-  factor(EXP_CONDITIONS)
-
-## frequency of every condition ####
-COND_FREQ <- table(EXP_CONDITIONS)
-
-# remove needless variables
-rm(EXP_CONDITIONS)
+rm(EXP_CONDITIONS)      # remove needless variable
 
 ## convert CONTRASTS list into the required vector of contrasts ####
 i <- 1
@@ -150,27 +146,34 @@ for (i in 1:length(CONTRASTS)) {
 ## Set the log2 of fold-change ####
 logFC <- log2(FC)
 
-## set correlation parameters ####
-# Set correlation method pearson or spearman
+## Set correlation parameters ####
+# Spearman method is more appropriate for biological data
 CORR_METHOD = "spearman"
 # Set correlation threshold considering that r^2 = (0,75)^2 = 0,5625
 R_MIN <- 0.75
 
-## Set code-folding for Rmd
-# my_codefolding <- ifelse(VERBOSE_MODE, "show", "hide")
+## Colouring palettes ####
+# for heatmaps
+HEATMAP_COLORS <- hcl.colors(99, "RdBu", rev = TRUE)
+HEATMAP_COLORS2 <- colorRampPalette(rev(brewer.pal(n = 11, name ="RdBu")), interpolate = "spline")(99)
+HEATMAP_COLORS_BWR <- colorRampPalette(c("blue", "white", "red"))(256)
+
+# for Venn diagrams
+VENN_COLORS <- c("steelblue", "#EFC000FF", "#CD534CFF", "plum", "#868686FF")
+
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # MAIN EXECUTION USING MARKDOWN ####
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## set workind directory ####
-setwd(WD)
+setwd(WD)       # set the working directory
 
-## launch rmarkdown report ####
 cat("\n*** Creating markdown report ***\n")
 
-# the Rmd file must be located with code
-loadRmd <- paste0(SOURCE_DIR, "Report_", SOFT_NAME, ".Rmd")
+loadRmd <- paste0(SOURCE_DIR,    # the Rmd file must be located with code
+                  "Report_", 
+                  SOFT_NAME, 
+                  ".Rmd")
 
 # the resulting HTML should be be saved with the results, not with code
 render(input = loadRmd, 
@@ -178,7 +181,7 @@ render(input = loadRmd,
        output_file = " Report.html",
        output_format = html_document(theme = "cerulean",
                                      number_sections = FALSE,
-                                     # code_folding = my_codefolding,
+                                     code_folding = ifelse(VERBOSE_MODE, "show", "hide"), # "none"
                                      toc = TRUE,
                                      toc_depth = 4,
                                      toc_float = TRUE),
@@ -189,6 +192,7 @@ render(input = loadRmd,
 # %%%%%%%%%%%%%%%%%%
 
 message(paste0("\n", SOFT_NAME, " v", VERSION_CODE, " report successfully completed."))
+
 cat("\n", "*** Report and results saved in the following folder: ***", "\n")
 message(WD)
 

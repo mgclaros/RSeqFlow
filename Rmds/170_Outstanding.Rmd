@@ -1,13 +1,48 @@
-Profiles of genes that have been selected by at least one of this criteria:
+Here you can find interactive plots to inspect
 
-1. Automatically selected:
-    * Being a DEG in all contrasts (ubiquitous)
-    * Being a significant hub (`kleinberg score >` `r MIN_KLEINBERG` and `deg > MIN_GENES_PER_CLUSTER`)
-3. Defined by the user: in `MY_IDs` at `configure_wf.R` file
+- The **user-defined genes**, if any, in the `MY_IDs` parameter of the configuration file.
+- Automatically selected [DEG]s in the `OUTSTANDING_GENE_LIST` variable, which merit a particular analysis by themselves.
 
-Those genes merit a particular analysis by themselves.
 
-## Automatically selected
+## Selected by the user
+
+```{r noOUTwarning1}
+# Verify if there is any IDs defined in the configure_wf.R file
+doID_PROFILES <- exists("MY_IDs")
+if (doID_PROFILES) {
+  OUTS_WARNING_MSG <- paste0("There are **", length(MY_IDs), " user IDs** to plot their profiles")
+} else {
+  OUTS_WARNING_MSG <- paste0(WARN_bx, " No user IDs were found in the configuration file; hence, nothing will be shown", "</div>")
+}
+```
+
+`r OUTS_WARNING_MSG`.
+
+```{r myIDs, fig.width=7, fig.height=5, out.width='90%', eval=doID_PROFILES, include=exists("MY_IDs")}
+# using the filtered matrix in CTF
+myIDs_2Plot <- t(x.filt.ctf[rownames(x.filt.ctf) %in% MY_IDs, ])
+num_ID <- ncol(myIDs_2Plot)
+theTitle <- paste0("Profiles for ", num_ID, " user-selected genes in the initially filtered matrix")
+SelectedGeneProfilePlots(myIDs_2Plot,
+                         aTitle = theTitle,
+                         y_label = "CTF counts")
+
+# using the scaled, filtered data
+myIDs_2Plot <- t(m.ctf.std[rownames(m.ctf.std) %in% MY_IDs, ])
+num_ID <- ncol(myIDs_2Plot)                     # number of myIDs found
+theTitle <- paste0("Profiles for ", num_ID, " user-selected genes within clusterisable genes")
+SelectedGeneProfilePlots(myIDs_2Plot,
+                         aTitle = theTitle)
+```
+
+
+
+## Automatically selected {.tabset .tabset-fade .tabset-pill}
+
+This set of genes are gathered in the `OUTSTANDING_GENE_LIST` variable constructed after clustering and networking [DEG]s. This list includes:
+
+- Genes that are [DEG] in all contrasts (ubiquitous), including the `eBayes()` adjustment.
+- Genes that are a significant hub (`kleinberg score >` `r MIN_KLEINBERG` and `deg > MIN_GENES_PER_CLUSTER`)
 
 ```{r summary}
 selected_summary <- c(length(OUTSTANDING_GENE_LIST),
@@ -23,11 +58,11 @@ max_outs <- names(outstand_sorted[outstand_sorted == outst_max])
 
 # select the most outstanding genes (above the median frequency of selection)
 outst_median <- median(outstand_sorted)
-most_outs <- names(outstand_sorted[outstand_sorted > outst_median])
+most_outs <- names(outstand_sorted[outstand_sorted >= outst_median])
 is_OUTS_EMPTY <- length(most_outs) < 1
 if (is_OUTS_EMPTY) {
   most_outs <- max_outs
-  OUTS_WARNING_MSG <- paste0(NOTE_bx, " **No outstanding** transcript detected. Be careful!!!", " </div>")
+  OUTS_WARNING_MSG <- paste0(WARN_bx, " **No outstanding** transcript detected.", " </div>")
 } else {
   OUTS_WARNING_MSG <- ""
 }
@@ -40,14 +75,17 @@ Summary:
 Feature | Amount
 :---    | :---
 Conditions with significant hubs      | `r selected_summary[1]`
-Total ID selected                     | `r selected_summary[2]`
-Unique ID from the total              | `r selected_summary[3]`
+Total IDs in the list                 | `r selected_summary[2]`
+Unique ID in th list                  | `r selected_summary[3]`
 The most frequent outstanding IDs     | `r length(most_outs)`
 Outstanding IDs in nearly all samples | `r length(max_outs)`
 
-Preparing data for representations:
 
-```{r prepSelectedGenes, fig.width=9, fig.height=5, fig.align='center', out.width='85%'}
+### Reliability
+
+The most reliable outstating genes must be selected in several analyses. Let's see if this is the case.
+
+```{r prepSelectedGenes, fig.width=9, fig.height=5, fig.align='center', out.width='85%', results='hold', fig.show='hold'}
 if (is_OUTS_EMPTY) {
   OUTS_WARNING_MSG <- paste0(WARN_bx, " There is **not any outstanding** transcript to plot", "</div>")
 } else {
@@ -58,77 +96,93 @@ if (is_OUTS_EMPTY) {
 
 `r OUTS_WARNING_MSG`.
 
-When outstandng transcripts were obtained, their profiles in all conditions and the profile of the most frequent outstanding IDs are represented below. 
+### Profiles using the filtered dataset
 
+Profiles of outstanding genes based on the expression in the filtered dataset `x.filt.ctf`, **if any**.
 
-```{r selgeneprof, fig.width=7, fig.height=5, out.width='90%', eval=!is_OUTS_EMPTY, include=!is_OUTS_EMPTY}
-# Profiles of the outstanding genes in all conditions
-myIDs_2Plot <- t(m.ctf.std[rownames(m.ctf.std) %in% max_outs, ])
-theTitle <- paste0(length(max_outs), " outstanding genes in all conditions")
-SelectedGeneProfilePlots(myIDs_2Plot,
-                         aTitle = theTitle)
-
-# Profiles the most frequent IDs, using the median as boundary
-myIDs_2Plot <- t(m.ctf.std[rownames(m.ctf.std) %in% most_outs, ])
-theTitle <- paste0(length(most_outs), " gene profiles of most outstanding genes")
-SelectedGeneProfilePlots(myIDs_2Plot,
-                         aTitle = theTitle)
-```
-
-## Selected by the user
-
-```{r}
-# Verify if there is any IDs defined in the configure_wf.R file
-doID_PROFILES <- exists("MY_IDs")
-if (doID_PROFILES) {
-  OUTS_WARNING_MSG <- "There are user IDs to plot their profiles, as follows.**"
+```{r max-outs-in-filtered, fig.width=7, fig.height=5, out.width='90%', eval=!(is_OUTS_EMPTY), include=!(is_OUTS_EMPTY)}
+# Profiles of all outstanding genes, in `max_outs`
+myIDs_2Plot <- t(x.filt.ctf[rownames(x.filt.ctf) %in% max_outs, ])
+if (ncol(myIDs_2Plot) > 0) {
+  theTitle <- paste0(length(max_outs), " gene profiles of the MOST outstanding genes")
+  SelectedGeneProfilePlots(myIDs_2Plot,
+                           aTitle = theTitle,
+                         y_label = "CTF counts")
 } else {
-  OUTS_WARNING_MSG <- paste0(WARN_bx, " No user IDs were found in the configuration file; hence, nothing will be shown", "</div>")
+  warning("The MOST outstanding genes ", toString(max_outs), " are not among the filtered dataset of CTFs.")
 }
 ```
 
-`r OUTS_WARNING_MSG`.
+Profiles of the most reliable outstanding genes in the filtered dataset, **if any**.
 
-```{r myIDs, fig.width=7, fig.height=5, out.width='90%', eval=doID_PROFILES, include=exists("MY_IDs")}
-# Add user selected genes to the OUTSTANDING variable for further saving
-OUTSTANDING_GENE_LIST[["User_defined"]] <- MY_IDs
-
-# using the scaled, filtered data
-myIDs_2Plot <- t(m.ctf.std[rownames(m.ctf.std) %in% MY_IDs, ])
-theTitle <- "Profiles for user-selected genes in scaled"
-SelectedGeneProfilePlots(myIDs_2Plot,
-                         aTitle = theTitle)
-
-# scaling the CTF-normalised counts to include previously filtered-out genes
-m.filt.ctf_std <- scale(x.filt.ctf)
-myIDs_2Plot <- t(m.filt.ctf_std[rownames(m.filt.ctf_std) %in% MY_IDs, ])
-theTitle <- "Profiles for user-selected genes as CTF-scale counts"
-SelectedGeneProfilePlots(myIDs_2Plot,
-                         aTitle = theTitle,
-                         y_label = "CTF-scaled counts")
+```{r most-outs-in-filtered, fig.width=7, fig.height=5, out.width='90%', eval=!(is_OUTS_EMPTY), include=!(is_OUTS_EMPTY)}
+# Profiles the most frequent IDs, in 'most_outs', using the median as boundary
+myIDs_2Plot <- t(x.filt.ctf[rownames(x.filt.ctf) %in% most_outs, ])
+if (ncol(myIDs_2Plot) > 0) {
+  theTitle <- paste0(length(most_outs), " (all) outstanding genes profiles")
+  SelectedGeneProfilePlots(myIDs_2Plot,
+                           aTitle = theTitle,
+                         y_label = "CTF counts")
+} else {
+  warning("All the outstanding genes are not among the filtered dataset of CTFs.")
+}
 ```
+
+
+### Profiles using the clusterisable dataset
+
+Here you can see the profiles of the most reliable outstanding genes, **if any**, using the expression data `m.ctf.std` for the clusterisable [DEG]s.
+
+```{r max-outs-in-clust, fig.width=7, fig.height=5, out.width='90%', eval=!(is_OUTS_EMPTY), include=!(is_OUTS_EMPTY)}
+# Profiles of all outstanding genes, in `max_outs`
+myIDs_2Plot <- t(m.ctf.std[rownames(m.ctf.std) %in% max_outs, ])
+if (ncol(myIDs_2Plot) > 0) {
+  theTitle <- paste0(length(max_outs), " gene profiles of the MOST outstanding genes")
+  SelectedGeneProfilePlots(myIDs_2Plot,
+                         aTitle = theTitle)
+} else {
+  warning("The MOST outstanding genes ", toString(max_outs), " are not among clusterisable DEGs.")
+}
+```
+
+Profiles of the most reliable outstanding genes in the cluterisable dataset, **if any**.
+
+```{r most-outs-in-clust, fig.width=7, fig.height=5, out.width='90%', eval=!(is_OUTS_EMPTY), include=!(is_OUTS_EMPTY)}
+# Profiles the most frequent IDs, in 'most_outs', using the median as boundary
+myIDs_2Plot <- t(m.ctf.std[rownames(m.ctf.std) %in% most_outs, ])
+if (ncol(myIDs_2Plot) > 0) {
+  theTitle <- paste0(length(most_outs), " (all) outstanding genes profiles")
+  SelectedGeneProfilePlots(myIDs_2Plot,
+                           aTitle = theTitle)
+} else {
+  warning("All the outstanding genes are not among clusterisable DEGs.")
+}
+```
+
 
 
 
 ## Save outstanding genes
 
-```{r}
+```{r noOUTwarning2}
 # Verify if there are outstanding genes in the analysis
 if (is_OUTS_EMPTY) {
-  OUTS_WARNING_MSG <- paste0(WARN_bx, " **No OutstandingGenes-... file will be saved: there is no ID to save**", "</div>")
+  OUTS_WARNING_MSG <- paste0(WARN_bx, " **No OutstandingGenes-... file will be saved:** there is no ID to save", "</div>")
 } else {
   OUTS_WARNING_MSG <- ""
 }
 ```
 
-Saving the analysis that produced outstanding genes as well as the list of gene IDs for each condition, provided that you have any outstanding transcript to save. `r OUTS_WARNING_MSG`.
+Saving the analysis that produced outstanding genes as well as the list of gene IDs for each condition (as well as the user defined IDs, if any), provided that you have any outstanding transcript to save. `r OUTS_WARNING_MSG`.
 
 ```{r saveOutstanding, eval=!is_OUTS_EMPTY, include=!is_OUTS_EMPTY}
-# convert the list into a long matrix
-m <- as.matrix(unlist2(OUTSTANDING_GENE_LIST))
-# put a meaningful name to the gene column
-colnames(m) <- "GeneID"
-fileName <- SaveTSV(m, "OutstandingGenes-")
+# Add the user defined IDs, if any
+if (doID_PROFILES) OUTSTANDING_GENE_LIST[["User_defined"]] <- MY_IDs
+
+m <- as.matrix(unlist2(OUTSTANDING_GENE_LIST))   # convert the list into a long matrix
+colnames(m) <- "GeneID"                          # put a meaningful name to the gene column
+fileName <- SaveTSV(m, "OutstandingGenes-")      # save outstanding genes
+
 message("Outstanding genes were saved in file", "\n", fileName)
 ```
 

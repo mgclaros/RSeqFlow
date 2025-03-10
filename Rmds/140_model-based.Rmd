@@ -4,6 +4,17 @@ The `Mclust()` function in [the `mclust` package](https://mclust-org.github.io/m
 ```{r MClustResults, results='hide'}
 # See also PAGE 173
 fit <- Mclust(m.ctf.std)
+
+groups_mclust <- fit$classification
+
+if (fit$G == 1) {
+  message("The **Mclust** algorithm found only one cluster. Then k-means clusters will be assigned")
+  groups_mclust <- groups_kmeans
+  mclust_k <- as.integer(max(names(table(groups_mclust))))
+} else {
+  message("The **Mclust** algorithm found **", fit$G, "** clusters")
+  mclust_k <- fit$G
+}
 ```
 
 Let's see the results of the [MBC] based on [BIC], as explained [above](#clustbkg).
@@ -11,10 +22,6 @@ Let's see the results of the [MBC] based on [BIC], as explained [above](#clustbk
 ```{r show-Mclust-results}
 plot(fit, what = "BIC")
 summary(fit) # display the best model
-
-groups_mclust <- fit$classification
-mclust_k <- fit$G
-message("The number of **Mclust** clusters is: **", mclust_k, "**")
 ```
 
 

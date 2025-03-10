@@ -1,4 +1,4 @@
-### Background
+### K-means background
 
 [START EXPANDIBLE]: #
 `r EXPAND_bx` Expand to read about <b><i>k</i>-means</b></summary>
@@ -19,7 +19,7 @@ As in HCA, the initial _k_ can be an arbitrary number or we can use objective me
 [END EXPANDIBLE]: #
 
 
-### Optimal clusters
+### Orientative number
 
 Using the `m.ctf.std` matrix, the scree plot provided above the `orientative_k` for `kmeans()`. Let's now calculate another _k_s from **gap statistics**:
 
@@ -37,9 +37,11 @@ message("Number of **k-means** clusters from **GAP statistics: ", gap_k, "**")
 fviz_gap_stat(gap_stat) + labs(subtitle = "Gap statistic for k-means")
 ```
 
+### Best-of-30
+
 Let's now calculate the _k_ from the **best-of-30** methods:
 
-```{r kmeans-of-30, warning=VERBOSE_MODE}
+```{r kmeans-of-30, warning=VERBOSE_MODE, results='hide'}
 # bext-of-30 for kmeans
 nb <- NbClust(m.ctf.std, 
               distance = "euclidean", 
@@ -60,6 +62,8 @@ message("**Optimal** number of **k-means** clusters for genes analysing **30 met
 kable(t(as.data.frame(table(kmeans_groups_30))), caption = "K-means groups using the best-of-30 k")
 ```
 
+### Final number of k-means clusters
+
 The most objective value for _k_ is the one obtained by the best-of-30, and it will be retained.
 
 ```{r optKmeansk}
@@ -68,40 +72,27 @@ kmeans_k <- kmeans_k30
 message("The **final** number of **k-means** clusters is: **", kmeans_k, "**")
 ```
 
+Let's exploit the `kmeans()` function to assign genes to clusters.
 
-
-### Forming k groups
-
-Let's exploit the `kmeans()` function to produce the clusters.
-
-```{r kmeansCalc, fig.width=6, fig.height=6, out.width='50%', fig.show='hold', fig.align='center'}
+```{r kmeansGroups}
 # For CTF data
 kmeans_ctf <- kmeans(m.ctf.std, 
                      centers = kmeans_k, 
                      nstart = 25)
 
 groups_kmeans <- kmeans_ctf$cluster
-
-# colours for groups
-niceCols <- brewer.pal(kmeans_k, "Paired")
-
-# pie chart of clusters
-pie(table(groups_kmeans), 
-    col = niceCols,
-    labels = paste("Cluster", names(table(groups_kmeans))), 
-    main = "k-means groups for CTF")
 ```
 
-
-### Group details
-
-In first instance, let's see the detailed number of genes per cluster and then how are they distributed in the two main dimensions.
+Let's see the detailed number of genes per cluster .
 
 ```{r kmeansgenesingroups}
 # see the number of genes per cluster
 n_genes_group_kmeans <- table(groups_kmeans)
 kable(t(as.data.frame(n_genes_group_kmeans)), caption = "Final K-means groups")
 ```
+
+
+### Group details
 
 Since the distribution of genes depends on more than two dimensions (variables), the plot calculated with `fviz_cluster()` will perform principal component analysis (PCA) and plot the data points according to the first two principal components that explain the majority of the variance.
 
@@ -131,10 +122,12 @@ fviz_cluster(kmeans_ctf,
 )
 ```
 
-Since we know that the genes sould be distributed by the experimental factors, does the _k_-means clustering matches with the true structure of the data? 
 
 
 ```{r TODO, echo=FALSE}
+# Since we know that the genes should be distributed by the experimental factors, does the _k_-means clustering matches with the true structure of the data? 
+
+
 # We should compute a cross-tabulation between _k_-means clusters and the experimental factors
 
 # table(iris$Species, km.res$cluster) PAGE 149

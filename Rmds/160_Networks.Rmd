@@ -342,7 +342,7 @@ for (i in 1:list_length) {
 
 For each network, we wil determine the communities that may form the network. Genes belonging to the same community are more likely co-expressed.
 
-```{r Allcommunities, results='asis'}
+```{r Allcommunities, results='asis', out.width='50%'}
 i <- 1
 for (i in 1:list_length) {
   if (ncol(CLUSTER_LIST[[i]]$expr_matrix) < 2) next # avoid representation of one-membered clusters
@@ -368,24 +368,28 @@ for (i in 1:list_length) {
   CLUSTER_LIST[[i]][["Genes_by_subgraph"]] <- gene_per_subgraph
   
   plot(ceb, 
-     aNet, 
-     vertex.label = NA,
-     main = paste0("Sub-graphs in ", cluster_name))
+       aNet, 
+       vertex.label = NA,
+       main = paste0("Sub-graphs in ", cluster_name))
   
   plot(aNet,
-     main = paste0("Labelled communities in ", cluster_name),
-     vertex.size = 5,   # tamaño del nodo
-     vertex.label.cex = 0.5,  # tamaño de la etiqueta
-     vertex.label.color = "darkblue",
-     edge.arrow.size = 0.3,   # intenta cambiar el tamaño del conector
-     mark.groups = ceb, # colorea las comunidades
-     margin = -0.1,  # aumenta el área de impresión
-     asp = 0)  # no reescala la imagen
-
+       main = paste0("Labelled communities in ", cluster_name),
+       vertex.label.font = 2,             # 1 plain, 2 bold, 3 italic, 4 bold italic, 5 symbol
+       vertex.label.family = "sans",      # font family: serif, sans, mono
+       vertex.size = 3,                   # tamaño del nodo
+       vertex.color="tomato",             # color del nodo
+       vertex.label.cex = 0.9,            # tamaño de la etiqueta
+       vertex.label.color = "darkviolet", # color de la etiqueta
+       vertex.label.dist = 1.5,           # distancia de la etiqueta al nodo
+       edge.arrow.size = 0.3,             # intenta cambiar el tamaño del conector
+       mark.groups = ceb,                 # colorea las comunidades
+       margin = -0.01,                    # aumenta el área de impresión; 0.05 ya deja cosas fuera
+       asp = 0)                           # no reescala la imagen
+  
   cat("   \n")  # required to combine markdown with plots
-
+  
   # red interactiva con etiquetas
-  visIgraph(aNet) 
+  # visIgraph(aNet) 
   # %>% visNodes(size = 10)
   # print(ggp_tmp)
   
@@ -422,7 +426,7 @@ For example, gene IDs for subgraph 2 for cluster `VariantDEGs` can be obtained a
 
 
 
-## Save network data
+## Save network to Cytoscape
 
 ```{r}
 fileName <- paste0(WD, "List_of_clusters-", HOY, ".Rds" )
@@ -435,19 +439,22 @@ summary(newList)
 rm(newList)
 ```
 
-## Use Cytoscape
+`r NOTE_bx`
+The list of edges and their parameters contained in the `corr_df` matrix for each cluster and saved in the `List_of_clusters-{...}.Rds` can be read in R using `r newList <- readRDS(file = fileName)`. 
+</div>
 
-The list of edges and their parameters are saved in the `corr_df` matrix for each cluster in the `List_of_clusters-` that can be read in R using `r newList <- readRDS(file = fileName)`. Otherwise, the corresponding `BestCorrelations_` file are lists of edges for every cluster. The can be loaded into [**Cytoscape**](http://www.cytoscape.org/) to more analysed as described in [@RodriGutierrez2018]:
+The `BestCorrelations_{...}.tsv` files are lists of edges for every cluster. **They can be loaded into [Cytoscape](http://www.cytoscape.org/) for further analysis** as described in [@RodriGutierrez2018]:
 
 1. Launch Cytoscape
-2. Import the network table `BestCorrelations.tsv`: File > Import > Network > File
+2. Import the network table `BestCorrelations_{...}.tsv`: ***File > Import > Network > File***
 3. Indicate where relevant information is stored in the file: 
-* Source interaction is Item1
-* Target interaction is Item2
-4. After the network has been displayed, use `organic layout` which can be found under the Layout > yFiles Layout > Organic menu to facilitate identification of highly connected nodes
-5. Load the network ranks  the node information calculated before, the user should go through File > Import > Table > File and select `Network_statistics.tsv`
-6. In the pop-up window, the drop-down list `Network Collection` select the imported network `BestCorrelations.tsv`
-7. Import the table as `Node table columns` in the `Import Data as:` drop-down list. Be sure to check all columns
-8. Node size can be set accordingly by selecting the `Style` tab under the  `Control Panel` box. 
-9. Under the “Node” section in the “Style” tab of the “Control Panel” box, set the size of the node by checking “Lock node width and height,” and then select “Size.” 
-10. On the new menu displayed, click on “Column” to show a new menu in which select “Rank_- stat” as the attribute to determine the size. “Mapping type” should be in “Continuous Mapping” option to distribute the sizes contin- uously along the previously generated combined ranking for each node.
+  - Source interaction is ***Item1***
+  - Target interaction is ***Item2***
+4. After the network has been displayed, use `organic layout` which can be found under the ***Layout > Files Layout > Organic*** menu to facilitate identification of highly connected nodes
+5. Load the network ranks  the node information calculated before, the user should go through ***File > Import > Table > File*** and select `Network_statistics.tsv`
+6. In the pop-up window, the drop-down list `Network Collection` select the imported network `BestCorrelations_{...}.tsv`
+7. Import the table as ***Node table columns*** in the ***Import Data as:*** drop-down list. Be sure to check all columns
+8. Node size can be set accordingly by selecting the ***Style*** tab under the  ***Control Panel*** box. 
+9. Under the ***Node*** section in the ***Style*** tab of the ***Control Panel*** box, set the size of the node by checking ***Lock node width and height,*** and then select ***Size.*** 
+10. On the new menu displayed, click on ***Column*** to show a new menu in which select ***Rank_- stat*** as the attribute to determine the size. ***Mapping type*** should be in ***Continuous Mapping*** option to distribute the sizes continuously along the previously generated combined ranking for each node.
+

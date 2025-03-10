@@ -105,6 +105,8 @@ genes.cutoff <- log2(10/M + 2/L)
 rm(L, M, Y_REDUCTION)
 ```
 
+**Why using logCPM?** Because genes have very different variances, and the variance is monotonically growing with the mean, making genes with higher expression tending to have higher variance. Hence, it might be difficult to capture the expression variation due to the biological condition since it is _masked_ by this natural tendency. Transforming counts into logCPMs instead of [CPM]s make the genes easily comparable as they are brought onto a common scale with a Gaussian distribution. Note that log-transformed data yield explained variances roughly similar to the standardised data (when each variable is centered and scaled to have unit variance). However, for further differential expression, counts should not be log-transformed or normalised by TPM, as [described in detail by Lior Pachter in 2017](https://liorpachter.wordpress.com/2017/08/02/how-not-to-perform-a-differential-expression-analysis-or-science/).
+
 </details> 
 [END EXPANDIBLE]: #
 

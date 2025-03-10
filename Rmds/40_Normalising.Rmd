@@ -85,8 +85,7 @@ boxplot(x.filt.ctf.lcpm,
 The new [MDS] and [PCA] plots for normalised data must be compared to the [previous plot](#filterdSizeMDSPCA) to verify that samples group better now [@Jolliffe2016dp]. Both TMM and CTF normalised data are compared
 
 
-```{r MDStrasNorm, fig.width=8, fig.height=8}
-par(mfrow = c(2, 2))
+```{r MDStrasNorm, fig.width=8, fig.height=8, out.width=c('50%', '50%'), fig.show='hold'}
 plotMDS(x.filt.norm, 
         labels = colnames(x.filt.norm), 
         col = EXP_COLORS,
@@ -110,30 +109,7 @@ tmp <- PlotMyPCA(x.filt.ctf.lcpm, "CTF sample similarities by PCA")
 In case that samples are grouped worse than [before](#filterdSizeMDSPCA), data should be questioned, or the further analyses put in caution.
 </div>
 
-The number of pincipal components in [PCA] that merit consideration are those whose `eigenvalues > 1` (where an eigenvalue is the standard deviation of such component) since they are components actually explaining more than a single explanatory variable. This can be inspected in the following scree plot:
-
-
-```{r PCAcompoments, results='hold', fig.width=8, fig.height=6, eval=FALSE, echo=FALSE}
-numPCs <- 10  # number of PCs to be plotted
-# el tmp tiene que ser el presultado de prcomp() y no el summary
-screeplot(tmp, 
-          type = "l", 
-          npcs = 1:numPCs,  
-          main = paste0("Screeplot of the first ", numPCs, " PCs")
-)
-abline(h = 1, col = "red", lty = 5)
-legend("topright", 
-       legend = c("Eigenvalue = 1"),
-       col = c("red"), 
-       lty = 5, 
-       cex = 0.6
-)
-
-# remove needless variables
-rm(tmp)
-```
-
-
+The number of pincipal components in [PCA] that merit consideration are those whose `eigenvalues > 1` (where an eigenvalue is the standard deviation of such component) since they are components actually explaining more than a single explanatory variable. 
 
 
 ### Sample grouping {-}
@@ -185,8 +161,17 @@ In constrast to the clustering with raw data, different clustering methods will 
 4. Plotting dendrograms for samples
 
     ```{r dendroplots, fig.width=6, fig.height=6, out.width=c('50%', '50%'), fig.show='hold'}
-    plot(HC_tmm_samp, main = paste0("TMM.std - d:", CORR_METHOD, " — HC: ", best_meth_tmm))
-    plot(HC_ctf_samp, main = paste0("CTF.std - d:", CORR_METHOD, " — HC: ", best_meth_ctf))
+    plot(HC_tmm_samp, 
+         main = paste0("TMM.std - d:", CORR_METHOD, " — HC: ", best_meth_tmm))
+    rect.hclust(HC_tmm_samp,                  # draw rectancles around TMM clusters
+                k = length(UNIQ_FACTORS),     # number of clusters based on the experimental factors
+                border = unique(EXP_COLORS))  # colours for each cluster
+
+    plot(HC_ctf_samp, 
+         main = paste0("CTF.std - d:", CORR_METHOD, " — HC: ", best_meth_ctf))
+    rect.hclust(HC_ctf_samp,                  # draw rectancles around CTF clusters
+                k = length(UNIQ_FACTORS),     # number of clusters based on the experimental factors
+                border = unique(EXP_COLORS))  # colours for each cluster
     ```
 
 

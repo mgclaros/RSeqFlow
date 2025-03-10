@@ -1,12 +1,87 @@
 %% This BibTeX bibliography file was created using BibDesk.
 %% https://bibdesk.sourceforge.io/
 
-%% Created for M. Gonzalo Claros at 2024-04-09 09:46:42 +0200 
+%% Created for M. Gonzalo Claros at 2025-01-15 17:11:33 +0100 
 
 
 %% Saved with string encoding Unicode (UTF-8) 
 
 
+
+@article{McDermaid2019aa,
+	abstract = {Differential gene expression (DGE) analysis is one of the most common applications of RNA-sequencing (RNA-seq) data. This process allows for the elucidation of differentially expressed genes across two or more conditions and is widely used in many applications of RNA-seq data analysis. Interpretation of the DGE results can be nonintuitive and time consuming due to the variety of formats based on the tool of choice and the numerous pieces of information provided in these results files. Here we reviewed DGE results analysis from a functional point of view for various visualizations. We also provide an R/Bioconductor package, Visualization of Differential Gene Expression Results using R, which generates information-rich visualizations for the interpretation of DGE results from three widely used tools, Cuffdiff, DESeq2 and edgeR. The implemented functions are also tested on five real-world data sets, consisting of one human, one Malus domestica and three Vitis riparia data sets.},
+	author = {McDermaid, Adam and Monier, Brandon and Zhao, Jing and Liu, Bingqiang and Ma, Qin},
+	date-added = {2025-01-15 17:11:23 +0100},
+	date-modified = {2025-01-15 17:11:23 +0100},
+	doi = {10.1093/bib/bby067},
+	journal = {Brief Bioinform},
+	journal-full = {Briefings in bioinformatics},
+	keywords = {R/Bioconductor package; bioinformatics tools; differential gene expression analysis; differentially expressed genes; visualization and interpretation},
+	mesh = {Computational Biology; Gene Expression; High-Throughput Nucleotide Sequencing; Sequence Analysis, RNA},
+	month = {Nov},
+	number = {6},
+	pages = {2044-2054},
+	pmc = {PMC6954399},
+	pmid = {30099484},
+	pst = {ppublish},
+	title = {Interpretation of differential gene expression results of RNA-seq data: review and integration},
+	volume = {20},
+	year = {2019},
+	bdsk-url-1 = {https://doi.org/10.1093/bib/bby067}}
+
+@article{Rosati2024aa,
+	abstract = {In recent years, the role of bioinformatics and computational biology together with omics techniques and transcriptomics has gained tremendous importance in biomedicine and healthcare, particularly for the identification of biomarkers for precision medicine and drug discovery. Differential gene expression (DGE) analysis is one of the most used techniques for RNA-sequencing (RNA-seq) data analysis. This tool, which is typically used in various RNA-seq data processing applications, allows the identification of differentially expressed genes across two or more sample sets. Functional enrichment analyses can then be performed to annotate and contextualize the resulting gene lists. These studies provide valuable information about disease-causing biological processes and can help in identifying molecular targets for novel therapies. This review focuses on differential gene expression (DGE) analysis pipelines and bioinformatic techniques commonly used to identify specific biomarkers and discuss the advantages and disadvantages of these techniques.},
+	author = {Rosati, Diletta and Palmieri, Maria and Brunelli, Giulia and Morrione, Andrea and Iannelli, Francesco and Frullanti, Elisa and Giordano, Antonio},
+	date-added = {2025-01-15 17:10:26 +0100},
+	date-modified = {2025-01-15 17:10:26 +0100},
+	doi = {10.1016/j.csbj.2024.02.018},
+	journal = {Comput Struct Biotechnol J},
+	journal-full = {Computational and structural biotechnology journal},
+	keywords = {Bioinformatic analyses; Biomarkers; Biomarkers discovery; Differential gene expression analysis; Pathway enrichment},
+	month = {Dec},
+	pages = {1154-1168},
+	pmc = {PMC10951429},
+	pmid = {38510977},
+	pst = {epublish},
+	title = {Differential gene expression analysis pipelines and bioinformatic tools for the identification of specific biomarkers: A review},
+	volume = {23},
+	year = {2024},
+	bdsk-url-1 = {https://doi.org/10.1016/j.csbj.2024.02.018}}
+
+@article{Costa-Silva2017aa,
+	abstract = {The correct identification of differentially expressed genes (DEGs) between specific conditions is a key in the understanding phenotypic variation. High-throughput transcriptome sequencing (RNA-Seq) has become the main option for these studies. Thus, the number of methods and softwares for differential expression analysis from RNA-Seq data also increased rapidly. However, there is no consensus about the most appropriate pipeline or protocol for identifying differentially expressed genes from RNA-Seq data. This work presents an extended review on the topic that includes the evaluation of six methods of mapping reads, including pseudo-alignment and quasi-mapping and nine methods of differential expression analysis from RNA-Seq data. The adopted methods were evaluated based on real RNA-Seq data, using qRT-PCR data as reference (gold-standard). As part of the results, we developed a software that performs all the analysis presented in this work, which is freely available at https://github.com/costasilvati/consexpression. The results indicated that mapping methods have minimal impact on the final DEGs analysis, considering that adopted data have an annotated reference genome. Regarding the adopted experimental model, the DEGs identification methods that have more consistent results were the limma+voom, NOIseq and DESeq2. Additionally, the consensus among five DEGs identification methods guarantees a list of DEGs with great accuracy, indicating that the combination of different methods can produce more suitable results. The consensus option is also included for use in the available software.},
+	author = {Costa-Silva, Juliana and Domingues, Douglas and Lopes, Fabricio Martins},
+	date-added = {2025-01-15 17:09:28 +0100},
+	date-modified = {2025-01-15 17:09:28 +0100},
+	doi = {10.1371/journal.pone.0190152},
+	journal = {PLoS One},
+	journal-full = {PloS one},
+	mesh = {Gene Expression; Humans; Sequence Analysis, RNA; Software},
+	number = {12},
+	pages = {e0190152},
+	pmc = {PMC5739479},
+	pmid = {29267363},
+	pst = {epublish},
+	title = {RNA-Seq differential expression analysis: An extended review and a software tool},
+	volume = {12},
+	year = {2017},
+	bdsk-url-1 = {https://doi.org/10.1371/journal.pone.0190152}}
+
+@article{Chen2024-bioRxiv,
+	abstract = {edgeR is an R/Bioconductor software package for differential analyses of sequencing data in the form of read counts for genes or genomic features. Over the past 15 years, edgeR has been a popular choice for statistical analysis of data from sequencing technologies such as RNA-seq or ChIP-seq. edgeR pioneered the use of the negative binomial distribution to model read count data with replicates and the use of generalized linear models to analyse complex experimental designs. edgeR implements empirical Bayes moderation methods to allow reliable inference when the number of replicates is small. This article announces edgeR version 4, which includes new developments across a range of application areas. Infrastructure improvements include support for fractional counts, implementation of model fitting in C, and a new statistical treatment of the quasi-likelihood pipeline that improves accuracy for small counts. The revised package has new functionality for differential methylation analysis, differential transcript expression, differential transcript and exon usage, testing relative to a fold-change threshold and pathway analysis. This article reviews the statistical framework and computational implementation of edgeR, briefly summarizing all the existing features and functionalities but with special attention to new features and those that have not been described previously.Competing Interest StatementThe authors have declared no competing interest.},
+	author = {Chen, Yunshun and Chen, Lizhong and Lun, Aaron T. L. and Baldoni, Pedro L. and Smyth, Gordon K.},
+	date-added = {2025-01-15 16:35:14 +0100},
+	date-modified = {2025-01-15 16:35:30 +0100},
+	doi = {10.1101/2024.01.21.576131},
+	elocation-id = {2024.01.21.576131},
+	eprint = {https://www.biorxiv.org/content/early/2024/11/24/2024.01.21.576131.full.pdf},
+	journal = {bioRxiv},
+	publisher = {Cold Spring Harbor Laboratory},
+	title = {edgeR v4: powerful differential analysis of sequencing data with expanded functionality and improved support for small counts and larger datasets},
+	url = {https://www.biorxiv.org/content/early/2024/11/24/2024.01.21.576131},
+	year = {2024},
+	bdsk-url-1 = {https://www.biorxiv.org/content/early/2024/11/24/2024.01.21.576131},
+	bdsk-url-2 = {https://doi.org/10.1101/2024.01.21.576131}}
 
 @article{Thawng2023aa,
 	abstract = {BACKGROUND: We have been documenting the biological responses to low levels of radiation (natural background) and very low level radiation (below background), and thus these studies are testing mild external stimuli to which we would expect relatively mild biological responses. We recently published a transcriptome software comparison study based on RNA-Seqs from a below background radiation treatment of two model organisms, E. coli and C. elegans (Thawng and Smith, BMC Genomics 23:452, 2022). We reported DNAstar-D (Deseq2 in the DNAstar software pipeline) to be the more conservative, realistic tool for differential gene expression compared to other transcriptome software packages (CLC, Partek and DNAstar-E (using edgeR). Here we report two follow-up studies (one with a new model organism, Aedes aegypti and another software package (Azenta) on transcriptome responses from varying dose rates using three different sources of natural radiation.

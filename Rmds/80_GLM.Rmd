@@ -1,34 +1,45 @@
-### About GLM {#aboutGLMs}
+### About GLMs {#aboutGLMs}
+
+Here you can find why a generalised linear model ([GLM]) is the better approach to obtain differentially expressed genes ([DEG]s), and why the `limma-voom-treat` is the most appropriate approach.
 
 [START EXPANDIBLE]: #
-`r EXPAND_bx` Expand to read about <b>GLMs and RNA-seq</b></summary>
+`r EXPAND_bx` Expand to read about the <b>use of [GLM]s in RNA-seq</b></summary>
 
-[DE] parametric tests require methods based on [binomial negative][NB] generalized linear models that take advantage of the estimates of dispersion and logarithmic fold changes, their main issue being the false positive. This issue has been recently investigated [@Li2022cf] for the most popular methods based on parametric distributional assumptions [DESeq2] and [edgeR], as well as `[limma]-voom`, `NOISeq`, `dearseq` and Wilcoxon rank-sum test. The only method that maintains the [FDR] control is the Wilcoxon rank-sum test, while [DESeq2] and [edgeR] sometimes exceed 20% of false positives, a rate that increases with the number of samples since they are very affected by the existence of outliers. In extreme cases, [DESeq2] and [edgeR] had only an 8% overlap in the DEGs they identified. 
+Remember from [above](#differential-expression) that linear regression (performed with the `stats::lm()` funcion) is a useful statistical method we can use to understand the relationship between two variables, provided that [the following assumptions are met for linear models](https://www.geeksforgeeks.org/assumptions-of-linear-regression/):
 
-`r NOTE_bx`
-The recommendation of [@Li2022cf] is to **use non-parametric Wilcoxon rank-sum test with large sample sizes**, with _large_ meaning $>10$ samples per experimental condition, since it is **more robust to outliers**. The Wilcoxon test developed in 1956 [@WILCOXON1946wa] is also known as the Mann-Whitney test, developed in 1947 [@Mann-Withney1947]. Wilcoxon rank-sum test is known to be **powerful for skewed distributions**, as is the case with gene expression counts measured by RNA-seq.
-</div>
+1. **Linear relationship** between the independent variable _x_ and the dependent variable _y_.
+2. **Homoscedasticity** of residuals in linear regression, that is, the residuals have constant variance at every level of _x_.
+3. **Normality** in the distribution of the residuals of the model.
+4. **Independence of errors** in the residuals; in particular, there is no correlation between consecutive residuals in time series data.
+5. **Lack of multicollinearity**, that is, when several independent variables are used, they are not highly correlated between them.
 
-Non-parametric approaches, such as `NOISeq` `SAMseq` or the Wilcoxon test require more replicates (usually 5 or more) than parametric methods (usually 3, but some of them can work with only 1 replicate [@GonzalezGayte2017]). The most frequent case when studying non-model species is that the number of replicates per experimental condition is not so high (usually 3 or less than 5) that allows a non-parametric study. Therefore, the parametric analysis that provides the best results in the recent study of @Li2022cf is the **combination of `[limma] + voom`** (very similar to the `limma-trend`, but more powerful). This is a [GLM] approach that extends classical [linear models](#differential-expression) to [non-normally distributed response data](https://online.stat.psu.edu/stat504/lesson/6/6.1) (including linear regression, logistic regression and Poisson regression) [@Nelder1972GLM], where `glm()` is used to fit [GLM]s on the variable whose heteroskedascity has been corrected, while `lm()` is used to fit linear models (regression, and analysis of variance and covariance). 
+Since RNA-seq data usually have heterogeneous sample sizes and the results are counts, **they violate at least the normality requirements** of [linear regression](#differential-expression) because they follow a **negative binomial ([NB]) distribution**, leading to ill-behaved _P_-values and likely failed [FDR] control [@BenjaminiHochberg1995ps]. 
 
-Since RNA-seq data usually have heterogeneous sample sizes and violate these parametric requirements of [linear regression](#differential-expression), they would lead to ill-behaved _P_-values and likely failed [FDR] control [@BenjaminiHochberg1995ps]. Obtaining [DEG]s using [edgeR] and [limma] libraries can be addressed by three different parametric approaches:
-
-* **Exact _t_-test** is based on the Student's _t_-test [@Robinson2008ro] for a difference in mean between two groups of negative binomial random variables. It depends on [`exactTest()` function](https://www.r-bloggers.com/2020/09/exact-tests-and-plots-with-edger-basic-differential-expression-analysis/). It is rapid and easy-to-do, but **many false positive**s are obtained, as revealed by [@Li2022cf].
-* **Quasi-likelihood F-tests (QLF)** performs the quasi-likelihood (QL) F-test [@Lund2012; @Lun2016] based on [GLM], with some enhancements and slight differences on trend and [FDR] methods. In fact, it performs a _genewise negative binomial generalized linear model with quasi-likelihood tests_ with `glmQLFit()` (preferred over `glmLRT()`) and `glmQLFTest()` (or the more rigurous `glmTreat()`) functions. Since they provide the most accurate type I error control and adds a bayesian squeezing of data from [limma] package, the results are better than exact tests for RNA-seq under the assumption that genes should exhibit a [binomial negative][NB] distribution, as [indicated above](#binomialNegative).
-* A pure **generalized linear model (GLM)** based on `lmFit()` and `eBayes()`, or even better `treat()`, that gives the **lowest number of false positives** [@Law2014tt; @Li2022cf]. The [GLM] is thought to deal with heterogeneity in variance (heteroskedascity) better than pure linear models.
-
-Benefits of the `limma + voom` approach combimed with `treat()` function are the following:
-
-1. production of accurate results for RNA-seq [@Law2014tt; @Li2022cf];
-2. resilience for unequal library sizes [@Law2014tt];
-3. dealing with outliers better than other parametric approaches [@Soneson2013];
-4. exacerbation of experimental errors when normalisation is based on less suitable adjustments, such as RPKM, CPM or TMP instead of [TMM].
-
-Taking all the above together explains why this `r paste(SOFT_NAME, VERSION_CODE)` script is based only on `limma + voom` [GLM].
+It is also common that **RNA-seq data present heteroscedasticity**, that is, absence of variance homogeneity, as will be shown below. This is why this deviation must be corrected.
 
 </details> 
 [END EXPANDIBLE]: #
 
+
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about the <b>[GLM] algorithms for differential expression</b></summary>
+
+In RNA-seq, [DE] parametric tests require methods based on [NB] models that take advantage of the estimates of dispersion and logarithmic fold changes, their main issue being the false positive. This issue has been recently investigated [@Li2022cf] for the most popular methods based on parametric distributional assumptions [DESeq2] and [edgeR], as well as `[limma]-voom`, `NOISeq`, `dearseq` and Wilcoxon rank-sum test. **The only method that maintains the [FDR] control is the Wilcoxon rank-sum test**, while [DESeq2] and [edgeR] sometimes exceed 20% of false positives, a rate that increases with the number of samples since they are very affected by the existence of outliers. In extreme cases, [DESeq2] and [edgeR] had only an 8% overlap in the DEGs they identified. 
+
+`r INFER_bx`
+The recommendation of [@Li2022cf] is to **use non-parametric Wilcoxon rank-sum test with large sample sizes**, with _large_ meaning $>10$ samples per experimental condition, since it is **more robust to outliers**. The Wilcoxon test developed in 1956 [@WILCOXON1946wa] is also known as the Mann-Whitney test, developed in 1947 [@Mann-Withney1947]. Wilcoxon rank-sum test is known to be **powerful for skewed distributions**, as is the case with gene expression counts measured by RNA-seq.
+</div>
+
+Non-parametric approaches, such as `NOISeq` `SAMseq` or the Wilcoxon test require more replicates (usually 5 or more) than parametric methods (usually 3, but some of them can work with only 1 replicate [@GonzalezGayte2017]). The most frequent case when studying non-model species is that the number of replicates per experimental condition is not so high (usually 3 or less than 5) that allows a non-parametric study. Therefore, the parametric analysis that provides the best results in the recent study of @Li2022cf is the **combination of `limma + voom`** (very similar to the `limma-trend`, but more powerful). This is a [GLM] approach that extends classical [linear models](#differential-expression) to [non-normally distributed response data](https://online.stat.psu.edu/stat504/lesson/6/6.1) (including linear regression, logistic regression and Poisson regression) [@Nelder1972GLM], where `glm()` is used to fit [GLM]s on the variable whose heteroskedascity has been corrected. 
+
+Obtaining [DEG]s using [edgeR] and [limma] libraries can be addressed by three different parametric approaches:
+
+- **Exact _t_-test** is based on the Student's _t_-test [@Robinson2008ro] for a difference in mean between two groups of negative binomial random variables. It depends on [`exactTest()` function](https://www.r-bloggers.com/2020/09/exact-tests-and-plots-with-edger-basic-differential-expression-analysis/). It is rapid and easy-to-do, but **many false positives** are obtained, as revealed by [@Li2022cf].
+- **Quasi-likelihood F-tests (QLF)** performs the quasi-likelihood (QL) F-test [@Lund2012; @Lun2016] based on [GLM], with some enhancements and slight differences on trend and [FDR] methods. In fact, it performs a _genewise negative binomial generalized linear model with quasi-likelihood tests_ with `glmQLFit()` (preferred over `glmLRT()`) and `glmQLFTest()` (or the more rigorous `glmTreat()`) functions. Since they provide the most accurate type I error control and adds a bayesian squeezing of data from [limma] package, the results are better than exact tests for RNA-seq under the assumption that genes should exhibit a [binomial negative][NB] distribution, as [indicated above](#binomialNegative).
+- A pure **generalized linear model (GLM)** based on `lmFit()` and `eBayes()`, or even better `treat()`, that gives the **lowest number of false positives** [@Law2014tt; @Li2022cf]. The [GLM] is thought to deal with heterogeneity in variance (heteroskedascity) better than pure linear models.
+
+</details> 
+[END EXPANDIBLE]: #
 
 
 [START EXPANDIBLE]: #
@@ -44,6 +55,7 @@ But this approach is highly dependent on _P_ values, that are misused in many ca
 
 </details> 
 [END EXPANDIBLE]: #
+
 
 
 [START EXPANDIBLE]: #
@@ -127,15 +139,31 @@ Note that the cutting threshold of `FC` will vary depending on the counts and mo
 </details> 
 [END EXPANDIBLE]: #
 
-`r NOTE_bx`
+`r INFER_bx`
 The above discussion reflects that changes in thresholds for `FC` and `P`, the statistic approach and even the RNA integrity affects the differential expression of any transcribed RNA (messanger, non-coding, etc.), and may exhibit significant differences [@Lu2022md; @Spies2019mx]. Fortunately, the functional enrichment analysis of the [DEG]s was significantly consistent and identified regular characteristics of samples. Hence, functions instead of genes must be the main source of interpretations when the statistic approach is not the best performing one [@Lu2022md; @Spies2019mx].
 </div>
 
-### Performing GLM
+### Advantages of limma-voom-treat
 
-Homoskedastic GLM-fitted values will be analysed with `eBayes` to produce `xxxx.eB` variables, and with `treat()` to produce `xxxx.treat` variables.
+Benefits of the [limma] library using the `voom()` function combined with `treat()` function (instead of `eBayes()`) are the following:
 
-```{r GLM-eBayes}
+1. production of accurate results for RNA-seq [@Law2014tt; @Li2022cf];
+2. resilience for unequal library sizes [@Law2014tt];
+3. dealing with outliers better than other parametric approaches [@Soneson2013];
+4. exacerbation of experimental errors when normalisation is based on less suitable adjustments, such as RPKM, CPM or TMP instead of [TMM].
+
+
+`r OK_bx`
+Taking all the above together explains why this `r paste(SOFT_NAME, VERSION_CODE)` script is based only on `limma + voom + treat` [GLM].
+</div>
+
+
+
+### Fitting the GLM
+
+Homoskedastic GLM-fitted values will be analysed with `eBayes()` to produce `xxxx.eB` variables, and with `treat()` to produce `xxxx.treat` variables.
+
+```{r GLM-fit}
 v.tmm.fit <- lmFit(v.tmm, design)
 v.tmm.fit <- contrasts.fit(v.tmm.fit, contrasts = contr_matrix)
 # using the classical eBayes()
@@ -147,13 +175,15 @@ v.tmm.fit.treat <- treat(v.tmm.fit, lfc = logFC)
 rm(v.tmm.fit)
 ```
 
-## Resulting DEGs
+
+### Resulting DEGs
 
 Let's have an overview of DEGs per contrast depending on the `eBayes()` or `treat()` analysis based on the `decideTests()` function with the configured `P` and `FC` thresholds, [as recommended above](#aboutGLMs), that qualifies genes in each contrast as:
 
 * **NotSig** (`0`): not-significant expression change
 * **Down** (`-1`): genes <span style="color:blue">down-regulated</span> in the contrast
 * **Up** (`+1`): genes <span style="color:red">up-regulated</span> in the contrast
+
 
 Although using the default `method = separate` makes function is equivalent to `topTable()` (that will be used for saving [DEG]s) but less stringent. Since `treat()` requires lower `P` and `FC` thresholds than `eBayes()`, the default `P` and `FC` will be increased to `0.05` and `1.5` for the Bayesian approach.
 
@@ -169,9 +199,14 @@ status.eB <- decideTests(v.tmm.fit.eB, p.value = P_eB, lfc = logFC_eB)
 status.treat <- decideTests(v.tmm.fit.treat, p.value = P, lfc = logFC)
 
 # join per rows the summary tables of eBayes and treat, with an intermediate title 
-tmp <- rbind(EBAYES="", summary(status.eB), TREAT="", summary(status.treat))
+tmp <- rbind(EBAYES = "", 
+             summary(status.eB), 
+             TREAT = "", 
+             summary(status.treat))
 # display the summary table
-kable(as.data.frame(tmp), align ="r", caption = "Orientative number of DEGs per contrast depending on eBayes() and treat() functions")
+kable(as.data.frame(tmp), 
+      align = "r", 
+      caption = "Orientative number of DEGs per contrast depending on eBayes() and treat() functions")
 ```
 
 ```{r old-DEGs-ebayes-treat, include=FALSE, eval=FALSE}
@@ -188,11 +223,11 @@ kable(t3, align ="lcrr")
 ```
 
 
-## MD plots
+### MD plots {.tabset .tabset-fade .tabset-pills}
 
 A mean-difference plot ([MD plot]) is a representation of log2-intensity ratios (differences) versus log2-intensity averages (means). It is equivalent to [MA plot](https://en.wikipedia.org/wiki/MA_plot) from microarrays. Thresholds for `P` and `FC` lined to clearly see <span style="color:blue">down-regulated</span> genes in <span style="color:blue">**blue**</span>, while <span style="color:red">up-regulated</span> genes are in <span style="color:red">**red**</span>.
 
-### Global plot
+#### Global plot
 
 Let's see the global aspect of DEGs.
 
@@ -213,9 +248,11 @@ abline(h = c(-logFC, logFC), col = "magenta")
 abline(h = c(-logFC_eB, logFC_eB), col = "#7FFFD4", lty = 2)
 ```
 
-> **IMPORTANT!**: DEGs obtained with `treat()` must be a subset of those obtained by `eBayes()`.
+`r NOTE_bx`
+Since [FC] and _P_ thresholds are different, [DEG]s obtained with `treat()` should not be a subset of those obtained by `eBayes()`.
+</div>
 
-```{r Compare-DEGs-tr_eB}
+```{r Compare-DEGs-tr_eB, fig.width=5, fig.height=5, out.width='55%', fig.align='center'}
 # create vector of gene IDs to compare
 degs.ebayes <- which(rowSums(abs(status.eB)) > 0)
 degs.treat <- which(rowSums(abs(status.treat)) > 0)
@@ -223,22 +260,27 @@ degs.treat <- which(rowSums(abs(status.treat)) > 0)
 venn.list <- list(DEGs_eBayes = degs.ebayes, 
                     DEGs_treat = degs.treat)
 
-# construct a nice Venn diagram
+## construct a nice Venn diagram
 gv <- ggvenn(venn.list,
-       fill_color = c("#0073C2FF", "#EFC000FF", "#868686FF", "#CD534CFF"),
-       show_percentage = TRUE,
-       stroke_size = 0.5, 
-       set_name_size = 3,
-       text_size = 3) +
-    ggtitle("Total DEGs for eBayes() and treat()") +
-    theme(plot.margin = margin(t = 0, r = -2, b = -2, l = -2, unit = "cm"))
+       fill_color = VENN_COLORS[1:length(venn.list)],
+       set_name_color = VENN_COLORS[1:length(venn.list)],
+       stroke_size = 0.5,
+       set_name_size = 4,
+       text_size = 4,
+       auto_scale = FALSE) +
+    ggtitle("Total DEGs for eBayes() and treat()\n") 
+gv
+
+# venn.matrix <- venn(venn.list,
+#                     show.plot = TRUE,
+#                     intersections = TRUE)
+# title("Total DEGs for eBayes() and treat()")
+
 # remove needless variables
 rm(degs.ebayes, degs.treat, venn.list)
-# show Venn diagram
-gv
 ```
 
-### Plot every contrast
+#### Plot every contrast
 
 Now let's see the differences of DEGs depending on the `eBayes()` and `treat()` methods.
 
@@ -270,44 +312,4 @@ for (i in 1:NUM_CONTRASTS) {
   abline(h = c(-logFC, logFC), col = "magenta")
   abline(h = c(-logFC_eB, logFC_eB), col = "#7FFFD4", lty = 2)
 }
-```
-
-
-
-```{r venn1, include=FALSE, eval=FALSE}
-# Venn diagrams comparying the ebayes/treat results of contrasts
-num_cols <- 2
-num_rows <- ceiling(num_contrast/num_cols)
-
-i <- 1
-venn_groups <- list()
-gv_list <- list()
-for (i in 1:num_contrast) {
-  thisContrast <- colnames(status.eB[ ,i])
-  degs.ebayes <- which(status.eB[, i] != 0)
-  degs.treat <- which(status.treat[, i] != 0)
-
-  # creamos la lista de vectores a comparar
-  venn.list <- list(DEGs_eBayes = degs.ebayes, 
-                    DEGs_treat = degs.treat)
-  
-  # nice Venn plot
-  gv_list[[thisContrast]] <- ggvenn(venn.list,
-       fill_color = c("#0073C2FF", "#EFC000FF", "#868686FF", "#CD534CFF"),
-       show_percentage = TRUE,
-       stroke_size = 0.5, 
-       set_name_size = 3,
-       text_size = 3) +
-    ggtitle(thisContrast) +
-    theme(plot.margin = margin(t = 0, r = -1, b = -1, l = -1, unit = "cm"))
-  
-  # guardar los conjuntos de cada parte
-  venn_groups[[thisContrast]] <- venn(venn.list,
-                                 show.plot = FALSE,
-                                 intersections = TRUE)
-}
-
-# alternative, with an additional label
-# ggarrange(plotlist= gv_list, labels = names(gv_list), nrow = num_rows, ncol = num_cols)
-grid.arrange(grobs = gv_list, ncol = num_cols)
 ```

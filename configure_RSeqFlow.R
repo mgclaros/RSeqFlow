@@ -1,6 +1,6 @@
-# configure_wf -> RSeqFlow
+# configure_RSeqFlow.R
 # Gonzalo Claros
-# 2025-01-13
+# 2025-02-22
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # DON'T TOUCH: CLEAN START ####
@@ -61,6 +61,17 @@ VERBOSE_MODE = FALSE
 
 
 
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# DO CLUSTERING AND NETWORKING? ####
+#
+# TRUE: The complete pipeline will be performed
+# FALSE: Execution stops after calculating differential expression
+
+DoCLUSTER_NETWORK = TRUE
+# //////////////////////////////////////////
+
+
+
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # PATH TO DATA-CONTAINING DIRECTORY ####
 #
@@ -86,7 +97,8 @@ DATA_DIR = "~/Documents/RNASeqData/olivo/Pollen_TR/"
 # %%%%
 # MAPPING COUNTS ARE IN SEPARATE FILES
 # %%%%
-# define every expression count file as a vector
+#
+# define a vector containing every expression count file
 # DATA_FILES = c("GSM1545538_purep53.txt",
                # "GSM1545539_JMS8-2.txt",
                # "GSM1545542_JMS8-5.txt",
@@ -107,6 +119,7 @@ CHARS_TO_REMOVE = 0 # the 11 first chars of all file names will be removed.
 # %%%%
 # MAPPING COUNTS ARE A SINGLE TABLE
 # %%%%
+#
 # define the expression table filename
 DATA_FILES = "pollen_picual_reord_TR3333.tsv"
 
@@ -287,7 +300,19 @@ MIN_KLEINBERG = 0.90
 # the MY_IDs line and add all IDs you are interested in.
 #
 
-# MY_IDs = c("Ciclev10013356m.g", "Ciclev10013262m.g", "Ciclev10022710m.g", "Ciclev10011381m.g", "Ciclev10012375m.g", "Ciclev10012384m.g", "Ciclev10013485m.g", "Ciclev10013337m.g", "Ciclev10013821m.g")
+MY_IDs = c("Oleur061Scf2198g01033.1",  # HSP20-like class I
+           "Oleur061Scf6548g00011.1",  # HSP20-like class II
+           "Oleur061Scf4589g00017.1",  # HSP22 mitochondria
+           "Oleur061Scf1156g03022.1",  # HSP70
+           "Oleur061Scf0604g01001.1",  # HSP90
+           "Oleur061Scf0776g00023.1",  # F-BOX protein SKIP27
+           "Oleur061Scf5688g00009.1",  # F-BOX protein EID1-like
+           "Oleur061Scf1295g03035.1",  # Uncharacterised
+           "Oleur061Scf3825g03001.1",  # Zn-Finger TF
+           "Oleur061Scf3317g04032.1",  # NAC TF !!!!!!
+           "Oleur061Scf3503g02024.1",  # PK receptor
+           "Oleur061Scf6158g01023.1"   # YTH protein   !!!!
+           )
 # //////////////////////////
 
 
@@ -312,5 +337,5 @@ if (INTERACTIVE_SESSION) {
     source(fileToSource)
 } else {
 	message("Run will stop unless you launched it as:\n")
-	message("    Rscript execute_wf.R configure_wf.R\n")
+	message("    Rscript execute_wf.R configure_RSeqFlow.R\n")
 }

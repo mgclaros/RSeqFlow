@@ -85,38 +85,41 @@ _RSeqFlow_ can be customised to your needs in the 'self-explained' `configure_wf
 
 After that, you will find all customisable parameters with a detailed explanation and exemplary values. In the following list, 
 
-* **Compuslory** tag indicates that you have to customise the parameter to run _RSeqFlow_ for the first time or to read a specific experiment data.
-* **Recommended** parameters will facilitate your analysis, but are not necessary to run _RSeqFlow_ in your computer.
-* *Optional* parameters do not require customisation unless you detect a problem with your data. For example, you can have copies of the configure file with different set of optional parameters to compare the results.
+- **Compuslory** tag indicates that you have to customise the parameter to run _RSeqFlow_ for the first time or to read a specific experiment data.
+- **Recommended** parameters will facilitate your analysis, but are not necessary to run _RSeqFlow_ in your computer.
+- *Optional* parameters do not require customisation unless you detect a problem with your data. For example, you can have copies of the configure file with different set of optional parameters to compare the results.
 
 Parameters customisable in the `configure_wf.R`:
 
-* `PROJECT_NAME`: the project name to easily identify your work. **Recommended**
-* `SOURCE_DIR`: the path to the directory of _RSeqFlow_. **Compulsory**
-* `PKG_UPDATE`: if you want to update R packages before running _RSeqFlow_. *Optional*
-* `VERBOSE_MODE`: if you want a verbose or clean report. *Optional*
-* `DATA_DIR`: the path to the directory containing your mapped count data. **Compulsory**
-* Variables to read your files correctly:
-  + `DATA_FILES`: expression count table or file names. **Compulsory**
-      + `COUNTS_COLUM`: the column containing mapping counts when each library is in a single file. **Compulsory**
-      + `FIRST_COLUMN` and `LAST_COLUMN`: define the columns in the single count table to be read. **Compulsory**
-  + `CHARS_TO_REMOVE`: define the removable initial part of each file 'name', usually when data come from GEO database. *Optional*
-* Experimental factors that you want to analyse:
-  + `CTRL` and `TREAT`: the minimum $2$ factors (control and treatment, respectively) required for the analysis. **Compulsory**
-  + `TREAT2` to `TREATn`: additional factor for multiple comparisons. The names can be changed by the user. *Optional*
-* `EXP_CONDITIONS`: the correspondence between experimental factors and read data. **Compulsory**
-* `C1, C2, C3...`:the contrast that you will analyse using the experimental factors expressed as a vector, where the first term will be for up-regulated genes and the second term the down-regulated ones (`fold change = first factor / second factor`). **Compulsory**
-* `CONTRASTS`: the list of contrasts (`C1, C2, C3...`) previously defined that will be analysed. **Compulsory**
-* Threshold values for several parameters (all *optional*)
-  + `MIN_CPM`: minimal amount of counts per million to conserve a gene for the analysis.
-  + `CV_MIN`: minimal coefficient of variance to filter by variability.
-  + `FC`: minimal fold-change for differential expression analysis.
-  + `P`: minimal _P_-value for significance in any statistical analysis.
-  + `NODE_MAX`: the maximal number of genes to calculate correlations and clustering to avoid very long calculations.
-  + `OPT_CLUST`: if you want to indicate the number of clusters that you want to obtain.
-  + `MIN_GENES_PER_CLUSTER`: to avoid lowly populated clusters.
-  + `MIN_KLEINBERG`: minimal value of the Kleinberg score to select outstanding (highly connected) genes.
-* `MY_IDs`: a list of gene IDs that you are specially interested in from your data files. **Recommended**
+- `PROJECT_NAME`: the project name to easily identify your work. **Recommended**
+- `SOURCE_DIR`: the path to the directory of _RSeqFlow_. **Compulsory**
+- `PKG_UPDATE`: if you want to update R packages before running _RSeqFlow_. *Optional*
+- `VERBOSE_MODE`: `TRUE` if you want the complete report showing code chunks, or `FALSE` if you want to hide (fold) code chunks and skip complementary plots. *Optional*
+- `DoCLUSTER_NETWORK`: `TRUE` if you want the complete analysis or `FALSE` if you want to calculate only differentially expressed genes and compare sample clustering using raw and normalised data. *Optional*
+- `DATA_DIR`: the path to the directory containing your mapped count data. **Compulsory**
+- `DATA_FILES`: one expression count table or several file names. **Compulsory**. 
+    + When you indicate **one single count table**, you have to customise the number of 
+        - `FIRST_COLUMN`: the first column in the table to read; Gene IDs is column 0. **Compulsory**
+        - `LAST_COLUMN`: the last column to be read. **Compulsory**
+    + When you indicate **several files with counts**, you have to customise the position of
+        - `COUNTS_COLUM`: the column containing mapping counts. **Compulsory**
+    + `CHARS_TO_REMOVE`: define the removable initial part of each file 'name', usually when data come from GEO database. *Optional*
+- To customise the **experimental factors** that you want to analyse:
+    + `CTRL` and `TREAT`: the minimum 2 factors (control and treatment, respectively) required for the analysis. **Compulsory**
+    + `TREAT2` to `TREATn`: additional factor for multiple comparisons. The names can be changed by the user. *Optional*
+- `EXP_CONDITIONS`: the correspondence between experimental factors and read data. **Compulsory**
+- `C1, C2, C3...`:the contrast that you will analyse using the experimental factors expressed as a vector, where the first term will be for up-regulated genes and the second term the down-regulated ones (`fold change = first factor / second factor`). **Compulsory**
+- `CONTRASTS`: the list of contrasts (`C1, C2, C3...`) previously defined that will be analysed. **Compulsory**
+- Threshold values for several parameters (all *optional*)
+    + `MIN_CPM`: minimal amount of counts per million to conserve a gene for the analysis.
+    + `CV_MIN`: minimal coefficient of variance to filter by variability.
+    + `FC`: minimal fold-change for differential expression analysis.
+    + `P`: minimal _P_-value for significance in any statistical analysis.
+    + `NODE_MAX`: the maximal number of genes to calculate correlations and clustering to avoid very long calculations.
+    + `OPT_CLUST`: if you want to indicate the number of clusters that you want to obtain.
+    + `MIN_GENES_PER_CLUSTER`: to avoid lowly populated clusters.
+    + `MIN_KLEINBERG`: minimal value of the Kleinberg score to select outstanding (highly connected) genes.
+- `MY_IDs`: a list of gene IDs that you are specially interested in from your data files. **Recommended**
 
 As a result of this `configure_wf.R` file customisation, you can have as many copies of this file as you want (with the name you prefer) for different data or different parameters. These copies can be located wherever you want in your computer. 
 
@@ -361,6 +364,22 @@ Version | Date      | Comments
 1.03    | 18-Dec-24 | Gene filtering improved, minor bugs resolved
 1.04    | 13-Jan-25 | Minor modifications in the report, changes in correlations and gene profiles
 1.05    | 14-Jan-25 | Cosmetic modifications in the report and the code
+1.1     | 10-Mar-25 | Improvements in graphics and HTML report. Clustering is now optional. Bugs fixed.
+ 
+
+### v 1.1
+
+- Cosmetic modifications in the code were introduced, mainly to avoid useless calculations and plots. More tabs have benn included to facilitate comparisons of different results or steps in the analysis.
+- Cosmetic modifications were included in the HTML report. The most evident are:
+    - Clustering results are now simplified and shown on tabs to facilitate the reading.
+    - Heatmap colour palettes are unified.
+    - Venn diagrams now fit in page in all report versions
+    - Parameter VERBOSE_MODE makes code chunks to be shown (TRUE) or hidden (FALSE)
+    - When model-based clustering only gives 1 cluster, _k_-means clusters are directly assigned to this analysis
+    - Labelled communities in networks are more readable
+- New parameter DoCLUSTER_NETWORK was included to stop execution after differential expression (FALSE) or do the complete script (TRUE)
+- Heatmap within _Profiling gene clusters_ contains also the distribution of genes per cluster
+- Plots of outstanding genes have been improved, showing genes in CTF-normalised and scaled counts. Additionally, internal controls were introduced to avoid plotting when no outstanding gene was selected.
 
 ### v 1.05
 

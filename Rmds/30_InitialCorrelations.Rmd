@@ -112,7 +112,7 @@ Samples (columns) | `r ncol(matriz)` | `r ncol(matriz_filt)`
 Genes (files)     | `r nrow(matriz)` | `r nrow(matriz_filt)`
 
 
-## Correlations
+## Sample correlations {#raw-sample-correlations}
 
 [START EXPANDIBLE]: #
 `r EXPAND_bx` Expand to read about <b>calculating correlations</b></summary>
@@ -135,7 +135,7 @@ The most used method to calculate association between paired samples is Pearson,
 * **Kendall**'s $\tau$ is thougth less powerful, but useful when all values are qualitative. However, a 2002 paper [@Newson2002] argued for the superiority of Kendall's $\tau$ over Spearman's $\rho$ correlation since confidence intervals for $\rho$ are less reliable and less interpretable than confidence intervals for $\tau$. Another article indicates that $\tau$ is more robust and slightly more efficient than $\rho$ [@Croux2010]. Unfortunately, Kendall's $\tau$ still runs a lot slower in R than Spearman's $\rho$, which is important in genomics, where datasets are large.
 * **Mutual Information** (MI) attempts to measure sthe tatistical dependence between two variables.
 
-`r NOTE_bx` 
+`r INFER_bx` 
 Even though all variables are quantitative, it is preferable to use `method = 'spearman'` to [correlate tendencies (instead of linearity)](https://medium.com/analytics-vidhya/covariance-vs-pearson-correlation-coefficient-vs-spearmans-rank-correlation-coefficient-1d2d8789a728). 
 </div>
 
@@ -144,82 +144,101 @@ Even though all variables are quantitative, it is preferable to use `method = 's
 
 
 `r NOTE_bx` 
-  Since this step is only exploratory, no _P_ value will be calcuate to speed up the analysis.
+  Since this step is only exploratory, no _P_ value will be calcuated to speed up the analysis.
+  
+  Remember that you indicated in the configuration file the use of `r CORR_METHOD` method to calculate correlations.
 </div>
 
 
 1. Calculating sample correlations 
 
-    ```{r CorrSamples_r}
-    # default method is Pearson; it includes scaling
-    # rounding r to 3 decimals
-    corr_samples_r <- round(cor(matriz_filt, method=CORR_METHOD), digits = ROUND_dig)
-    ```
+```{r CorrSamples_r}
+# default method is Pearson; it includes scaling
+# rounding r to 3 decimals
+corr_samples_r <- round(cor(matriz_filt, method=CORR_METHOD), digits = ROUND_dig)
+```
 
-2. Plotting correlations with _r_ values
+2. Plotting correlations using two different methods. The left method includes the correlation values and the right plot uses the circle size to represent the correlation value. In both cases, the color intensity is related to the correlation value and sign.
 
-    ```{r corPlotting}
-    corPlot(corr_samples_r, 
-        diag = FALSE,
-        las = 2, 
-        scale = TRUE,
-        main = "Correlations between samples")
-    ```
-    
+```{r corPlotting, out.width="50%", fig.show='hold'}
+# corPlot is defined in library psych
+corPlot(corr_samples_r, 
+    diag = FALSE,
+    las = 2, 
+    scale = TRUE,
+    main = "Correlations between samples")
 
-3. Another correlation plot, where the circle size relates to _r_ and the color to the sign:
-
-    ```{r corrPlotBasic}
-    # other possible plots: https://r-coder.com/correlation-plot-r/
-    corrplot(corr_samples_r)
-    ```
+# corrplot comes from library corrplot
+corrplot(corr_samples_r)
+```
 
 `r NOTE_bx` 
 If samples are correctly grouped, data are very coherent. However, even if samples apparently produce odd groups, this might be corrected after normalisation and differential expression (see next sections)
 </div>
 
-## Grouping raw samples
 
-A good way to see if raw samples behave as expected respect to replicates and experimental conditions is to group them by similarity and then plot the result as a dendrogram. [Fundamentals of clustering will be given below](#clustering) ando also in <https://www.statology.org/hierarchical-clustering-in-r/>. You can also inspect some [clustering code](https://github.com/Statology/R-Guides/blob/main/hierarchical_clustering.R).
+## Dendrogram of samples {#grouping-raw-samples}
+
+A good way to see if raw samples behave as expected respect to replicates and experimental conditions is to group them by similarity and then plot the result as a **dendrogram**. [Fundamentals of clustering will be given below](#clustering) and also in <https://www.statology.org/hierarchical-clustering-in-r/>. You can also inspect some [clustering code](https://github.com/Statology/R-Guides/blob/main/hierarchical_clustering.R).
+
+Two dendrograms will be calculated with the function `stats::hclust()` using two agglomeration methods:
+
+1. Using the default method (`method = "complete"`).
+2. Using the ward.D2 method (`method = "ward.D2"`), where the dissimilarities are squared to minimise the total. This method is usually more appropriate for RNA-seq data.
+
+Dendrograms will be plotted cutting the tree by the number of unique factor described in the experiment (`length(UNIQ_FACTORS)`) to facilitate the interpretation.
+
+```{r dendrograms, out.width="50%", fig.show='hold'}
+hcols <- hclust(as.dist(1 - corr_samples_r), 
+                method = "complete") 
+# 'complete' finds the max distance between points belonging to two different clusters.
+plot(hcols,
+     main = "Dendrogram of sample clusters using 'complete'")
+rect.hclust(hcols,                        # draw rectangles around clusters
+            k = length(UNIQ_FACTORS),     # number of clusters based on the experimental factors
+            border = unique(EXP_COLORS))  # colours for each cluster
+
+hcols <- hclust(as.dist(1 - corr_samples_r), 
+                method = "ward.D2") 
+plot(hcols,
+      main = "Dendrogram of sample clusters using 'ward.D2'")
+rect.hclust(hcols,
+            k = length(UNIQ_FACTORS),
+            border = unique(EXP_COLORS))
+```
+
+## Heatmap of samples
+
+A heat map is a false color image with a dendrogram added to rows and/or columns. Reordering at least rows (genes) is recommended to produce meaning heatmaps. Sample dendrogram was calculated before (`hcols` variable), and the dendrogram of rows is now calculated based on correlations. Main gene clusters will be calculated and coloured for the heatmap.
+
+```{r geneclusters}
+# clustering by gene
+hrow <- hclust(as.dist(1-cor(t(matriz_filt), 
+                             method = CORR_METHOD)), 
+               method = "complete")
+
+mycl <- cutree(hrow, h = max(hrow$height)/1.5)  # Obtain discrete clusters
+mycolhc <- sample(rainbow(256))                 # Give colours to clusters
+mycolhc <- mycolhc[as.vector(mycl)]             # assing color cluster to genes
+```
 
 
-1. The first representation is a dendrogram to inspect whether all samples are grouped by replicates in separate branches. 
+Now we can use both hierarchical clusters to construct a heatmap, but showing only the dendrogram of samples sin the one of genes is very crowded and difficult to interpret.
 
-    ```{r dendrogram}
-    # clustering by sample as eculidean distances
-    hcols <- hclust(as.dist(1 - corr_samples_r), method = "complete") 
-    plot(hcols)
-    ```
-
-2. Let's group genes (rows) now by expression and mark groups by colours
-
-    ```{r geneclusters}
-    # clustering by gene
-    hrow <- hclust(as.dist(1-cor(t(matriz_filt), method=CORR_METHOD)), method="complete")
-    # Obtain discrete clusters
-    mycl <- cutree(hrow, h = max(hrow$height)/1.5)
-    # Give colours to clusters
-    mycolhc <- sample(rainbow(256))
-    mycolhc <- mycolhc[as.vector(mycl)]
-    ```
-
-
-3. Use both hierarchical clusters to construct a heatmap, but showing only the dendrogram of samples (the one of genes is very crowded).
-
-    ```{r heatmap}
-    heatmap.2(matriz_filt, 
-              dendrogram = "column", # no dengrogran for row/genes
-              Rowv = as.dendrogram(hrow), 
-              Colv = as.dendrogram(hcols),
-              # col = redgreen(150),
-              labRow = FALSE,
-              scale = "row", 
-              trace = "none",
-              key = TRUE,
-              key.title = "Colour scale",
-              ColSideColors = terrain.colors(length(hcols$labels)), 
-              RowSideColors = mycolhc)
-    ```
+```{r heatmap}
+heatmap.2(matriz_filt, 
+          dendrogram = "column",           # no dengrogran printed for row/genes
+          Rowv = as.dendrogram(hrow),      # precalcuated dendrogram for rows
+          Colv = as.dendrogram(hcols),     # precalcuated dendrogram for columns
+          col = HEATMAP_COLORS,            # colour palette for expression levels
+          labRow = FALSE,                  # no row (gene) labels
+          scale = "row",                   # scale rows
+          trace = "none",                  # no expression trace
+          key = TRUE,                      # show colour scale
+          key.title = "Colour scale",      # title of colour scale
+          ColSideColors = EXP_COLORS,      # give colors to colums by experimental factor
+          RowSideColors = mycolhc)         # give colors to genes by cluster
+```
 
 `r NOTE_bx` 
 Samples should be grouped by replicates. 

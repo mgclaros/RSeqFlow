@@ -1,27 +1,9 @@
-
-Before next calculations, the matrix `m.ctf.std` or `m.tmm.std` must have some genes. If no transcript is present, the execution will stop just here.
-
-```{r}
-if (nrow(m.ctf.std) == 0 | nrow(m.tmm.std) == 0) {
-    warning("Execution stopped due to absence of variant genes")
-    knit_exit(paste0(DANGER_bx, " An ERROR occurred </div>"))
-}
-```
-
 ### Sample distances
 
 The usual way to connect/link/associate samples is to analyse distances in scaled data. Distances can be calculated as follows:
 
 * with `dist()` to compute the distances between the rows (genes);
-* after the correlations between the columns (factors, conditions, samples) using `cor()` that is the fastest function doing that; correlations can be converted to distances with `as.dist()` function.
-
-`r NOTE_bx`
-
-* **Distance** variables will start by `d`
-* **Correlation** variables will start by `r`.
-</div>
-
-Among the different correlation methods, `pearson` will be used since all variables are numeric.
+* after the correlations between the columns (factors, conditions, samples) using `cor()`, as [calculated above with raw data](#raw-sample-correlations); correlations are then converted to distances using `as.dist()` function.
 
 ```{r sample-dist-std}
 # for CTF
@@ -35,11 +17,18 @@ d_tmm_samp <- as.dist(1 - r_tmm_samp)
 # d_allDEG_samp <- as.dist(1 - r_allDEG_samp)
 ```
 
+`r NOTE_bx`
+
+* **Distance** variables will start by `d`
+* **Correlation** variables will start by `r`.
+</div>
+
+
 
 ### Sample linkage
 
-
 1. Let's use `agnes()` within our function `CalcAgglomCoef()` to obtain the **best linkage method** to calculate distances. This is based on the agglomerative coefficient (`ac`) for each clustering linkage method with a transposed version of the scaled matrix.
+
     ```{r SampleDistances, results='hold'}
     # let's use 'meth' vector previously defined for the names of methods
     # samples for CTF
@@ -55,7 +44,7 @@ d_tmm_samp <- as.dist(1 - r_tmm_samp)
     ```
 
 
-2. Use the best linkage method using `hclust()` to produce a `hclust` object; these variables start by `HC_??`.
+2. Let's use the best linkage method in `hclust()` function to produce a `hclust` object; these variables start by `HC_??`.
     ```{r samples-HCA}
     # for CTF
     HC_samples_ctf <- hclust(d_ctf_samp, method = best_meth_ctf)
@@ -66,31 +55,45 @@ d_tmm_samp <- as.dist(1 - r_tmm_samp)
 
 ### Sample dendrogram
 
-The `hclust` object can be plotted as a dendrogram.
+The `hclust` object can be plotted as a dendrogram to check whether the different branches correspond to sample replicates.
 
 ```{r sample-dendro, fig.width=6, fig.height=4, out.width=c('50%', '50%'), fig.show='hold'}
-plot(HC_samples_ctf, main = paste0("CTF.std - d:", CORR_METHOD, " — HCA: ", best_meth_ctf))
-plot(HC_samples_tmm, main = paste0("TMM.std - d:", CORR_METHOD, " — HCA: ", best_meth_tmm))
+plot(HC_samples_ctf,                             # CTF dendrogram
+     main = paste0("CTF.std - d:", CORR_METHOD, " — HCA: ", best_meth_ctf))
+rect.hclust(HC_samples_ctf,                      # draw rectangles around clusters
+            k = length(UNIQ_FACTORS),            # number of clusters based on the experimental factors
+            border = unique(EXP_COLORS))         # colours for each cluster
+
+plot(HC_samples_tmm,                             # TMM dendrogram
+     main = paste0("TMM.std - d:", CORR_METHOD, " — HCA: ", best_meth_tmm))
+rect.hclust(HC_samples_tmm, 
+            k = length(UNIQ_FACTORS), 
+            border = unique(EXP_COLORS))
 ```
 
-You can check whether the different branches correspond to sample replicates. This inspection can be complemented with a **silhouette plot** to determine how well each observation (i.e. sample) lies within its dendrogram branch: a high average silhouette width indicates a good contribution. The average silhouette is the mean of observations (samples) for different values of _k_ (here, the number of experimental factors defined by the user in `EXP_FACTORS`).
+### Sample contribution
+
+The **silhouette plot** can help to determine how well each observation (i.e. sample) lies within its dendrogram branch: a high average silhouette width indicates a good contribution. The average silhouette is the mean of observations (samples) for different values of experimental factors defined by the user in `EXP_FACTORS`.
 
 ```{r siluetas, fig.show='hold'}
 # use EXP_FACTORS to determine the number of clusters that must be obtained
 k_samples <- length(unique(EXP_FACTORS))
-plot(silhouette(cutree(HC_samples_ctf, k_samples), d_ctf_samp), main = "CTF")
-plot(silhouette(cutree(HC_samples_tmm, k_samples), d_tmm_samp), main = "TMM")
-# plot(silhouette(cutree(HC_samples_allDEG, k_samples), d_allDEG_samp), main = "All DEGs")
+plot(silhouette(cutree(HC_samples_ctf, k_samples), 
+                d_ctf_samp), 
+     main = "CTF")
+plot(silhouette(cutree(HC_samples_tmm, k_samples), 
+                d_tmm_samp), 
+     main = "TMM")
 ```
 
 `r NOTE_bx` 
 If there is a sample with negative contribution, you may consider to remove it and reanalyse the complete dataset.
  
- Additionally, both sets of TMM and CTF normalisations should produce similar dendrograms and silhouettes.
+ Additionally, both sets of [TMM] and [CTF] normalisations should produce similar dendrograms and silhouettes.
 </div>
 
 
-### Correlation plot of samples
+### Sample correlations
 
 It is a [simple graphical display](https://r-coder.com/correlation-plot-r/) of distance (or correlation) matrices in continuous variables. They are called _correlogram_ when more than two variables are presented. The color level is proportional to the value of the dissimilarity, and the correlation _r_ is printed within each box.
 
@@ -116,5 +119,5 @@ corPlot(r_tmm_s,
 ```
 
 `r NOTE_bx` 
-Usually, correlations based on highly variant genes do not cluster samples appropriately
+Correlations based on normalised [DEG]s should group samples better than un-normalised highly variant genes.
 </div>

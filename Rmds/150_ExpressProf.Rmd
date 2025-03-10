@@ -1,8 +1,13 @@
 
 ## Heatmaps
 
-Heatmaps are another way to visualise [AHC] after [transforming data values to a color scale](https://statisticsglobe.com/heatmap-in-r). Its main advantage is that it allow us to simultaneously visualise clusters of samples and genes (rows, features), that is, how the values (genes) change over an area (samples). The columns/rows of the data matrix are re-ordered according to the [AHC] result, putting similar observations close to each other. Visualising the data matrix in this way can help to find the variables/genes that appear to be characteristic for each sample cluster. Ironically, the origin of the term “heat map” has nothing to do with temperature but it was invented to refer to graphical displays of real-time financial data.
+[START EXPANDIBLE]: #
+`r EXPAND_bx` Expand to read about <b>heatmaps</b></summary>
 
+Heatmaps are another way to visualise [AHC] after [transforming data values to a color scale](https://statisticsglobe.com/heatmap-in-r). Its main advantage is that it allow us to simultaneously visualise clusters of samples and genes (rows, features), that is, how the genes (rows) change over an area (samples). Both columns and rows can be re-ordered according to the [AHC] result, putting similar observations close to each other. Visualising the data matrix in this way can help to find the variables (genes) that appear to be characteristic for each sample cluster. Ironically, the origin of the term "heat map" has nothing to do with temperature but it was invented to refer to graphical displays of real-time financial data.
+
+</details> 
+[END EXPANDIBLE]: #
 
 1. Prepare data giving different colours for the corresponding groups of genes (rows) 
 
@@ -14,40 +19,48 @@ Heatmaps are another way to visualise [AHC] after [transforming data values to a
     ```
 
 
-3. Plot the heatmap using the [AHC] clusters previously defined at left using `heatmap.2()`, although there are [many other packages for drawing heatmaps](https://www.datanovia.com/en/lessons/heatmap-in-r-static-and-interactive-visualization/). For examaple, clusters can be recalculated and plotted into separate groups using `pheatmap()` (right image).
+3. Plot the heatmap using the [AHC] clusters previously defined at left using `heatmap.2()`, although there are [many other packages for drawing heatmaps](https://www.datanovia.com/en/lessons/heatmap-in-r-static-and-interactive-visualization/). The cluster correspondence to colours in the left heatmap
 
-    ```{r heatmaps2, fig.width=6, fig.height=9, out.width=c('55%', '45%'), fig.show='hold'}
+    ```{r heatmaps2, fig.width=6, fig.height=8, out.width=c('70%', '30%'), fig.show='hold'}
     dendr_samples_ctf <- as.dendrogram(HC_samples_ctf)
     heatmap.2(m.putat.ctf.CV, 
-              dendrogram = "none", # no dendrogran for genes/samples
-              Rowv = dendr_genes_ctf,  # already calculated dendrograms
-              # Colv = dendr_samples_ctf,  # reorder colums by the dendrogram
-              Colv = FALSE,             # Colums are in the same order as the matrix
-              labRow = FALSE,  # do not print gene names
-              scale = "row", 
-              trace = "none",  # to clean the imge
-              key = TRUE,      # legend
-              key.title = "Colour scale",
+            # dendrogram control
+              Rowv = dendr_genes_ctf,     # already calculated dendrograms
+              # Colv = dendr_samples_ctf,   # reorder colums by the dendrogram
+              Colv = FALSE,               # Colums are in the same order as the matrix
+              dendrogram = "none",        # no dendrogran for genes/samples
+            # scaling
+              scale = "none",             # show raw data 
+              na.rm = TRUE,               # remove NAs before plotting
+              # col = HEATMAP_COLORS,       # intenstity colours for the image
+              col = "bluered",
+            # block separation
+              # colsep = c(3, 6, 9),        # separate columns in blocks
+            # level trace
+              trace = "none",             # to clean the imge
+            # labelling
+              margins = c(3, 10),         # margins for for column and row names,
               # ColSideColors = terrain.colors(length(HC_samples_ctf$labels)), 
-              ColSideColors = EXP_COLORS,
-              RowSideColors = mycolhc,
-              main = "Gene clusters correctly defined")
+              ColSideColors = EXP_COLORS, # sample color by experimental condition
+              RowSideColors = mycolhc,    # gene color by cluster
+              # cexRow = 0.5,               # small gene names
+              labRow = FALSE,             # do not print gene names
+              labCol = colnames(m.putat.ctf.CV),
+              # adjCol = c(NA, -58.3),      # shift column labels OJO
+              offsetRow = 0.1,            # gene names close to the image
+            # key features
+              key = TRUE,                 # show colour legend, by default
+              keysize =  1,               # increases key size (1.5 by default)
+              key.title = "Expression \n colours",
+              key.xlab = paste("Raw expression") , # add label to x in the legend 
+            # plot layout
+              # lmat = rbind( c(0, 3, 0), c(2, 1, 0), c(0, 4, 0) ), 
+              # lhei = c(0.43, 2.6, 0.6),   # Alter dimensions of display array cell heighs
+              # lwid = c(0.6, 4, 0.6),      # Alter dimensions of display array cell widths
+            # plot labels
+              main = "Gene clusters previously calculated \n DEGs across samples")
     
-    # alternative presentantion, where the number of clusters to cut the tree is required
-    pheatmap(m.putat.ctf.CV, 
-             clustering_distance_rows = d_ctf_genes, 
-             cluster_cols = TRUE,  # if false, no reordering of columns is produced
-             clustering_distance_cols = d_ctf_samp,
-             cutree_rows = final_k, 
-             cutree_cols = k_samples,
-             color = colorRampPalette(rev(brewer.pal(n = 7, name = "PuOr")))(100),
-             show_rownames = FALSE,
-             main = "Gene clusters recalculated with cutree function")
-    ```
-
-Show the cluster correspondence to colours in the left heatmap
-
-```{r heatmapclustercolours, fig.align = 'center', out.width = '40%'}
+    # Colors for the clusters
     # show_col(hc_colours, ncol = length(hc_colours))
     barplot(rep(1, length(hc_colours)), 
             col = hc_colours, 
@@ -56,8 +69,44 @@ Show the cluster correspondence to colours in the left heatmap
             names.arg = paste("Cluster", 1:final_k),
             main = "Legend of colours in gene clusters",
             legend.text = hc_colours)
+    ```
+
+4. Alternatively, the heatmap can be plotted using the `pheatmap::pheatmap()` function that allows for more customisation and is more user-friendly. We can even add the correspondence with clusters and experimental conditions.
+
+```{r pheatmap-complete, fig.align = 'center', fig.width=6, fig.height=8, out.width = '70%'}
+    # table with factors for the samples
+    annot_columns <- data.frame(Sample = EXP_FACTORS,
+                                row.names = colnames(m.putat.ctf.CV))
+    
+    # Create a list of colours for the samples
+    my_colours <- list(Sample = setNames(EXP_COLORS, EXP_FACTORS))  # sample colouring defined by RSeqFlow
+    
+    # table with clusters for the genes
+    annot_rows <- data.frame(AHC = paste0("AHC_", groups_k),
+                             K_Means = paste0("KMeans_", groups_kmeans),
+                             MClust = paste0("MClust_", groups_mclust),
+                             row.names = rownames(m.putat.ctf.CV))
+    
+    # resulting heatmpap, more informative
+    pheatmap(m.putat.ctf.CV, 
+             show_rownames = FALSE,
+             show_colnames = TRUE,
+             color = HEATMAP_COLORS,
+             angle_col = 45,                 # rotate column names
+             annotation_col = annot_columns, # add sample annotation
+             annotation_row = annot_rows,    # add gene cluster annotation
+             annotation_colors = my_colours,
+             scale = "row",                  # to have all rows (genes) in the same max-min scale
+             cluster_cols = FALSE,           # if true, dendrogram and reorganisation of columns is produced
+             clustering_distance_cols = d_ctf_samp,
+             cutree_cols = k_samples,        # number of sample clusters calculated before
+             cluster_rows = TRUE,            # if false, no dendrogram and reorganisation of rows is produced
+             clustering_distance_rows = d_ctf_genes, 
+             cutree_rows = final_k,          # maximum number of clusters calculated before
+             main = "Gene clusters respect to samples")
 ```
 
+4. Clusters can be recalculated and plotted into separate groups using `pheatmap()` (right image). 
 
 ## Aggregate matrix by factors
 
@@ -99,7 +148,7 @@ The resulting aggregated expression matrix are
 * `m_ctf_cpm_bysample` for CPM data
 </div>
 
-## Aggregate genes by cluster
+## Aggregate genes by cluster {.tabset .tabset-fade .tabset-pills}
 
 Using the sample-aggregated matrices, genes will be aggregated by cluster using again the `mean()`. Error bars are based on the 95% confidence interval (`CI95`) using the standard deviation calculated by `sd()`, the number of genes in the cluster (stored in variable `NUM_genes_by_cluster`) and the critical _z_-value for the 95% (`z_CI`).
 
@@ -113,7 +162,7 @@ agg_list <- list()                             # create the list to gather aggre
 The list `agg_list` will contain the aggregated genes by all [AHC] and _k_-means clusters for each aggregated set of replicates
 </div>
 
-### AHC-clusters
+### AHC-clusters {-}
 
 
 1. Aggregate [AHC] clusters using scaled data:
@@ -164,9 +213,9 @@ The list `agg_list` will contain the aggregated genes by all [AHC] and _k_-means
     ```
 
 
-### K-means clusters
+### K-means clusters {-}
 
-1. Aggregate k-means clusters using scaled data:
+1. Aggregate _k_-means clusters using scaled data:
 
     ```{r aggregateBy-kmeans-scaled}
     thisID <- "kMeans_scaled"
@@ -214,7 +263,7 @@ The list `agg_list` will contain the aggregated genes by all [AHC] and _k_-means
     ```
 
 
-### MBC clusters
+### MBC clusters {-}
 
 1. Aggregation of [MBC] clusters using scaled data 
 
@@ -270,7 +319,7 @@ The list `agg_list` will contain the aggregated genes by all [AHC] and _k_-means
 Let's see the expression profile of every cluster using the scaled expression and the expression in [CPM]. For statistical considerations, the plot with error bars based on the 95% confidence interval (`±CI95`) is also presented in the second plot column.
 
 `r NOTE_bx` 
-Errors bars (interval of the mean at 95% confidence) are expected to be small, indicating that the mean is reliable. However, you can see the profile of each gene in the cluster in [section ***Gene profiles***](#gene-profiles) below.
+Errors bars are confidence intervals of the mean at 95% confidence). The profile of each gene in the cluster is represented in [section ***Gene profiles***](#gene-profiles) below.
 </div>
 
 ```{r clustplotlog, fig.width=6, fig.height=4.5, out.width=c('50%', '50%')}

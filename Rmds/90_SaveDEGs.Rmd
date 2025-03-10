@@ -78,7 +78,7 @@ Let's produce the files after filtering genes per `P` and `FC` thresholds to obt
 
 Now we can compare the differences when limma-trend DEGs filtered both by `FC` and `P` are decided with `topTreat()` or the less stringent `decideTests()`:
 
-```{r decidetest-vs-topTreat}
+```{r decidetest-vs-topTreat, fig.width=5, fig.height=5, out.width='55%', fig.align='center'}
 # DEGs defined by decideTest()
 degs.decideTest <- names(which(rowSums(abs(status.treat)) > 0))
 # DEGs defined by topTreat()
@@ -88,15 +88,30 @@ rm(degs.to.save.eB, degs.to.save.treat)
 
 # prepare Venn diagram
 venn.list <- list(DEGs_topTreat = degs.topTreat, 
-                    DEGs_decideTests = degs.decideTest)
+                  DEGs_decideTests = degs.decideTest)
+
+# venn.matrix <- venn(venn.list,
+#                     show.plot = TRUE,
+#                     intersections = TRUE)
+# title("Total treat() DEGs from decideTests and from topTreat")
+
+# venn.plot <- venn.diagram(venn.list, NULL,
+#                           category.names = names(venn.list),
+#                           cat.cex = 1.5, cat.fontface = "italic", cat.fontfamily = "sans", # Names
+#                           cat.default.pos = "outer",
+#                           lwd = 2, lty = 1,                                                # Circles
+#                           cex = 2, fontface = "bold", fontfamily = "sans",                 # Numbers
+#                           main = "Total treat() DEGs from decideTests and from topTreat")
+# grid.draw(venn.plot)
+
 gv <- ggvenn(venn.list,
-       fill_color = c("#868686FF", "#CD534CFF", "#0073C2FF", "#EFC000FF"),
-       show_percentage = TRUE,
-       stroke_size = 0.5, 
-       set_name_size = 3,
-       text_size = 3) +
-    ggtitle("Total treat() DEGs from decideTests and from topTreat") +
-    theme(plot.margin = margin(t = 0, r = -2, b = -2, l = -2, unit = "cm"))
+       stroke_size = 0.5,
+       set_name_size = 4,
+       fill_color = VENN_COLORS[1:length(venn.list)],
+       set_name_color = VENN_COLORS[1:length(venn.list)],
+       text_size = 4,
+       auto_scale = FALSE) +
+    ggtitle("Total treat() DEGs from decideTests and from topTreat\n") 
 gv
 ```
 

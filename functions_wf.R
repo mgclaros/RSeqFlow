@@ -1,6 +1,6 @@
 # functions_wf -> RSeqFlow
 # Gonzalo Claros
-# 2025-01-13
+# 2025-02-22
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -27,10 +27,10 @@ GetComputer <- function() {
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # WORKING DIRECTORY DEFINITION ####
 
-CreateDir <- function(adir = DATA_DIR,
-                      aname = SOFT_NAME,
+CreateDir <- function(adir     = DATA_DIR,
+                      aname    = SOFT_NAME,
                       aversion = VERSION_CODE,
-                      adate = HOY) {
+                      adate    = HOY) {
   name.wd <- paste0(adir, aname, aversion, "_results_", adate, "/")
   
   if (file.exists(name.wd)){                # ¿existe el directorio ya?
@@ -52,11 +52,11 @@ CreateDir <- function(adir = DATA_DIR,
 # %%%%%%%%%%%%%%%%%%%%%%%%
 # LOAD EXPRESSION DATA ####
 
-LoadExpressionData <- function (files = DATA_FILES,
-                                dataDir = DATA_DIR,
+LoadExpressionData <- function (files      = DATA_FILES,
+                                dataDir    = DATA_DIR,
                                 theFactors = EXP_FACTORS,
                                 colsToRead = COLUMNS_TO_READ,
-                                chars2rm = CHARS_TO_REMOVE) {
+                                chars2rm   = CHARS_TO_REMOVE) {
   if (length(files) == 1) {
     # only one file defined, therefore, is a complete counts table
     countsTable <- read.delim(paste0(dataDir, files),    # datafile path
@@ -257,6 +257,20 @@ ExtractFirstMax <- function (aVector) {
 # //////////////////////////////////
 
 
+# %%%%%%%%%%%%%%%%%%
+# VENN DIAGRAMS ####
+
+DoVennColoured <- function(vector_list,
+                           aTitle = "Venn diagram") {
+  venn_IDs <- venn::venn(vector_list,
+                         zcolor = "style", 
+                         ellipse = TRUE, 
+                         ilcs = 1, 
+                         sncs = 1.2, 
+                         box = FALSE,
+                         main = aTitle)
+  return(venn_IDs)  # to see attr(venn_IDs, "intersections")
+}
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -341,7 +355,7 @@ PlotGeneProfiles <- function(m,
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # matplot PROFILES OF SELECTED GENES ####
 SelectedGeneProfilePlots <- function(m, 
-                                     aTitle = "Selected gene profiles",
+                                     aTitle = "Profiles of selected genes",
                                      y_label = "Scaled expression values") {
   df <- data.frame(m) # colnames are the gene names
   # convert rownames in numbers by adding a new first column
@@ -351,7 +365,7 @@ SelectedGeneProfilePlots <- function(m,
   # reshape wide data.frame to a long format for ggplot
   df2 <- melt(df,  id.vars = 'new_x', variable.name = 'GeneID')
   new_col_names <- colnames(df2)
-  ggp <- ggplot(df2, aes(x = new_x, y = value)) + # equivalent to aes(x=df2[, 1], y=df2[, 3])
+  staticPlot <- ggplot(df2, aes(x = new_x, y = value)) + # equivalent to aes(x=df2[, 1], y=df2[, 3])
     # colour lines per gene
     geom_line(aes(colour = GeneID, group = GeneID), linewidth = 0.9, alpha = 0.3) + # GeneID is df[, 2]
     # resize points with the same colour than lines
@@ -372,6 +386,6 @@ SelectedGeneProfilePlots <- function(m,
           panel.grid = element_line(color = "lightgray", linewidth = 0.5),
           # panel.background = element_rect(fill = "white"),
           plot.title = element_text(lineheight = 0.8, face = "bold", size = 12, colour = "darkgreen"))
-  ggplotly(ggp)
+  ggplotly(staticPlot)
 }
 # //////////////////////////////////

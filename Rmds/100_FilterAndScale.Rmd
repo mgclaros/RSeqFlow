@@ -33,7 +33,7 @@ Clustering methods can be classified in the following [main classes](https://dat
     
     The method to choose will depend on data behaviour; the `agnes()` function will be used to determine the best linkage method.
 
-2. **Non-hierarchical**: this technique groups the data in order to maximise or minimise some evaluation criteria,  involving the iterative formation of new clusters by merging or splitting the clusters instead of following a hierarchical order. Although it is less intuitive, it is considered [faster and more reliable than hierarchical clustering](https://www.geeksforgeeks.org/difference-between-hierarchical-and-non-hierarchical-clustering/), and is preferred for large datasets. There are many algorithms, such as K-medians, self-organising maps, or gene shaving, but **[K-means](https://data-flair.training/blogs/clustering-in-r-tutorial/)** is the most popular and simple. _K_-means algorithm is commonly randomnly initialized, so different runs may yield different results. Additionally, _k_-means requires the specification of the the optimal number of clusters _k_. Since there is no solid solution for such a determination, a _Within Sum of Squares_ ([WSS]) evaluated in an _Elbow plot_ is the usual criterium. The result can be checked with the _Silhouette Score_, that should be positive and close to +1. More details can be obtained [below](#bestgeneclusterk). 
+2. **Non-hierarchical**: this technique groups the data in order to maximise or minimise some evaluation criteria,  involving the iterative formation of new clusters by merging or splitting the clusters instead of following a hierarchical order. Although it is less intuitive, it is considered [faster and more reliable than hierarchical clustering](https://www.geeksforgeeks.org/difference-between-hierarchical-and-non-hierarchical-clustering/), and is preferred for large datasets. There are many algorithms, such as K-medians, self-organising maps, or gene shaving, but **[K-means](https://data-flair.training/blogs/clustering-in-r-tutorial/)** is the most popular and simple. _K_-means algorithm is commonly randomnly initialized, so different runs may yield different results. Additionally, _k_-means requires the specification of the the optimal number of clusters _k_. Since there is no solid solution for such a determination, a _Within Sum of Squares_ ([WSS]) evaluated in an _Elbow plot_ is the usual criterium. The result can be checked with the _Silhouette Score_, that should be positive and close to +1. More details can be obtained [below](#ahc-of-genes). 
 
 3. **Model-based clustering** ([MBC]), also known as **mixture models**, is a broad family of algorithms designed for modelling an unknown distribution as a mixture of simpler distributions [@Fraley2002]. It considers the data as multivariate, coming from a distribution that is mixture of two or more clusters with variety of data models, and applies maximum likelihood estimation and Bayes criteria to identify the most likely model and number of clusters. In contrast to the hirarchical and non-hierarchical, [MBC] is no heuristic but based on formal models. The model parameters can be estimated using the _Expectation-Maximization_ (EM) algorithm initialised by hierarchical [MBC]. Among the different model selections to provide the most realistic _true clusters_, the _Bayesian Information Criterion_ ([BIC]) remains the criterion of choice [@McNicholas2016vo], that is, a large [BIC] score indicates strong evidence for the corresponding model.
 
@@ -44,22 +44,24 @@ In the case of gene expression, you can cluster both samples (columns) and genes
 [END EXPANDIBLE]: #
 
 
-## Filtering
+## Select clusterisable DEGs {#clusterisable}
 
-Two initial subsets will be defined only after `treat()`:
+In the stage, we will select the most variable [DEG]s to calculate clusters and coexpression. The previously identified [DEG]s will be inspected to select those belonging to one of this two subsets:
 
-* **Ubiquitous**: genes that are DEGs in ***ALL*** contrasts (`ubi`)
-* **Putative**: genes that are DEGs in at least one contrast (`putative`)
+- **Ubiquitous**: genes that are DEGs in ***ALL*** contrasts (`ubi`)
+- **Putative**: genes that are DEGs in at least one contrast (`putative`)
 
-1. Look for any **`ubi`** DEG, preferentially after `treat()` but also after `eBayes()` since it is frequent that the first method do not provide any ubiquous genes
+The idea is to reduce the number of [DEG]s to a computationally-manageable number. Hence, the two previous subsets are filled in the following steps:
+
+1. Look for any **`ubi`** DEG, preferentially by `limma-voom-treat` but also by `limma-voom-eBayes` since it is frequent that the first method do not provide any ubiquous gene.
 
     ```{r ubiDEGs-in-all, results='hold'}
     keep.treat.ubi <- rowSums(abs(status.treat)) == dim(status.treat)[2]
     # keep.ubiquitous <- rowSums(status.treat != 0) == dim(status.treat)[2]
-    ubis.treat.IDs <- names(keep.treat.ubi[keep.treat.ubi == TRUE]) # ID of best 'ubis'
+    ubis.treat.IDs <- names(keep.treat.ubi[keep.treat.ubi == TRUE])        # ID of best 'ubis'
     ubis.treat <- length(ubis.treat.IDs)
     keep.eB.ubi <- rowSums(abs(status.eB)) == dim(status.eB)[2]
-    ubi.DEGs <- as.data.frame(status.eB[keep.eB.ubi, ]) # information of eBayes 'ubis'
+    ubi.DEGs <- as.data.frame(status.eB[keep.eB.ubi, ])                    # information of eBayes 'ubis'
     ubis.eB <- nrow(ubi.DEGs)
     ```
 
@@ -71,7 +73,7 @@ Method     | Amount of ubiquitous candidates
 `eBayes()` | `r ubis.eB`
 
 
-2. If there is any **`ubi`** DEG, save it, since they can be good **biomarker candidates**, even though they are less useful for clustering, networking and functional analyses.
+2. If there is any **`ubi`** DEG, save it in `OUTSTANDING_GENE_LIST`, since they can be good **biomarker candidates**, even though they are less useful for clustering, networking and functional analyses.
 
     ```{r SaveUbis, results='hold'}
     # Create an empty list to store any interesting or outstanding candidate
@@ -80,12 +82,13 @@ Method     | Amount of ubiquitous candidates
     # Save ubiquitous DEGs for further utility
     if (ubis.eB >= 1) {
       fileName <- SaveTSV(ubi.DEGs, "ubiquitousDEGs-eB_")
-      message("IDs of ubiquitous DEGs have been saved in file", "\n", fileName)
+      message("IDs of ubiquitous DEGs based on **eBayes** have been saved in file", "\n", fileName)
+      OUTSTANDING_GENE_LIST[["Ubiq-eB"]] <- row.names(ubi.DEGs)
       if (ubis.treat > 0) {
         fileName <- SaveTSV(ubis.treat.IDs, "ubiquitousDEGs-TREAT_")
         message("IDs of ubiquitous DEGs based on **TREAT** have been saved in file", "\n", fileName)
         # keep ubi IDs as the first outstanding genes
-        OUTSTANDING_GENE_LIST[["Ubiquitous"]] <- ubis.treat.IDs
+        OUTSTANDING_GENE_LIST[["Ubiq-treat"]] <- ubis.treat.IDs
       }
     }
     
@@ -94,45 +97,36 @@ Method     | Amount of ubiquitous candidates
     ```
 
 
-3. Retain **`putative`** genes based only on the `treat()` analysis for further clustering, networking and functional analysis. Only CTF normalised data will be considered as [previoulsy explained](#normBkg).
+3. **Retain `putative`** [DEG]s in `x.filt.ctf.putat` based only on the `limma-voom-treat` analysis for further clustering, networking and functional analysis. Only CTF normalised data will be considered as [previoulsy explained in Background](#normBkg), and putatives in [TMM] normalised data are calculated for comparisons.
 
     ```{r putativeDEGs}
     keep.putative <- rowSums(status.treat != 0) >= 1
-    # putative in CTF
-    x.filt.ctf.putat <- x.filt.ctf[keep.putative, ]
-    # putative in TMM
-    x.filt.tmm.putat <- x.filt.norm$counts[keep.putative, ]
-    
-    rm(keep.putative)
+    x.filt.ctf.putat <- x.filt.ctf[keep.putative, ]          # putative in CTF
+    x.filt.tmm.putat <- x.filt.norm$counts[keep.putative, ]  # putative in TMM
+    rm(keep.putative)                                        # remove useless variables
+
     message("Number of putative DEGs: **", nrow(x.filt.ctf.putat), "** \n")
-    ```
-
-
-4. Correlations and distances should be calculated with **logarithmic counts** to group highly variant genes. However, this is configured in `configure_wf.R` in the variable `LOG_EXPR`. As explained above and in [@Johnson2022fn], only [CTF] transformation is affected.
-The new log-counts are stored in `m.??` variables.
-
-    ```{r calcLogCtf}
-    m.x <- log2(x.filt.ctf + 1) # add 1 to avoid log(0) ; complete x object
+    
+    # Take logarithms for further correlations in `m.??` variables
+    m.x <- log2(x.filt.ctf + 1)               # add 1 to avoid log(0) ; complete x object
     m.putat.ctf <- log2(x.filt.ctf.putat + 1) # CTF putative
     m.putat.tmm <- log2(x.filt.tmm.putat + 1) # TMM putative
     ```
 
 
-5. Retain the **most variable genes** (rows) by filtering `putative` DEGs by [CV] as configured in `configure_wf.R`. When the `m` variables are in log-counts, CV will be much lower than CV for regular counts. 
+4. Retain the **most variable [DEG]s** (rows) by filtering `putative` [DEG]s by the [CV] configured in the configuration file.
 
     ```{r filterByCV}
-    # the most variant genes
-    m.x.cv <- calculaVars(m.x) # complete set of genes
-    m.putat.ctf.cv <- calculaVars(m.putat.ctf) # CTF putative
-    m.putat.tmm.cv <- calculaVars(m.putat.tmm) # TMM putative
+    m.x.cv <- calculaVars(m.x)                                          # CVs of all DEGs
+    m.putat.ctf.cv <- calculaVars(m.putat.ctf)                          # CTF putative
+    m.putat.tmm.cv <- calculaVars(m.putat.tmm)                          # TMM putative
     
-    # remove genes with CV < CV_MIN
-    m.x.cv_filt <- m.x.cv[m.x.cv$cv >= CV_MIN,]
+    m.x.cv_filt <- m.x.cv[m.x.cv$cv >= CV_MIN,]                         # remove genes with CV < CV_MIN
     m.putat.ctf.cv_filt <- m.putat.ctf.cv[m.putat.ctf.cv$cv >= CV_MIN,]
     m.putat.tmm.cv_filt <- m.putat.tmm.cv[m.putat.tmm.cv$cv >= CV_MIN,]
     ```
 
-7. Decreasing the most variable genes at a maximum of `r NODE_MAX` genes to avoid neverending calculations
+5. Decreasing the **most variable [DEG]s at a maximum of `r NODE_MAX` genes** to avoid neverending calculations
 
     ```{r decrease-putat-DEGs}
     # verificar el número de genes que pasan
@@ -155,9 +149,9 @@ The new log-counts are stored in `m.??` variables.
     ```
 
 
-6. A brief **summary** of the new sets of data for clustering:
+**Summary** of the new sets of [DEG]s for clustering:
 
-Result                      | Total                 | After CV > `r CV_MIN`
+Result                      | Total                 | Filtered by CV > `r CV_MIN`
 :---                        | ---:                  | ---:
 ***Total matrix***          |                       | 
 Samples (columns)           | `r ncol(m.x)`         | `r ncol(m.x.CV)`
@@ -173,7 +167,7 @@ Samples (columns)           | `r ncol(m.putat.tmm)` | `r ncol(m.putat.tmm.CV)`
 Genes (files)               | `r nrow(m.putat.tmm)` | `r nrow(m.putat.tmm.CV)`
 
 
-## Scaling
+## Scaling filtered DEGs
 
 [START EXPANDIBLE]: #
 `r EXPAND_bx` Expand to read about <b>scaling</b></summary>
@@ -183,7 +177,7 @@ Clustering analyses are based on distances that have to be calculated with compa
 </details> 
 [END EXPANDIBLE]: #
 
-The scaled matrices `m` variables are characterised for ending by `std`
+The scaled (_standardised_) matrices `m` variables are characterised for ending by `std`
 
 ```{r z-norm_scaling}
 # scaling CTF normalisation
@@ -192,7 +186,13 @@ m.ctf.std <- scale(m.putat.ctf.CV)
 m.tmm.std <- scale(m.putat.tmm.CV)
 ```
 
-Recovering RAM space by removing needless variables. On the non-scaled matrix `m.putat.ctf.CV` is retained for future heatmaps.
+`r NOTE_bx`  
+The matrices that can be clustered by genes or samples are `m.ctf.std` and `m.tmm.std`.
+
+The non-scaled matrix `m.putat.ctf.CV` is retained for future heatmaps.
+</div>
+
+Recovering RAM space by removing needless variables.
 
 ```{r remCV}
 rm(m.x, m.putat.ctf, m.putat.tmm,      # LOG2 transformed (or not)
@@ -201,7 +201,11 @@ rm(m.x, m.putat.ctf, m.putat.tmm,      # LOG2 transformed (or not)
    m.x.CV, m.putat.tmm.CV)  # retain only the expression columns
 ```
 
-`r NOTE_bx`  
-The matrices that can be clustered by genes or samples are `m.ctf.std` and `m.tmm.std`.
-</div>
+Before next calculations, the matrix `m.ctf.std`, and desriably `m.tmm.std`, must have some genes. If no transcript is present, the execution will stop just here.
 
+```{r}
+if (nrow(m.ctf.std) == 0 | nrow(m.tmm.std) == 0) {
+    warning("Execution stopped due to absence of variant genes")
+    knit_exit(paste0(DANGER_bx, " An ERROR occurred </div>"))
+}
+```

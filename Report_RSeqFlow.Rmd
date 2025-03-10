@@ -2,18 +2,18 @@
 title: "`r PROJECT_NAME`"
 subtitle: "Using the `r paste(SOFT_NAME, VERSION_CODE)` pipeline"
 author: "M. Gonzalo Claros[^![](https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png)^](https://orcid.org/0000-0002-0112-3550) & Amanda Bullones"
-date: "`r format(Sys.time(), '%A %d, %B %Y. %H.%M.%S')` | RMD version: 250114"
+date: "`r format(Sys.time(), '%A %d, %B %Y. %H.%M.%S')` | RMD version: 250310"
 abstract: |
   **Data Science** is an interdisciplinary field that encompases statistics, computer science, and domain-specific knowledge to extract knowledge and insights from structured and unstructured data. **Bioinformatics** is a data sciencie applied to biology and related sciences. Hence, **`r paste(SOFT_NAME, VERSION_CODE)`** [@Bullones2023aa] is a bioinformatics R pipeline for processing RNA-Seq datasets from non-model organisms that performs the most recommended statistical analyses. It carries out the following processes:
 
    1. **Data collection**: reading gene counts [@Wang2009]
-      - from a single expression table, ot
+      - from a single expression table, or
       - from a set of counting files (one per sequencing library).
-   2. **Data cleaning**: removing inconsistencies/errors to ensure data quality based on 
-      - ***filtering by expression***, and 
-      - ***normalisation*** using `TMM` and `CTF` [@Zhao2021wp; @Johnson2022fn].
+   2. **Data processing** or **cleaning**: raw gene expression data usually need to be appropriately cleaned to remove noise, technical and unwanted biological effects; removing inconsistencies/errors to ensure data quality based on 
+      - ***filtering by expression*** using `edgeR` functions [@Chen2024-bioRxiv], and 
+      - ***normalisation*** using `TMM` [@Dillies2013; @Tam2015] and `CTF` [@Zhao2021wp; @Johnson2022fn].
    3. **Data analysis**: to identify patterns and trends of biological relevance, the following statistical methods are used:
-      - ***differential expression*** using `limma/voom` and `treat()` [@Oshlack2010; @Marioni2008; @Li2022cf];
+      - ***differential expression*** [@Oshlack2010; @Li2022cf] is a tailored mathematical approach to fetures (i.e. genes) exhibiting substantial differences in the levels of gene expression between experimental groups; several statistical methods are available, and this script is based on `limma-voom` [@Oshlack2010; @Law2014tt; @Li2022cf] combined with the empirical Bayesian method in `eBayes()`, as well as the `treat()` function to identify more biologically relevant genes [@McCarthy2009oo]; ***differentially expressed genes are then a key component of the discovery process in biological research***;
       - gene and sample ***correlation*** analyses;
       - ***clustering*** with 3 algorithms [@Usadel2009su; @Serin2016uw];
       - ***gene networking***, including hubs and subgraphs, as a surrogate of co-expression [@Parsana2019jm; @Sia2022].
@@ -28,7 +28,7 @@ link-citations: true
 ---
 
 ```{r RmdSetup, include = FALSE}
-opts_chunk$set(echo = VERBOSE_MODE)
+# opts_chunk$set(echo = VERBOSE_MODE)
 
 knitr::knit_hooks$set(
    error = function(x, options) {
@@ -58,10 +58,16 @@ knitr::knit_hooks$set(
 # they can also be defined as params: or launchend in render() as params=list(...)
 # blockquote
 # > IMPORTANT: Essential information required for user success
+# Violet: result interpretation
+INFER_bx <- "<div style = 'background-color: SlateBlue; 
+                        color: white;
+                        padding: 10px 10px 8px;
+                        margin-bottom: 10px;
+                        border-radius: 4px'>**INFERENCE** <br>" 
 # blue = Accessory information the user should notice even if skimming
 NOTE_bx <- "<div class='alert alert-info'>***NOTE:*** "
 # green = Optional information to help a user be more successful
-OK_bx <- "<div class='alert alert-success'>***SUCCESS!*** "
+OK_bx <- "<div class='alert alert-success'>***OK!*** "
 # orange = Negative potential consequences of an action
 WARN_bx <- "<div class='alert alert-warning'>***CAUTION!*** "
 # red = Dangerous certain consequences of an action
@@ -75,6 +81,7 @@ EXPAND_bx <- '<details  style="background-color: SeaShell;
                  color: darkGreen; 
                  padding: 3px 2px 3px 2px;">'
 ```
+
 
 [Global links setup]: #
 
@@ -104,6 +111,16 @@ EXPAND_bx <- '<details  style="background-color: SeaShell;
 
 [BCV]: https://www.bioconductor.org/packages/release/bioc/vignettes/edgeR/inst/doc/edgeRUsersGuide.pdf#2.9.2 "Biological coefficient of variation"
 
+[FC]: "Fold change"
+
+[TMM]: "Trimmed Mean of M-values"
+
+[QLF]: https://bookdown.org/goknurginer/Analysing-CRISPR-screens-with-edgeR/differential-abundance-analysis-at-guide-level.html "quasi-likelihood F-test"
+
+[MD plot]: "mean-difference plot"
+
+[FDR]: "False discovery rate (rate of type I errors)"
+
 [AHC]: https://online.stat.psu.edu/stat555/node/86/ "Agglomerative hierarchical clustering"
 
 [CTF]: https://github.com/krishnanlab/RNAseq_coexpression "Counts adjustment with TMM Factors"
@@ -120,31 +137,23 @@ EXPAND_bx <- '<details  style="background-color: SeaShell;
 
 [GCN]: "Gene co-expression network"
 
-[FC]: "Fold change"
-
-[TMM]: "Trimmed Mean of M-values"
-
-[QLF]: "quasi-likelihood F-test"
-
-[MD plot]: "mean-difference plot"
-
-[FDR]: "False discovery rate (rate of type I errors)"
 
 
-| Environment variables        | Value |
-| :---- | :--- |
-| **Workflow** name and version | `r SOFT_NAME` v. `r VERSION_CODE` |
-| Run **date & time**           | `r HOY` |
-| **`r COMPUTER`**              | `r R.version$platform` |
-| **R** version                 | `r R.version.string` |
-| **BioConductor** version      | `r VERSION_BIOC` |
-| **User**                      | `r Sys.getenv("LOGNAME")` |
-| PATH to **results**           | `r WD` |
-|                               |  |
-| **Customisable environment**: |  |
-| Packages update               | `r PKG_UPDATE` |
-| PATH to **code** files        | `r SOURCE_DIR` |
-| **Verbose** report            | `r VERBOSE_MODE` |
+| Environment variables               | Value |
+| :----                               | :--- |
+| **Workflow** name and version       | `r SOFT_NAME` v. `r VERSION_CODE` |
+| Run **date & time**                 | `r HOY` |
+| **`r COMPUTER`**                    | `r R.version$platform` |
+| **R** version                       | `r R.version.string` |
+| **BioConductor** version            | `r VERSION_BIOC` |
+| **User**                            | `r Sys.getenv("LOGNAME")` |
+| PATH to **results**                 | `r WD` |
+|                                     |  |
+| **Customisable environment**:       |  |
+| Packages update                     | `r PKG_UPDATE` |
+| PATH to **code** files              | `r SOURCE_DIR` |
+| **Verbose** report                  | `r VERBOSE_MODE` |
+| Calculate **clusters and networks** | `r DoCLUSTER_NETWORK` |
 
 
 Customised parameters           | Value
@@ -170,6 +179,7 @@ Maximal **genes** for correlation and clustering | `r NODE_MAX`
 **Decimal digits** for rounding  | `r ROUND_dig`
 **Correlation method**           | `r CORR_METHOD`
 **Correlation threshold**        | `r R_MIN`
+
 
 
 ***
@@ -198,7 +208,12 @@ A living being with about 20 000 genes usually have only **9 000-20 000 genes
 
 # Raw sample similarities
 
-This is to show if original data already can group replicates in separate groups. This is based on correlation coefficient.
+This is to show if original data already can group replicates in separate groups. Hence, grouping samples can serve to discern if there is more similarities inter-replicates than inter-factors (conditions). This can be calculated based on **correlation coefficient, which groups a matrix by columns** (***samples***: one per experimental condition or factor). Since the total number of columns is usually low, there is not computational problem on this.
+
+`r NOTE_bx`
+  As a rule, the number of clusters should be the number of different experimental conditions.
+</div>
+
 
 ```{r initial_corr, child='Rmds/30_InitialCorrelations.Rmd'}
 ```
@@ -223,26 +238,38 @@ This is to show if original data already can group replicates in separate groups
 
 ## Background
 
-RNA-Seq is a powerful tool for studying gene expression. **Differential expression** ([DE]) of genes means that a gene is expressed differently in a series of biological conditions due to the process where different genes are activated in a cell, giving that cell a specific purpose that defines its function.
+RNA-Seq is a powerful tool for studying gene expression. **Differential expression** ([DE]) of genes means that a gene is expressed differently in a series of biological conditions due to the process where different genes are activated in a cell, giving that cell a specific purpose that defines its function [@Costa-Silva2017aa].
 
 [START EXPANDIBLE]: #
 `r EXPAND_bx` Expand to read about <b>differential expression methods</b></summary>
 
-Detecting [DE] is extremely important because it allows living organisms, including human beings, to grow and develop into complex, multicellular beings with different tissues, cells, and organs. Genes exhibiting DE are called **DEGs** (_differentially expressed genes_). [DEG]s can be selected using many algorithms, most of them based on the gene-expression _fold change_ (**FC**) and other statistical parameters. 
+Detecting [DE] is extremely important because it allows living organisms, including human beings, to grow and develop into complex, multicellular beings with different tissues, cells, and organs. Genes exhibiting DE are called **DEGs** (_differentially expressed genes_). [DEG]s can be selected using many algorithms, most of them based on the gene-expression _fold change_ (**FC**) and other statistical parameters [@Costa-Silva2017aa; @McDermaid2019aa; @Rosati2024aa]. 
 
-To unlock the underlying biological insights, the selection of appropriate data analysis software is essential. There is no reliable method for differential expression in RNA-seq [@Rapaport2013]. However, the most reliable and widely used [DE] methods when a few replicates are available are those based in [DESeq2] and [edgeR] libraries. It was recently demonstrated that different algorithms produce significant variations in the differentially expressed genes proposing [DESeq2] as the algorithm of choice [@Thawng2022aa; @Thawng2023aa]. However, when considering the false discovery rate, the classic Wicoxon rank-sum test (when more than 10 replicates are available) and the [limma]-voom` approach (when only a few replicates are available) perform clearly better than any other one [@Li2022cf].
+To unlock the underlying biological insights, the [selection of appropriate data analysis software is essential](https://bigomics.ch/blog/how-to-perform-differential-gene-expression-analysis/). There is no reliable method for differential expression in RNA-seq [@Rapaport2013]. However, the most reliable and widely used [DE] methods when a few replicates are available are those based in [DESeq2] and [edgeR] libraries. It was recently demonstrated that different algorithms produce significant variations in the differentially expressed genes proposing [DESeq2] as the algorithm of choice [@Thawng2022aa; @Thawng2023aa]. However, when considering the false discovery rate, the classic Wicoxon rank-sum test (when more than 10 replicates are available) and the [limma]-voom` approach (when only a few replicates are available) perform clearly better than any other one [@Li2022cf].
 
-Since [**linear regression**](https://mlu-explain.github.io/linear-regression/) is a simple and powerful model for predicting a numeric response from a set of one or more independent variables, it is a suitable approach to detect [DEG]s. Additionally, it is effective and easy to interpret. Typically, any linear model imply the [following assumptions](https://www.r-bloggers.com/2021/10/simple-linear-regression-in-r/):
+Since [**linear regression**](https://mlu-explain.github.io/linear-regression/) is a simple and powerful model for predicting a numeric response from a set of one or more predictor variables, it is a suitable approach to detect [DEG]s. Additionally, it is effective and easy to interpret. Typically, any linear model imply the [following assumptions](https://www.r-bloggers.com/2021/10/simple-linear-regression-in-r/):
 
-* **Log-linearity**: a straight line between the log values of _x_ and _y_ (a constant change in a predictor leads to a constant change in the response variable); in terms of gene expression, the response variable _y_ is assumed to follow an exponential family distribution with _mean_ ($\mu$).
-* **Homoskedasticity**: noise hase the same variance along the variables.
-* **Normality**: noise is normally distributed.
-* **Independence**: error is independent of variables and does now follow a gaussian/normal distribution.
+1. **Linearity**: a straight line between the log values of _x_ and _y_ (a constant change in a predictor leads to a constant change in the response variable); in terms of gene expression, the response variable _y_ is assumed to follow an exponential family distribution (**log-linearity**) with _mean_ ($\mu$).
+2. **Homoskedasticity**: noise hase the same variance along the variables.
+3. **Normality**: noise (residuals) is normally distributed.
+4. **Independence**: error is independent of variables and does now follow a gaussian/normal distribution.
+5. Absence of **multicollinearity** when more than two predictor variables are analysed: the predictor variables cannot be predicted from the others predictors.
+
+If one or more of these assumptions are violated, the results of the linear regression may be unreliable or even misleading, and [other models should be used](https://www.maximaformacion.es/blog-dat/que-modelo-de-regresion-deberia-elegir/):
+
+- Use **AM** (_Additive Models_) when variables are not linearly related (1) or you do now know the relation or it is too complex---, and you should apply smoothed functions.
+- Use **GLS** (_Generalised Least Squares models_) when there is no variance homogeneity (2)
+- Use **[GLM]** (_Generalised Linear Model_) when you have no normality (3) because the response variable is binary (binomial GLM), counts (Poisson GLM) or proportions (gamma GLM).
+- Use **MM** (_Mixed Models_) when there is no independence (4) because data have a hierarchical or nested structure, there are repeated observations, or there is a time-space dependence.
+- Use **GAM** (_Generalised Additive Models_) when you lack linearity (1) and normality (3)
+- Use **GLMM** (_Generalised Linear Mixed Models_) whene you lack normality (3) and independence (4).
+- Use **GAMM** (_Generalised Additive Mixed Models_) when you lack linearity (1), normality (3) and independence (4).
 
 </details> 
 [END EXPANDIBLE]: #
 
 The following steps are to reduce data dispersion, homogenise them around the mean, and adjust a linear model to obtain the most reliable [DEG]s based on linear models.
+
 
 
 ## Experimental design
@@ -262,14 +289,13 @@ The following steps are to reduce data dispersion, homogenise them around the me
 ## Heteroskedasticity
 
 
-```{r calculate-GLM, child='Rmds/70_Heteroscedasticity.Rmd'}
+```{r calculate-HS, child='Rmds/70_Heteroscedasticity.Rmd'}
 ```
 
 
-## GLM: Generalised linear model
+## Limma-voom-treat method
 
-Once we know that data `v.tmm` are less dispersed and homoskedastic, a GLM can be applied to obtain DEGs.
-
+Once we know that data `v.tmm` are less dispersed and homoskedastic, we will extract [DEG]s using the `limma-voom-treat` approach based on a [GLM].
 
 ```{r calculate-GLM, child='Rmds/80_GLM.Rmd'}
 ```
@@ -287,41 +313,54 @@ The complete set of parameters calculated for every gene, including the informat
 
 # Clustering {#clustering}
 
-From the complete set of genes, the most significant ones should be selected for correlation and co-expression analysis. As [previously indicated](#normBkg), [CTF] normalisation is more appropriate than [TMM] for clustering and co-expression analyses [@Johnson2022fn], and this is why dataset including `ctf` will be preferred.
+From the complete set of genes, the most significant ones should be selected for correlation and co-expression analysis. As [previously indicated](#normBkg), **[CTF] normalisation is more appropriate** than [TMM] for clustering and co-expression analyses [@Johnson2022fn], and this is why dataset including `ctf` will be preferred here.
 
-```{r clustering, child='Rmds/100_FinalFilterScale.Rmd'}
+Let's review the sample correlation using [AHC] as above and then different gene clusterings will be performed.
+
+
+```{r clustering, child='Rmds/100_FilterAndScale.Rmd'}
 ```
 
 
-## AHC of samples
 
-A matrix can be grouped by columns (***samples***: one per experimental condition or factor) or by rows (genes). The total number of experimental conditions (factors) is much lower than the number of genes, so there is not computational problem on this. Clustering samples can serve to discern if replicates cluster together, and if different factor (conditions) produce different clusters.
+## AHC of samples {.tabset .tabset-fade .tabset-pills}
 
-`r NOTE_bx`
-  As a rule, the number of clusters should be the number of different experimental conditions.
-</div>
+Let's see if grouping samples using [DEG]s presents differences respect to the [grouping performed using hingly variant genes in raw data](#grouping-raw-samples).
 
 ```{r AHC-sampl-clust, child='Rmds/110_SampleClusters.Rmd'}
 ```
 
 
-## AHC of genes
+## AHC of genes {.tabset .tabset-fade .tabset-pills}
 
-Clustering genes can serve to know genes that behave similarly, and this can be interpreted as co-expressed or co-regulated genes belonging to the same or related biological process or pathway. In any RNA-seq experiment, the number of genes (_rows_) is much higher than the number of columns (samples) by far, so there is a computational constraint that requires the elimination of _stable_ genes to reduce computation. This is the reason of the [filtering performed above](#filtering).
+Clustering genes can serve to know genes that behave similarly, and this can be interpreted as co-expressed or co-regulated genes belonging to the same or related biological process or pathway. In any RNA-seq experiment, the number of genes (_rows_) is much higher than the number of columns (samples) by far, so there is a computational constraint that requires the elimination of _stable_ genes to reduce computation. This is the reason of the [selection of clusterisable [DEG]s performed above](#clusterisable).
 
-```{r AHC-gene-clust, child='Rmds/120_GeneClustering.Rmd'}
+```{r clustering2, include=!(DoCLUSTER_NETWORK), results='asis'}
+DO_MSG <- "**This part of the report is not computed** as idicated by `DoCLUSTER_NETWORK` in configuration file.\n"
+warning(DO_MSG)
+```
+
+```{r AHC-gene-clust, child=if (DoCLUSTER_NETWORK) 'Rmds/120_GeneClustering.Rmd'}
 ```
 
 
-## K-means of genes
+## K-means of genes {.tabset .tabset-fade .tabset-pills}
 
-```{r kmeans-genes-clust, child='Rmds/130_kmeans.Rmd'}
+```{r kmeans-genes-clust, child=if (DoCLUSTER_NETWORK) 'Rmds/130_kmeans.Rmd'}
+```
+
+```{r kmeans-genes-clust2, include=!(DoCLUSTER_NETWORK), results='asis'}
+warning(DO_MSG)
 ```
 
 
 ## Model-based clustering
 
-```{r mbc-genes-clust, child='Rmds/140_model-based.Rmd'}
+```{r mbc-genes-clust, child=if (DoCLUSTER_NETWORK) 'Rmds/140_model-based.Rmd'}
+```
+
+```{r mbc-genes-clust2, include=!(DoCLUSTER_NETWORK), results='asis'}
+warning(DO_MSG)
 ```
 
 
@@ -332,15 +371,22 @@ Clustering genes can serve to know genes that behave similarly, and this can be 
 
 To see the behaviour of clusters with respect to samples using the `aggregate()` function to calculate the mean for each cluster in each sample.
 
-```{r profiles, child='Rmds/150_ExpressProf.Rmd'}
+```{r profiles, child=if (DoCLUSTER_NETWORK) 'Rmds/150_ExpressProf.Rmd'}
 ```
 
+```{r profiles2, include=!(DoCLUSTER_NETWORK), results='asis'}
+warning(DO_MSG)
+```
 
 ***
 
 # Networking
 
-```{r networks, child='Rmds/160_Networks.Rmd'}
+```{r networks, child=if (DoCLUSTER_NETWORK) 'Rmds/160_Networks.Rmd'}
+```
+
+```{r networks2, include=!(DoCLUSTER_NETWORK), results='asis'}
+warning(DO_MSG)
 ```
 
 
@@ -350,7 +396,6 @@ To see the behaviour of clusters with respect to samples using the `aggregate()`
 
 ```{r outsprofs, child='Rmds/170_Outstanding.Rmd'}
 ```
-
 
 ***
 
