@@ -32,7 +32,7 @@ The GitHub repository and your local version will contain the following files an
 
 - `README.md`: this file
 - `LICENSE`: details about the CC-BY license
-- `configure_wf.R`: a file containing all parameters necessary to execute _RSeqFolder_. This file can be located anywhere in your computer and is the only file that requires user intervention.
+- `configure_RSeqFlow.R`: a file containing all parameters necessary to execute _RSeqFolder_. This file can be located anywhere in your computer and is the only file that requires user intervention.
 - `libraries_wf.R`: a file that loads, installs and updates the _RSeqFile_ required libraries.
 - `functions_wf.R`: a file gathering all functions called within the code.
 - `execute_wf.R`: a file that starts the execution of _RSeqFile_ using the parameters indicated in `configure_wf.R` and the markdown skeleton in `Report_RSeqFlow.Rmd`.
@@ -374,10 +374,10 @@ Version | Date      | Comments
     - Clustering results are now simplified and shown on tabs to facilitate the reading.
     - Heatmap colour palettes are unified.
     - Venn diagrams now fit in page in all report versions
-    - Parameter VERBOSE_MODE makes code chunks to be shown (TRUE) or hidden (FALSE)
+    - Parameter `VERBOSE_MODE` makes code chunks to be shown (`TRUE`) or hidden (`FALSE`)
     - When model-based clustering only gives 1 cluster, _k_-means clusters are directly assigned to this analysis
     - Labelled communities in networks are more readable
-- New parameter DoCLUSTER_NETWORK was included to stop execution after differential expression (FALSE) or do the complete script (TRUE)
+- New parameter `DoCLUSTER_NETWORK` was included to stop execution after differential expression (`FALSE`) or do the complete script (`TRUE`)
 - Heatmap within _Profiling gene clusters_ contains also the distribution of genes per cluster
 - Plots of outstanding genes have been improved, showing genes in CTF-normalised and scaled counts. Additionally, internal controls were introduced to avoid plotting when no outstanding gene was selected.
 
