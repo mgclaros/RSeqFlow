@@ -19,61 +19,9 @@ Heatmaps are another way to visualise [AHC] after [transforming data values to a
     ```
 
 
-3. Plot the heatmap using the [AHC] clusters previously defined at left using `heatmap.2()`, although there are [many other packages for drawing heatmaps](https://www.datanovia.com/en/lessons/heatmap-in-r-static-and-interactive-visualization/). The cluster correspondence to colours in the left heatmap
+3. Plot the heatmap using the [AHC] clusters previously defined for rows (genes) using the `pheatmap::pheatmap()` function. It allows for more customisation and is more user-friendly than `heatmap()` and `heatmap.2()`. We will include the correspondence with clusters and experimental conditions, and show the heatmap with and withouth row scaling.
 
-    ```{r heatmaps2, fig.width=6, fig.height=8, out.width=c('70%', '30%'), fig.show='hold'}
-    dendr_samples_ctf <- as.dendrogram(HC_samples_ctf)
-    heatmap.2(m.putat.ctf.CV, 
-            # dendrogram control
-              Rowv = dendr_genes_ctf,     # already calculated dendrograms
-              # Colv = dendr_samples_ctf,   # reorder colums by the dendrogram
-              Colv = FALSE,               # Colums are in the same order as the matrix
-              dendrogram = "none",        # no dendrogran for genes/samples
-            # scaling
-              scale = "none",             # show raw data 
-              na.rm = TRUE,               # remove NAs before plotting
-              # col = HEATMAP_COLORS,       # intenstity colours for the image
-              col = "bluered",
-            # block separation
-              # colsep = c(3, 6, 9),        # separate columns in blocks
-            # level trace
-              trace = "none",             # to clean the imge
-            # labelling
-              margins = c(3, 10),         # margins for for column and row names,
-              # ColSideColors = terrain.colors(length(HC_samples_ctf$labels)), 
-              ColSideColors = EXP_COLORS, # sample color by experimental condition
-              RowSideColors = mycolhc,    # gene color by cluster
-              # cexRow = 0.5,               # small gene names
-              labRow = FALSE,             # do not print gene names
-              labCol = colnames(m.putat.ctf.CV),
-              # adjCol = c(NA, -58.3),      # shift column labels OJO
-              offsetRow = 0.1,            # gene names close to the image
-            # key features
-              key = TRUE,                 # show colour legend, by default
-              keysize =  1,               # increases key size (1.5 by default)
-              key.title = "Expression \n colours",
-              key.xlab = paste("Raw expression") , # add label to x in the legend 
-            # plot layout
-              # lmat = rbind( c(0, 3, 0), c(2, 1, 0), c(0, 4, 0) ), 
-              # lhei = c(0.43, 2.6, 0.6),   # Alter dimensions of display array cell heighs
-              # lwid = c(0.6, 4, 0.6),      # Alter dimensions of display array cell widths
-            # plot labels
-              main = "Gene clusters previously calculated \n DEGs across samples")
-    
-    # Colors for the clusters
-    # show_col(hc_colours, ncol = length(hc_colours))
-    barplot(rep(1, length(hc_colours)), 
-            col = hc_colours, 
-            border = hc_colours, 
-            axes = FALSE,
-            names.arg = paste("Cluster", 1:final_k),
-            main = "Legend of colours in gene clusters",
-            legend.text = hc_colours)
-    ```
-
-4. Alternatively, the heatmap can be plotted using the `pheatmap::pheatmap()` function that allows for more customisation and is more user-friendly. We can even add the correspondence with clusters and experimental conditions.
-
-```{r pheatmap-complete, fig.align = 'center', fig.width=6, fig.height=8, out.width = '70%'}
+```{r pheatmap-complete, fig.align = 'center', results='hold', fig.width=6, fig.height=8, out.width = '59%', fig.show='hold'}
     # table with factors for the samples
     annot_columns <- data.frame(Sample = EXP_FACTORS,
                                 row.names = colnames(m.putat.ctf.CV))
@@ -89,24 +37,49 @@ Heatmaps are another way to visualise [AHC] after [transforming data values to a
     
     # resulting heatmpap, more informative
     pheatmap(m.putat.ctf.CV, 
-             show_rownames = FALSE,
-             show_colnames = TRUE,
              color = HEATMAP_COLORS,
+             scale = "row",                  # to have all rows (genes) in the same max-min scale
+             border_color = "white",
+             # customise columns
+             show_colnames = TRUE,
              angle_col = 45,                 # rotate column names
              annotation_col = annot_columns, # add sample annotation
-             annotation_row = annot_rows,    # add gene cluster annotation
-             annotation_colors = my_colours,
-             scale = "row",                  # to have all rows (genes) in the same max-min scale
              cluster_cols = FALSE,           # if true, dendrogram and reorganisation of columns is produced
              clustering_distance_cols = d_ctf_samp,
              cutree_cols = k_samples,        # number of sample clusters calculated before
+             # customise rows
+             show_rownames = FALSE,
+             annotation_row = annot_rows,    # add gene cluster annotation
              cluster_rows = TRUE,            # if false, no dendrogram and reorganisation of rows is produced
              clustering_distance_rows = d_ctf_genes, 
              cutree_rows = final_k,          # maximum number of clusters calculated before
-             main = "Gene clusters respect to samples")
+             # colours for row and column annotations
+             annotation_colors = my_colours,
+             main = "Gene clusters respect to samples. Scaled by row")
+
+    pheatmap(m.putat.ctf.CV, 
+             color = HEATMAP_COLORS,
+             scale = "none",                 # to have all rows (genes) in the same max-min scale
+             border_color = NA,              # remove border, in this case is by default
+             # customise names for columns and rows
+             show_rownames = FALSE,
+             show_colnames = TRUE,
+             angle_col = 45,                 # rotate column names
+             # customise annotations for columns and rows
+             annotation_col = annot_columns, # add sample annotation
+             annotation_row = annot_rows,    # add gene cluster annotation
+             annotation_colors = my_colours,
+             # customise clustering of columns and rows
+             cluster_cols = TRUE,            # if true, dendrogram and reorganisation of columns is produced
+             cluster_rows = TRUE,            # if false, no dendrogram and reorganisation of rows is produced
+             clustering_distance_cols = d_ctf_samp,
+             clustering_distance_rows = d_ctf_genes, 
+             cutree_cols = k_samples,        # number of sample clusters calculated before
+             cutree_rows = final_k,          # maximum number of clusters calculated before
+             main = "Gene clusters respect to clustered samples. Not scaled")
 ```
 
-4. Clusters can be recalculated and plotted into separate groups using `pheatmap()` (right image). 
+
 
 ## Aggregate matrix by factors
 
@@ -174,6 +147,8 @@ The list `agg_list` will contain the aggregated genes by all [AHC] and _k_-means
     # aggregate the m_ctf_std_bysample matrix by clusters, using the mean, sd and CI95
     aggr_med <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_k), mean)
     tmp_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_k), sd)
+    # when there are clusters with only 1 value, sd returs NA. Change this for 0
+    tmp_sd[is.na(tmp_sd)] <- 0
     aggr_CI95 <- cbind(tmp_sd[1], tmp_sd[, 2:ncol(tmp_sd)]*z_CI/sqrt(NUM_genes_by_cluster))
     aggr_CI95[is.na(aggr_CI95)] <- 0 # avoid crashing when NAs are present due to 1-member clusters
     
@@ -198,6 +173,8 @@ The list `agg_list` will contain the aggregated genes by all [AHC] and _k_-means
     aggr_med <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_k), mean)
     # standard deviation and 95% confidence interval
     tmp_sd <- aggregate(m_ctf_cpm_bysample, by = list(Cluster = groups_k), sd)
+    # when there are clusters with only 1 value, sd returs NA. Change this for 0
+    tmp_sd[is.na(tmp_sd)] <- 0
     aggr_CI95 <- cbind(tmp_sd[1], tmp_sd[, 2:ncol(tmp_sd)]*z_CI/sqrt(NUM_genes_by_cluster))
     aggr_CI95[is.na(aggr_CI95)] <- 0 # avoid crashing when NAs are present due to 1-member clusters
     
@@ -225,6 +202,8 @@ The list `agg_list` will contain the aggregated genes by all [AHC] and _k_-means
     aggr_med <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_kmeans), mean)
     # standard deviation and 95% confidence interval
     tmp_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_kmeans), sd)
+    # when there are clusters with only 1 value, sd returs NA. Change this for 0
+    tmp_sd[is.na(tmp_sd)] <- 0
     aggr_CI95 <- cbind(tmp_sd[1], tmp_sd[, 2:ncol(tmp_sd)]*z_CI/sqrt(NUM_genes_by_cluster))
     aggr_CI95[is.na(aggr_CI95)] <- 0 # avoid crashing when NAs are present due to one-member clusters
     
@@ -248,6 +227,8 @@ The list `agg_list` will contain the aggregated genes by all [AHC] and _k_-means
     aggr_med <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_kmeans), mean)
     # standard deviation and 95% confidence interval
     tmp_sd <- aggregate(m_ctf_cpm_bysample, by = list(Cluster = groups_kmeans), sd)
+    # when there are clusters with only 1 value, sd returs NA. Change this for 0
+    tmp_sd[is.na(tmp_sd)] <- 0
     aggr_CI95 <- cbind(tmp_sd[1], tmp_sd[, 2:ncol(tmp_sd)]*z_CI/sqrt(NUM_genes_by_cluster))
     aggr_CI95[is.na(aggr_CI95)] <- 0 # avoid crashing when NAs are present due to one-member clusters
     
@@ -276,6 +257,8 @@ The list `agg_list` will contain the aggregated genes by all [AHC] and _k_-means
     aggr_med <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_mclust), mean)
     # standard deviation and 95% confidence interval
     tmp_sd <- aggregate(m_ctf_std_bysample, by = list(Cluster = groups_mclust), sd)
+    # when there are clusters with only 1 value, sd returs NA. Change this for 0
+    tmp_sd[is.na(tmp_sd)] <- 0
     aggr_CI95 <- cbind(tmp_sd[1], tmp_sd[, 2:ncol(tmp_sd)]*z_CI/sqrt(NUM_genes_by_cluster))
     aggr_CI95[is.na(aggr_CI95)] <- 0 # avoid crashing when NAs are present due to one-member clusters
     
@@ -299,6 +282,8 @@ The list `agg_list` will contain the aggregated genes by all [AHC] and _k_-means
     aggr_med <- aggregate(m_ctf_cpm_bysample, by = list(cluster = groups_mclust), mean)
     # standard deviation and 95% confidence interval
     tmp_sd <- aggregate(m_ctf_cpm_bysample, by = list(Cluster = groups_mclust), sd)
+    # when there are clusters with only 1 value, sd returs NA. Change this for 0
+    tmp_sd[is.na(tmp_sd)] <- 0
     aggr_CI95 <- cbind(tmp_sd[1], tmp_sd[, 2:ncol(tmp_sd)]*z_CI/sqrt(NUM_genes_by_cluster))
     
     agg_list[[thisID]]$med <- aggr_med

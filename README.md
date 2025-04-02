@@ -356,16 +356,24 @@ The folder will contain
 
 Version | Date      | Comments
 :---    | :---      | :---
-0.9     | 9-Jun-22  | Initial release
+0.9     | 09-Jun-22 | Initial release
 1.0     | 21-Jul-22 | First stable release
-1.01    | 7-Jul-23  | Small improvements avoiding unexpected crashes
-1.02    | 3-Nov-23  | Minor display improvements, code debugging, more references and explanations
-1.02b   | 6-Nov-23  | Two minor bugs in library load and removal of unused variables
+1.01    | 07-Jul-23 | Small improvements avoiding unexpected crashes
+1.02    | 03-Nov-23 | Minor display improvements, code debugging, more references and explanations
+1.02b   | 06-Nov-23 | Two minor bugs in library load and removal of unused variables
 1.03    | 18-Dec-24 | Gene filtering improved, minor bugs resolved
 1.04    | 13-Jan-25 | Minor modifications in the report, changes in correlations and gene profiles
 1.05    | 14-Jan-25 | Cosmetic modifications in the report and the code
 1.1     | 10-Mar-25 | Improvements in graphics and HTML report. Clustering is now optional. Bugs fixed.
+1.1.1   | 02-Apr-25 | Heatmaps improved and correction of minor bugs that hang the analysis
+
+
+### v 1.1.1
  
+- Heatmaps in the _Profiling gene clusters_ section are more informative
+- Corrected when hanging in profile of clusters having only one gene.
+- Networks are only calculated for clusters having at least one pair of genes with significant correlation
+
 
 ### v 1.1
 

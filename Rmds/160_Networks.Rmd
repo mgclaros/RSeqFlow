@@ -57,6 +57,10 @@ We will produce network for the following datasets using the method `r CORR_METH
 
 The [DEG]s have been [already filtered](#filtering) as `putative` and then the most variable ones were then [scaled](#scaling) and stored in `m.ctf.std`. We will now obtain the significant correlation as the quantifiable link to perform a net [@Provart2012tj]. Let's create a list (`CLUSTER_LIST`) with all clusters that we want to analyse.
 
+`r NOTE_bx`
+Only clusters **including >2 genes** will be analysed. The rest will be removed.
+</div>
+
 ```{r}
 CLUSTER_LIST <- list()
 # most variable genes for a reasonable number of nodes
@@ -67,28 +71,42 @@ if (nrow(m.ctf.std) < NODE_MAX) CLUSTER_LIST[["Variant_DEGs"]] <- list(expr_matr
 txt <- "AHC_Clust_"
 i <- 1
 for (i in 1:final_k) {
-  id <- paste0(txt, i)
-  # CLUSTER_LIST[[id]][["expr_matrix"]] <- t(m.ctf.std[groups_k == i, ])
-  CLUSTER_LIST[[id]] <- list(expr_matrix = t(m.ctf.std[groups_k == i, ]))
+  hasMoreThan1Row <- !is.null(nrow(m.ctf.std[groups_k == i, ]))
+  if (hasMoreThan1Row) {
+    id <- paste0(txt, i)
+    CLUSTER_LIST[[id]] <- list(expr_matrix = t(m.ctf.std[groups_k == i, ]))
+  }
 }    
 
 txt <- "kMeans_Clust_"
 i <- 1
 for (i in 1:kmeans_k) {
-  id <- paste0(txt, i)
-  CLUSTER_LIST[[id]] <- list(expr_matrix = t(m.ctf.std[groups_kmeans == i, ]))
+  hasMoreThan1Row <- !is.null(nrow(m.ctf.std[groups_kmeans == i, ]))
+  if (hasMoreThan1Row) {
+    id <- paste0(txt, i)
+    CLUSTER_LIST[[id]] <- list(expr_matrix = t(m.ctf.std[groups_kmeans == i, ]))
+  }  
 }    
 
 txt <- "MBC_Clust_"
 i <- 1
 for (i in 1:mclust_k) {
-  id <- paste0(txt, i)
-  CLUSTER_LIST[[id]] <- list(expr_matrix = t(m.ctf.std[groups_mclust == i, ]))
+  hasMoreThan1Row <- !is.null(nrow(m.ctf.std[groups_mclust == i, ]))
+  if (hasMoreThan1Row) {
+    id <- paste0(txt, i)
+    CLUSTER_LIST[[id]] <- list(expr_matrix = t(m.ctf.std[groups_mclust == i, ]))
+  }
 }    
 
-# contants for the list
+# contents for the list
 list_length <- length(CLUSTER_LIST)
 ```
+
+`r OK_bx`
+The clusters to be analysed are: 
+
+`r toString(names(CLUSTER_LIST))`.
+</div>
 
 
 ## Significant correlations {.tabset .tabset-fade .tabset-pills}
@@ -106,11 +124,16 @@ To avoid the multitesting problem in large number of data sets, the adjusted _P_
 [END EXPANDIBLE]: #
 
 
+`r NOTE_bx`
+To construct networks, only clusters **including significant correlations** will be analysed. The rest will be removed.
+</div>
+
 
 ```{r, results='asis'}
 # An analysis for each CLUSTER_LIST element
 i <- 1
 removable_elements <- vector()
+
 for (i in 1:list_length) {
   # tab header
   cluster_name <- names(CLUSTER_LIST)[i]
@@ -153,8 +176,10 @@ for (i in 1:list_length) {
     removable_elements <- c(removable_elements, i)
   }
 }
+
 # cat("## {.unlisted .unnumbered} \n")
-# remove elements from CLUSTER_LIST
+
+# remove clusters from CLUSTER_LIST that do not contain significant correlations
 if (length(removable_elements) > 0) {
   CLUSTER_LIST <- CLUSTER_LIST[-removable_elements]
   list_length <- length(CLUSTER_LIST)
@@ -164,6 +189,12 @@ rm(r_genes_clust, r_clust, p_clust, corr_list, corr_df, removable_elements)
 
 
 ## Constructing nets {.tabset .tabset-fade .tabset-pills}
+
+`r OK_bx`
+The clusters that will produce networks are: 
+
+`r toString(names(CLUSTER_LIST))`.
+</div>
 
 [START EXPANDIBLE]: #
 `r EXPAND_bx` Expand to read about <b>matrices for networks</b></summary>

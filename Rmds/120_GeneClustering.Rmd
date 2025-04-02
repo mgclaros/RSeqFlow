@@ -78,11 +78,18 @@ It requires a matrix of scaled and filtered genes: `m.ctf.std` and maybe `m.tmm.
 For the scree plot, [WSS] is calculated on-the-fly. Then, `clusGap()` is used to determine the gap statistic that can be plotte with `fviz_gap_stat()`. The third plot uses `fviz_nbclust()` to directly calculate the distances, linkage and average silhouette.
 
 ```{r orientativePlots, fig.height=6, fig.show='hold', fig.width=5, warning=FALSE, out.width=c('33%', '33%', '33%')}
+# verify that there are enough genes for the scree plot
+tmp <- 15
+nr <- nrow(m.ctf.std)
+MAX_WSS <- ifelse(nr > tmp, tmp, (nr - 1))
+
 # scree plot
-wss <- (nrow(m.ctf.std) - 1) * sum(apply(m.ctf.std, 2, var))
-for (i in 2:20) wss[i] <- sum(kmeans(m.ctf.std, centers = i)$withinss)
-plot(1:20, wss, type="b", 
-     xlab="Number of clusters k", ylab="Within groups sum of squares", 
+wss <- (nr - 1) * sum(apply(m.ctf.std, 2, var))
+for (i in 2:MAX_WSS) wss[i] <- sum(kmeans(m.ctf.std, centers = i)$withinss)
+plot(1:MAX_WSS, wss, 
+     type = "b", 
+     xlab = "Number of clusters k", 
+     ylab = "Within groups sum of squares", 
      main = "Scree plot")
 
 # calculate gap statistic for each number of clusters

@@ -2,7 +2,7 @@
 title: "`r PROJECT_NAME`"
 subtitle: "Using the `r paste(SOFT_NAME, VERSION_CODE)` pipeline"
 author: "M. Gonzalo Claros[^![](https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png)^](https://orcid.org/0000-0002-0112-3550) & Amanda Bullones"
-date: "`r format(Sys.time(), '%A %d, %B %Y. %H.%M.%S')` | RMD version: 250310"
+date: "`r format(Sys.time(), '%A %d, %B %Y. %H.%M.%S')` | RMD version: 250315"
 abstract: |
   **Data Science** is an interdisciplinary field that encompases statistics, computer science, and domain-specific knowledge to extract knowledge and insights from structured and unstructured data. **Bioinformatics** is a data sciencie applied to biology and related sciences. Hence, **`r paste(SOFT_NAME, VERSION_CODE)`** [@Bullones2023aa] is a bioinformatics R pipeline for processing RNA-Seq datasets from non-model organisms that performs the most recommended statistical analyses. It carries out the following processes:
 

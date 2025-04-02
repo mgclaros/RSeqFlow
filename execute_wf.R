@@ -2,7 +2,7 @@
 #
 # execute_wf -> RSeqFlow
 # Gonzalo Claros
-# 2025-02-21
+# 2025-03-11
 #
 # Main file, invoked after source(configure_wf.R)
 # Alternative usage from terminal: Rscript execute_wf.R aConfigFile.R 
@@ -100,7 +100,7 @@ rm(fileToSource)   # remove useless variable
 ## Pipeline name and version ####
 # this should be changed every time you produce a main change
 SOFT_NAME <- "RSeqFlow"
-VERSION_CODE <- 1.1
+VERSION_CODE <- "1.1.1"
 
 ## Computer type ####
 COMPUTER <- GetComputer()
